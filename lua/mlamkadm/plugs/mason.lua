@@ -1,6 +1,8 @@
 return {
     "williamboman/mason.nvim",
     "VonHeikemen/lsp-zero.nvim",
+    "neovim/nvim-lspconfig",
+    "williamboman/mason-lspconfig",
     branch = 'v2.x',
     requires = {
         -- LSP Support
@@ -12,7 +14,7 @@ return {
                 pcall(vim.cmd, "MasonUpdate")
             end,
         },
-        --{ 'williamboman/mason-lspconfig.nvim' }, -- Optional
+        --{ "williamboman/mason-lspconfig.nvim" }, -- Optional
 
         -- Autocompletion
         { "hrsh7th/nvim-cmp" }, -- Required
@@ -27,4 +29,3 @@ return {
         { "rafamadriz/friendly-snippets" }, -- Optional
     }
 }
-

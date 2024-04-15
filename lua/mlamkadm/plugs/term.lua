@@ -1,0 +1,3 @@
+return {
+    'kessejones/term.nvim',
+}
