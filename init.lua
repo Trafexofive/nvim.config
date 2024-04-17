@@ -4,9 +4,9 @@ require("mlamkadm.lazy")
 
 require("lazy").setup("mlamkadm.plugs")
 
-require("neoconf").setup({
-    -- override any of the default settings here
-})
+-- require("neoconf").setup({
+--     -- override any of the default settings here
+-- })
 
 
 require('Comment').setup()
