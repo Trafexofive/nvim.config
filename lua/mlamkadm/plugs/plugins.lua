@@ -1,8 +1,6 @@
 return {
-    "folke/which-key.nvim",
-  "folke/neoconf.nvim",
-  cmd = "Neoconf", 
-  "folke/neodev.nvim",
+    "folke/neoconf.nvim",
+    "folke/neodev.nvim",
+    cmd = "Neoconf",
 }
-    --"ms-jpq/chadtree",
-
+--"ms-jpq/chadtree",

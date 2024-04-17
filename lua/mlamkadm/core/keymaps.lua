@@ -70,3 +70,7 @@ map('n', '<leader>z', ':TagbarToggle<CR>') -- open/close
 
 map('n', '<leader>g', ':Glow<CR>')
 map('n', '<leader>la', ':Term<CR>')
+
+-- Formatting
+
+map('n', '<leader>p', '<cmd>LspZeroFormat<CR>')
