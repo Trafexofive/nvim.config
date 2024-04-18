@@ -5,16 +5,14 @@ return {
     "williamboman/mason-lspconfig",
     branch = 'v2.x',
     requires = {
-        -- LSP Support
         { "neovim/nvim-lspconfig" }, -- Required
         {
-            -- Optional
             "williamboman/mason.nvim",
             run = function()
                 pcall(vim.cmd, "MasonUpdate")
             end,
         },
-        --{ "williamboman/mason-lspconfig.nvim" }, -- Optional
+        { "williamboman/mason-lspconfig.nvim" }, -- Optional
 
         -- Autocompletion
         { "hrsh7th/nvim-cmp" }, -- Required
@@ -24,7 +22,6 @@ return {
         { "saadparwaiz1/cmp_luasnip" }, -- Optional
         { "hrsh7th/cmp-nvim-lua" }, -- Optional
 
-        -- Snippets
         { "L3MON4D3/LuaSnip" },    -- Required
         { "rafamadriz/friendly-snippets" }, -- Optional
     }
