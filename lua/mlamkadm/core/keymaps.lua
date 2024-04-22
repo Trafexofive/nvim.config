@@ -1,3 +1,7 @@
+    -- lazy
+    -- lazy
+    -- lazy
+    -- lazy
 -----------------------------------------------------------
 -- Define keymaps of Neovim and installed plugins.
 -----------------------------------------------------------
@@ -50,7 +54,7 @@ map('n', '<leader>r', ':so %<CR>')
 map('n', '<leader>s', ':w<CR>')
 
 -- Close all windows and exit from Neovim with <leader> and q
-map('n', '<leader>q', ':qa!<CR>')
+map('n', '<leader>q', ':q<CR>')
 --map(':w', '', ':LspZeroFormat<CR>')
 map('n', '<leader>qa', ':wqa!<CR>')
 
