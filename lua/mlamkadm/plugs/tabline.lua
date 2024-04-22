@@ -7,9 +7,9 @@ return {
     },
     lazy = false,
     config = function()
-        require('buffertabs').setup({
-            -- config
-        })
+        -- require('buffertabs').setup({
+        --     -- config
+        -- })
     end
 },
 }
