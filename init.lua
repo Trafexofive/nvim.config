@@ -14,32 +14,17 @@ require("lazy").setup("mlamkadm.plugs",
     }
 )
 
-require('buffertabs').toggle()
 
-require('buffertabs').setup({
-    ---@type 'none'|'single'|'double'|'rounded'|'solid'|'shadow'|table
-    border = 'rounded',
-    ---@type integer
-    padding = 1,
-    ---@type boolean
-    icons = true,
-    ---@type string
-    modified = " ",
-    ---@type string use hl Group or hex color
-    hl_group = 'Keyword',
-    ---@type string use hl Group or hex color
-    hl_group_inactive = 'Comment',
-    ---@type boolean
-    show_all = false,
-    ---@type 'row'|'column'
-    display = 'row',
-    ---@type 'left'|'right'|'center'
-    horizontal = 'center',
-    ---@type 'top'|'bottom'|'center'
-    vertical = 'top',
-    ---@type number in ms (recommend 2000)
-    timeout = 0
+require('glow').setup({
+    border = "shadow",         -- floating window border config
+    pager = true,
+    width = 80,
+    height = 100,
+    width_ratio = 0.7,         -- maximum width of the Glow window compared to the nvim window size (overrides `width`)
+    height_ratio = 0.7,
 })
+
+
 
 require 'nvim-web-devicons'.setup {
     -- your personnal icons can go here (to override)
@@ -107,6 +92,8 @@ require("mason-lspconfig").setup({
 require("mason-lspconfig").setup({
     ensure_installed = { "clangd" }
 })
+
+
 require("lspconfig").lua_ls.setup {}
 require("lspconfig").clangd.setup {}
 
@@ -125,4 +112,4 @@ require("term").setup({
     },
 })
 
-vim.cmd("COQnow")
+-- vim.cmd("COQnow")

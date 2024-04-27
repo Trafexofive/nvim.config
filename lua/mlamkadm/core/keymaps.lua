@@ -64,7 +64,7 @@ map('n', '<leader>qa', ':wqa!<CR>')
 
 -- Terminal mappings
 map('n', '<C-t>', ':Term<CR>', { noremap = true }) -- open
---map('t', '<Esc>', '<C-\\><C-n>')                   -- exit
+map('t', '<Esc>', '<C-\\><C-n>')                   -- exit
 
 -- NvimTree
 map('n', '<C-n>', ':NvimTreeToggle<CR>')       -- open/close
@@ -75,7 +75,6 @@ map('n', '<leader>n', ':NvimTreeFindFile<CR>') -- search file
 map('n', '<leader>z', ':TagbarToggle<CR>') -- open/close
 
 map('n', '<leader>g', ':Glow<CR>')
-map('n', '<leader>la', ':Term<CR>')
 
 -- Formatting
 

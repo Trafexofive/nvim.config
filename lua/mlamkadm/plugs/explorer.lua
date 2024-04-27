@@ -65,9 +65,7 @@ return {
                     highlight = "NeoTreeFileIcon"
                 },
                 modified = {
-                    symbol = "[+]",
-                    highlight = "NeoTreeModified",
-                },
+                    symbol = "[+]", highlight = "NeoTreeModified", },
                 name = {
                     trailing_slash = false,
                     use_git_status_colors = true,
@@ -117,7 +115,7 @@ return {
                 position = "left",
                 width = 40,
                 mapping_options = {
-                    noremap = true,
+                    noremap = false,
                     nowait = true,
                 },
                 mappings = {
