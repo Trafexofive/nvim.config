@@ -11,6 +11,7 @@ return {
         { '<leader><leader>', '<cmd>Telescope find_files<cr>' },
         { '<leader>b',        '<cmd>Telescope buffers<cr>' },
         { '<leader>i',        '<cmd>Telescope git_files<cr>' },
+        { '<leader>/',        '<cmd>Telescope live_grep<cr>' },
         { 'gd',               '<cmd>Telescope lsp_definitions<cr>' },
         { 'gr',               '<cmd>Telescope lsp_references<cr>' },
         { 'gl',               '<cmd>Telescope lsp_implementations<cr>' },
