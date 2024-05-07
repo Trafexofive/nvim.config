@@ -99,8 +99,8 @@ require("lspconfig").clangd.setup {}
 
 require("term").setup({
     shell = vim.o.shell,
-    width = 0.5,
-    height = 0.5,
+    width = 0.7,
+    height = 0.7,
     anchor = "NW",
     position = "center",
     title = {
