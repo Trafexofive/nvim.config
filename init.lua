@@ -14,7 +14,6 @@ require("lazy").setup("mlamkadm.plugs",
     }
 )
 
-
 require('glow').setup({
     border = "shadow",         -- floating window border config
     pager = true,
@@ -24,6 +23,10 @@ require('glow').setup({
     height_ratio = 0.7,
 })
 
+require'cmp_zsh'.setup {
+  zshrc = true, -- Source the zshrc (adding all custom completions). default: false
+  filetypes = { "deoledit", "zsh" } -- Filetypes to enable cmp_zsh source. default: {"*"}
+}
 
 
 require 'nvim-web-devicons'.setup {
@@ -89,10 +92,10 @@ require("mason").setup()
 require("mason-lspconfig").setup({
     ensure_installed = { "lua_ls" }
 })
+
 require("mason-lspconfig").setup({
     ensure_installed = { "clangd" }
 })
-
 
 require("lspconfig").lua_ls.setup {}
 require("lspconfig").clangd.setup {}
@@ -112,4 +115,3 @@ require("term").setup({
     },
 })
 
--- vim.cmd("COQnow")
