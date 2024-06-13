@@ -115,3 +115,4 @@ require("term").setup({
     },
 })
 
+require("symbols-outline").setup()
