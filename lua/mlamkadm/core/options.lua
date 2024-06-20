@@ -42,3 +42,12 @@ if vim.fn.executable('wl-copy') == 1 then
   vim.api.nvim_set_keymap('n', 'yy', '"+yy', { noremap = true, silent = true })
 end
 
+-- Automatically copy yanked text to macOS clipboard using pbcopy
+vim.cmd([[
+    augroup NeovimYankAutocmd
+        autocmd!
+        autocmd TextYankPost * silent! call system('pbcopy', @")
+    augroup END
+]])
+
+
