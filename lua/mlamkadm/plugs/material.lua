@@ -3,6 +3,6 @@ return {
     'marko-cerovac/material.nvim',
     priority = 1000,
     config = function()
-        vim.cmd("colorscheme material")
+        vim.cmd("colorscheme material-deep-ocean")
     end
 }
