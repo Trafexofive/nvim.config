@@ -2,17 +2,19 @@ return {
     "hrsh7th/cmp-nvim-lsp",
     {
         'L3MON4D3/LuaSnip',
+        version = "v2.*",
+        build = "make install_jsregexp",
         dependencies = {
-            -- 'hrsh7th/nvim-cmp',
-            -- 'tzachar/fuzzy.nvim',
+            'hrsh7th/nvim-cmp',
+            'tzachar/fuzzy.nvim',
             'saadparwaiz1/cmp_luasnip',
             "rafamadriz/friendly-snippets",
             'tamago324/cmp-zsh',
             'Shougo/deol.nvim',
         },
     },
-    -- 'tzachar/cmp-fuzzy-path',
-    -- dependencies = { 'hrsh7th/nvim-cmp', 'tzachar/fuzzy.nvim' },
+    'tzachar/cmp-fuzzy-path',
+    dependencies = { 'hrsh7th/nvim-cmp', 'tzachar/fuzzy.nvim' },
     {
         "hrsh7th/nvim-cmp",
         config = function()

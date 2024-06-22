@@ -15,17 +15,17 @@ require("lazy").setup("mlamkadm.plugs",
 )
 
 require('glow').setup({
-    border = "shadow",         -- floating window border config
+    border = "shadow", -- floating window border config
     pager = true,
     width = 80,
     height = 100,
-    width_ratio = 0.7,         -- maximum width of the Glow window compared to the nvim window size (overrides `width`)
+    width_ratio = 0.7, -- maximum width of the Glow window compared to the nvim window size (overrides `width`)
     height_ratio = 0.7,
 })
 
-require'cmp_zsh'.setup {
-  zshrc = true, -- Source the zshrc (adding all custom completions). default: false
-  filetypes = { "deoledit", "zsh" } -- Filetypes to enable cmp_zsh source. default: {"*"}
+require 'cmp_zsh'.setup {
+    zshrc = true,                   -- Source the zshrc (adding all custom completions). default: false
+    filetypes = { "deoledit", "zsh" } -- Filetypes to enable cmp_zsh source. default: {"*"}
 }
 
 
@@ -99,3 +99,18 @@ require("term").setup({
 })
 
 require("symbols-outline").setup()
+
+local opts = {
+    log_level = 'info',
+    auto_session_enable_last_session = false,
+    auto_session_root_dir = vim.fn.stdpath('data') .. "/sessions/",
+    auto_session_enabled = true,
+    auto_save_enabled = nil,
+    auto_restore_enabled = nil,
+    auto_session_suppress_dirs = nil,
+    auto_session_use_git_branch = nil,
+    -- the configs below are lua only
+    bypass_session_save_file_types = nil
+}
+
+require('auto-session').setup(opts)

@@ -1,7 +1,3 @@
-    -- lazy
-    -- lazy
-    -- lazy
-    -- lazy
 -----------------------------------------------------------
 -- Define keymaps of Neovim and installed plugins.
 -----------------------------------------------------------
@@ -14,7 +10,6 @@ local function map(mode, lhs, rhs, opts)
     vim.api.nvim_set_keymap(mode, lhs, rhs, options)
 end
 
--- Change leader to a comma
 vim.g.mapleader = ' '
 
 -----------------------------------------------------------
@@ -64,7 +59,7 @@ map('n', '<leader>s', ':w<CR>')
 -- Close all windows and exit from Neovim with <leader> and q
 map('n', '<leader>q', ':q<CR>')
 --map(':w', '', ':LspZeroFormat<CR>')
-map('n', '<leader>qa', ':wqa!<CR>')
+map('n', '<leader>qa', ':wqall<CR>')
 
 -----------------------------------------------------------
 -- Applications and Plugins shortcuts
