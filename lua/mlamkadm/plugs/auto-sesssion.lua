@@ -1,14 +1,16 @@
 return {
     'rmagatti/auto-session',
     dependencies = {
-        "junegunn/fzf",
-        build = "./install --bin",
         'tzachar/fuzzy.nvim',
+        require = {
+            'nvim-telescope/telescope-fzf-native.nvim',
+        }
     },
     config = function()
         require("auto-session").setup {
-            log_level = "error",
             auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
+            auto_save_enabled = true,
+            auto_session_use_git_branch = true,
         }
     end
 }
