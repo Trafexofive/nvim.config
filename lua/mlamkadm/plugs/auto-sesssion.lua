@@ -1,10 +1,9 @@
 return {
     'rmagatti/auto-session',
-    dependencies = {
+    requires = {
+        'nvim-telescope/telescope-fzf-native.nvim',
+        run = 'make',
         'tzachar/fuzzy.nvim',
-        require = {
-            'nvim-telescope/telescope-fzf-native.nvim',
-        }
+        requires = { 'nvim-telescope/telescope-fzf-native.nvim' }
     },
 }
-
