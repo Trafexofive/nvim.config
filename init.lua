@@ -99,7 +99,7 @@ require("term").setup({
     anchor = "NW",
     position = "center",
     title = {
-        align = "center", -- left, center or right
+        align = "right", -- left, center or right
     },
     border = {
         chars = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
