@@ -4,6 +4,14 @@ require("mlamkadm.lazy")
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
+vim.api.nvim_create_autocmd("VimLeavePre", {
+    callback = function()
+        vim.cmd("silent! call jobstop(b:terminal_job_id)")
+    end,
+})
+
+
+
 require("lazy").setup("mlamkadm.plugs",
     {
         change_detection = {
@@ -15,10 +23,10 @@ require("lazy").setup("mlamkadm.plugs",
 )
 
 require('glow').setup({
-    glow_path = "/home/linuxbrew/.linuxbrew/bin/glow",       -- will be filled automatically with your glow bin in $PATH, if any
-    install_path = "~/.local/bin", -- default path for installing glow binary
-    border = "shadow",    -- floating window border config
-    style = "dark", -- filled automatically with your current editor background, you can override using glow json style
+    glow_path = "/home/linuxbrew/.linuxbrew/bin/glow", -- will be filled automatically with your glow bin in $PATH, if any
+    install_path = "~/.local/bin",                     -- default path for installing glow binary
+    border = "shadow",                                 -- floating window border config
+    style = "dark",                                    -- filled automatically with your current editor background, you can override using glow json style
     pager = nil,
     width = 80,
     height = 100,
@@ -133,3 +141,31 @@ local opts = {
 }
 
 require('auto-session').setup(opts)
+
+-- deps:
+require('img-clip').setup({
+    -- use recommended settings from above
+})
+
+require('copilot').setup({
+  auto_trigger = true,
+  filetypes = {'*'},
+})
+
+require('render-markdown').setup({
+    -- use recommended settings from above
+})
+require('avante_lib').load()
+-- Avante.nvim setup
+require('avante').setup({
+  provider = "copilot", -- Recommend using Claude
+  auto_suggestions_provider = "copilot",
+  mappings = {
+    suggestion = {
+      accept = "<M-l>",
+      next = "<M-]>",
+      prev = "<M-[>",
+      dismiss = "<C-]>",
+    },
+  },
+})

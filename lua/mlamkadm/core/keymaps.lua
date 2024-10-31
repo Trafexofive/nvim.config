@@ -65,7 +65,7 @@ map('n', '<leader>r', ':so %<CR>')
 map('n', '<leader>s', ':w<CR>')
 
 
-map('n', '<leader>q', ':wqall<CR>')
+map('n', '<leader>q', ':qall!<CR>')
 
 -----------------------------------------------------------
 -- Applications and Plugins shortcuts
