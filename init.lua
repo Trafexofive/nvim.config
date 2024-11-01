@@ -143,29 +143,31 @@ local opts = {
 require('auto-session').setup(opts)
 
 -- deps:
-require('img-clip').setup({
-    -- use recommended settings from above
-})
+-- require('img-clip').setup({
+--     -- use recommended settings from above
+-- })
+-- require('render-markdown').setup({
+--     -- use recommended settings from above
+-- })
+-- require('avante_lib').load()
+-- -- Avante.nvim setup
+-- require('avante').setup({
+--   provider = "copilot", -- Recommend using Claude
+--   auto_suggestions_provider = "copilot",
+--   mappings = {
+--     suggestion = {
+--       accept = "<M-l>",
+--       next = "<M-]>",
+--       prev = "<M-[>",
+--       dismiss = "<C-]>",
+--     },
+--   },
+-- })
 
 require('copilot').setup({
   auto_trigger = true,
   filetypes = {'*'},
 })
 
-require('render-markdown').setup({
-    -- use recommended settings from above
-})
-require('avante_lib').load()
--- Avante.nvim setup
-require('avante').setup({
-  provider = "copilot", -- Recommend using Claude
-  auto_suggestions_provider = "copilot",
-  mappings = {
-    suggestion = {
-      accept = "<M-l>",
-      next = "<M-]>",
-      prev = "<M-[>",
-      dismiss = "<C-]>",
-    },
-  },
-})
+
+
