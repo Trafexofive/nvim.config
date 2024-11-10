@@ -22,6 +22,8 @@ require("lazy").setup("mlamkadm.plugs",
     }
 )
 
+require('auto-session').setup(opts)
+
 require('glow').setup({
     glow_path = "/home/linuxbrew/.linuxbrew/bin/glow", -- will be filled automatically with your glow bin in $PATH, if any
     install_path = "~/.local/bin",                     -- default path for installing glow binary
@@ -140,7 +142,6 @@ local opts = {
     }
 }
 
-require('auto-session').setup(opts)
 
 -- deps:
 -- require('img-clip').setup({
