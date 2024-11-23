@@ -165,10 +165,10 @@ local opts = {
 --   },
 -- })
 
-require('copilot').setup({
-  auto_trigger = true,
-  filetypes = {'*'},
-})
+-- require('copilot').setup({
+--   auto_trigger = true,
+--   filetypes = {'*'},
+-- })
 
 
 

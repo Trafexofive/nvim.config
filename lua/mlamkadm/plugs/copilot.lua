@@ -1,6 +1,6 @@
 return
 {
-    'github/copilot.lua',
+    -- 'github/copilot.lua',
     -- {
     --     "yetone/avante.nvim",
     --     event = "VeryLazy",
