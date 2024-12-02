@@ -22,33 +22,13 @@ vim.opt.backspace = "indent,eol,start"
 vim.g.mapleader = " "       -- Make sure to set `mapleader` before lazy so your mappings are correct
 vim.g.maplocalleader = "\\" -- Same for `maplocalleader`
 
+-- wl-clipboard
+vim.opt.clipboard = "unnamedplus"
 
-if vim.fn.executable('wl-copy') == 1 then
-  vim.g.clipboard = {
-    name = 'wl-clipboard',
-    copy = {
-      ['+'] = 'wl-copy',
-      ['*'] = 'wl-copy',
-    },
-    paste = {
-      ['+'] = 'wl-paste',
-      ['*'] = 'wl-paste',
-    },
-    cache_enabled = 1,
-  }
 
-  -- Yank to system clipboard
-  vim.api.nvim_set_keymap('n', 'y', '"+y', { noremap = true, silent = true })
-  vim.api.nvim_set_keymap('v', 'y', '"+y', { noremap = true, silent = true })
-  vim.api.nvim_set_keymap('n', 'yy', '"+yy', { noremap = true, silent = true })
-end
+vim.keymap.set("n", "<leader>y", '"+y', { desc = "Yank to clipboard" })
+vim.keymap.set("n", "<leader>p", '"+p', { desc = "Paste from clipboard" })
 
--- Automatically copy yanked text to macOS clipboard using pbcopy
-vim.cmd([[
-    augroup NeovimYankAutocmd
-        autocmd!
-        autocmd TextYankPost * silent! call system('pbcopy', @")
-    augroup END
-]])
+
 
 
