@@ -1,8 +1,13 @@
+
+
+
 require("mlamkadm.core")
 require("mlamkadm.lazy")
+require("mlamkadm.core.cmp")
 
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
+
 
 vim.api.nvim_create_autocmd("VimLeavePre", {
     callback = function()
@@ -10,17 +15,6 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
     end,
 })
 
-
-
-require("lazy").setup("mlamkadm.plugs",
-    {
-        change_detection = {
-            -- automatically check for config file changes and reload the ui
-            enabled = false,
-            notify = true, -- get a notification when changes are found
-        },
-    }
-)
 
 require('auto-session').setup(opts)
 
@@ -102,20 +96,7 @@ require("lspconfig").lua_ls.setup {}
 require("lspconfig").clangd.setup {}
 require("lspconfig").typos_lsp.setup {}
 
-require("term").setup({
-    shell = vim.o.shell,
-    width = 0.7,
-    height = 0.7,
-    anchor = "NW",
-    position = "center",
-    title = {
-        align = "right", -- left, center or right
-    },
-    border = {
-        chars = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
-        hl = "TermBorder",
-    },
-})
+require("toggleterm").setup {}
 
 require("symbols-outline").setup()
 
@@ -141,6 +122,7 @@ local opts = {
         },
     }
 }
+
 
 
 -- deps:
@@ -169,6 +151,3 @@ local opts = {
 --   auto_trigger = true,
 --   filetypes = {'*'},
 -- })
-
-
-
