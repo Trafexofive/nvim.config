@@ -1,9 +1,9 @@
-
-
-
 require("mlamkadm.core")
 require("mlamkadm.lazy")
+require("mlamkadm.core.sessions")
+require("mlamkadm.core.terminal")
 require("mlamkadm.core.cmp")
+require("mlamkadm.core.winshift")
 
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
@@ -16,7 +16,6 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 })
 
 
-require('auto-session').setup(opts)
 
 require('glow').setup({
     glow_path = "/home/linuxbrew/.linuxbrew/bin/glow", -- will be filled automatically with your glow bin in $PATH, if any
@@ -96,33 +95,7 @@ require("lspconfig").lua_ls.setup {}
 require("lspconfig").clangd.setup {}
 require("lspconfig").typos_lsp.setup {}
 
-require("toggleterm").setup {}
-
 require("symbols-outline").setup()
-
-local opts = {
-    log_level = 'error',
-    auto_session_enable_last_session = nil,
-    auto_session_root_dir = vim.fn.stdpath('data') .. "/sessions/",
-    auto_session_enabled = nil,
-    auto_save_enabled = nil,
-
-    auto_restore_enabled = true,
-    auto_session_suppress_dirs = nil,
-    auto_session_use_git_branch = nil,
-    -- the configs below are lua only
-    bypass_session_save_file_types = nil,
-    require("auto-session").setup {
-        bypass_session_save_file_types = nil, -- table: Bypass auto save when only buffer open is one of these file types
-        close_unsupported_windows = true,     -- boolean: Close windows that aren't backed by normal file
-        cwd_change_handling = {               -- table: Config for handling the DirChangePre and DirChanged autocmds, can be set to nil to disable altogether
-            restore_upcoming_session = true,  -- boolean: restore session for upcoming cwd on cwd change
-            pre_cwd_changed_hook = nil,       -- function: This is called after auto_session code runs for the `DirChangedPre` autocmd
-            post_cwd_changed_hook = nil,      -- function: This is called after auto_session code runs for the `DirChanged` autocmd
-        },
-    }
-}
-
 
 
 -- deps:
@@ -151,3 +124,30 @@ local opts = {
 --   auto_trigger = true,
 --   filetypes = {'*'},
 -- })
+--
+
+-- local colors = require("sttusline.colors")
+
+require("sttusline").setup {
+    statusline_color = "StatusLine",
+
+    laststatus = 3,
+    disabled = {
+        filetypes = {},
+        buftypes = {},
+    },
+    components = {
+        "mode",
+        "filename",
+        "git-branch",
+        "git-diff",
+        "%=",
+        "diagnostics",
+        "lsps-formatters",
+        "copilot",
+        "indent",
+        "encoding",
+        "pos-cursor",
+        "pos-cursor-progress",
+    },
+}

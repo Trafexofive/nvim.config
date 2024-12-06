@@ -1,4 +1,4 @@
 
 return {
-    --"sindrets/winshift.nvim"
+    "sindrets/winshift.nvim"
 }

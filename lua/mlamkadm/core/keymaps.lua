@@ -72,7 +72,7 @@ map('n', '<leader>q', ':qall!<CR>')
 -----------------------------------------------------------
 
 -- Terminal mappings
-map('n', '<C-t>', ':Term<CR>', { noremap = true }) -- open
+map('n', '<C-t>', ':ToggleTerm<CR>', { noremap = true }) -- open
 map('t', '<C-t>', '<C-\\><C-n>')                   -- exit
 
 -- NvimTree
