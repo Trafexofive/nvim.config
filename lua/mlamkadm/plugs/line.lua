@@ -19,3 +19,4 @@ return {
         event = { "BufEnter" },
     },
 }
+
