@@ -15,8 +15,6 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
     end,
 })
 
-
-
 require('glow').setup({
     glow_path = "/home/linuxbrew/.linuxbrew/bin/glow", -- will be filled automatically with your glow bin in $PATH, if any
     install_path = "~/.local/bin",                     -- default path for installing glow binary
