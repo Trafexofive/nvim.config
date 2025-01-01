@@ -1,3 +1,15 @@
+-- ************************************************************************** --
+--                                                                            --
+--                                                        :::      ::::::::   --
+--   init.lua                                           :+:      :+:    :+:   --
+--                                                    +:+ +:+         +:+     --
+--   By: mlamkadm <mlamkadm@student.42.fr>          +#+  +:+       +#+        --
+--                                                +#+#+#+#+#+   +#+           --
+--   Created: 2025/01/01 05:51:03 by mlamkadm          #+#    #+#             --
+--   Updated: 2025/01/01 05:51:03 by mlamkadm         ###   ########.fr       --
+--                                                                            --
+-- ************************************************************************** --
+
 require("mlamkadm.core")
 require("mlamkadm.lazy")
 require("mlamkadm.core.sessions")
@@ -5,9 +17,24 @@ require("mlamkadm.core.terminal")
 require("mlamkadm.core.cmp")
 require("mlamkadm.core.winshift")
 
-vim.g.loaded_netrw = 1
-vim.g.loaded_netrwPlugin = 1
+require('Comment').setup()
 
+require("mason").setup()
+require("mason-lspconfig").setup({
+    ensure_installed = { "lua_ls" }
+})
+
+require("mason-lspconfig").setup({
+    ensure_installed = { "typos_lsp" }
+})
+
+require("mason-lspconfig").setup({
+    ensure_installed = { "clangd" }
+})
+
+require("lspconfig").lua_ls.setup {}
+require("lspconfig").clangd.setup {}
+require("lspconfig").typos_lsp.setup {}
 
 vim.api.nvim_create_autocmd("VimLeavePre", {
     callback = function()
@@ -74,24 +101,6 @@ require 'nvim-web-devicons'.setup {
 --     -- override any of the default settings here
 -- })
 
-require('Comment').setup()
-
-require("mason").setup()
-require("mason-lspconfig").setup({
-    ensure_installed = { "lua_ls" }
-})
-
-require("mason-lspconfig").setup({
-    ensure_installed = { "typos_lsp" }
-})
-
-require("mason-lspconfig").setup({
-    ensure_installed = { "clangd" }
-})
-
-require("lspconfig").lua_ls.setup {}
-require("lspconfig").clangd.setup {}
-require("lspconfig").typos_lsp.setup {}
 
 require("symbols-outline").setup()
 
@@ -149,3 +158,4 @@ require("sttusline").setup {
         "pos-cursor-progress",
     },
 }
+

@@ -53,10 +53,10 @@ map('n', '<C-l>', '<C-w>l')
 map('n', '<leader>-', '<cmd>split<cr>')
 map('n', '<leader>=', '<cmd>vsplit<cr>')
 
-map('n', '<C-Left>', '<cmd>vertical resize -5<cr>')
-map('n', '<C-Right>', '<cmd>vertical resize +5<cr>')
-map('n', '<C-Up>', '<cmd>horizontal resize +5<cr>')
-map('n', '<C-Down>', '<cmd>horizontal resize -5<cr>')
+map('n', '<C-Left>', '<cmd>vertical resize -7<cr>')
+map('n', '<C-Right>', '<cmd>vertical resize +7<cr>')
+map('n', '<C-Up>', '<cmd>horizontal resize +7<cr>')
+map('n', '<C-Down>', '<cmd>horizontal resize -7<cr>')
 
 -- Reload configuration without restart nvim
 map('n', '<leader>r', ':so %<CR>')

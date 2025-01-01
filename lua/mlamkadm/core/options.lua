@@ -24,10 +24,10 @@ vim.g.maplocalleader = "\\" -- Same for `maplocalleader`
 -- wl-clipboard
 vim.opt.clipboard = "unnamedplus"
 
-
 vim.keymap.set("n", "<leader>y", '"+y', { desc = "Yank to clipboard" })
 vim.keymap.set("n", "<leader>p", '"+p', { desc = "Paste from clipboard" })
 
-
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
 
 
