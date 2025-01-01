@@ -9,7 +9,7 @@ return {
         stages = "fade", -- fade|slide|fade_in_slide_out|static
 
         -- Set timeout for notifications (in ms)
-        timeout = 3000,
+        timeout = 1000,
 
         -- Maximum width of notifications
         max_width = function()
@@ -26,10 +26,10 @@ return {
 
         -- Icons for different levels (using nerdfont)
         icons = {
-            ERROR = "",
-            WARN = "",
-            INFO = "",
-            DEBUG = "",
+            -- ERROR = "",
+            -- WARN = "",
+            -- INFO = "",
+            -- DEBUG = "",
             TRACE = "✎",
         },
 
@@ -39,7 +39,7 @@ return {
         end,
 
         -- Set default level for vim.notify()
-        level = 2,
+        level = 3,
 
         -- Render style
         render = "default", -- default|minimal|simple

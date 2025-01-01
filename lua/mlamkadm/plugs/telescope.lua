@@ -134,13 +134,7 @@ return {
                 history_style = 'dropdown',
                 mappings = {
                     i = {
-                        ["<C-j>"] = require('telescope.actions').move_selection_next,
-                        ["<C-k>"] = require('telescope.actions').move_selection_previous,
-                        -- ["<C-j>"] = "move_selection_next",
-                        -- ["<C-k>"] = "move_selection_previous",
                         -- Optionally, you might want to add these for consistent navigation
-                        ["<C-n>"] = false,  -- Disable default next
-                        ["<C-p>"] = false,  -- Disable default previous
                         ["<Down>"] = false, -- Optionally disable arrows
                         ["<Up>"] = false,   -- Optionally disable arrows
                     },
