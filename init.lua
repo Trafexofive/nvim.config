@@ -24,7 +24,7 @@ require('Comment').setup()
 -- Mason and LSP setup
 require("mason").setup()
 require("mason-lspconfig").setup({
-    ensure_installed = { "lua_ls", "clangd", "typos_lsp" }
+    ensure_installed = { "lua_ls", "clangd", "typos_lsp", "sumneko_lua" , "rust_analyzer", "tsserver", "jsonls", "html", "cssls", "svelte", "tailwindcss", "yamlls", "dockerls", "bashls", "vimls", "pyright", "gopls", "jdtls", "sqlls", "graphql", "efm", "diagnosticls" },
 })
 
 local lspconfig = require("lspconfig")
@@ -38,6 +38,7 @@ local server_configs = {
     },
     clangd = {},
     typos_lsp = {},
+    sumneko_lua = { cmd = { "lua-language-server" } },
 }
 
 for server, config in pairs(server_configs) do
