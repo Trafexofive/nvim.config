@@ -24,7 +24,7 @@ require('Comment').setup()
 -- Mason and LSP setup
 require("mason").setup()
 require("mason-lspconfig").setup({
-    ensure_installed = { "lua_ls", "clangd", "typos_lsp", "sumneko_lua" , "rust_analyzer", "tsserver", "jsonls", "html", "cssls", "svelte", "tailwindcss", "yamlls", "dockerls", "bashls", "vimls", "pyright", "gopls", "jdtls", "sqlls", "graphql", "efm", "diagnosticls" },
+    ensure_installed = { "lua_ls", "clangd", "typos_lsp", "rust_analyzer", "jsonls", "html", "cssls","tailwindcss", "yamlls", "dockerls", "bashls", "vimls", "pyright", "gopls", "jdtls", "sqlls", "graphql", "efm", "diagnosticls" },
 })
 
 local lspconfig = require("lspconfig")
@@ -38,12 +38,11 @@ local server_configs = {
     },
     clangd = {},
     typos_lsp = {},
-    sumneko_lua = { cmd = { "lua-language-server" } },
 }
 
-for server, config in pairs(server_configs) do
-    lspconfig[server].setup(config)
-end
+-- for server, config in pairs(server_configs) do
+--     lspconfig[server].setup(config)
+-- end
 
 -- Automatically stop terminal jobs on exit
 vim.api.nvim_create_autocmd("VimLeavePre", {

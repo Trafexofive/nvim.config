@@ -87,4 +87,5 @@ map('n', '<leader>g', ':Glow<CR>')
 
 -- Formatting
 
--- map('n', '<leader>p', '<cmd>LspZeroFormat<CR>')
+map('n', '<leader>p', '<cmd>LspZeroFormat<CR>', { noremap = true, silent = true })
+

@@ -102,22 +102,4 @@ return {
             vim.keymap.set("n", "<leader>p", "<cmd>lua require('lint').try_lint()<CR>", opts)
         end,
     },
-    {
-        "jose-elias-alvarez/null-ls.nvim", -- Formatting
-        dependencies = { "nvim-lua/plenary.nvim" },
-        config = function()
-            local null_ls = require("null-ls")
-            null_ls.setup({
-                sources = {
-                    null_ls.builtins.formatting.clang_format, -- C/C++
-                    null_ls.builtins.formatting.black,        -- Python
-                    null_ls.builtins.formatting.gofmt,        -- Go
-                    null_ls.builtins.formatting.stylua,       -- Lua
-                    null_ls.builtins.formatting.shfmt,        -- Shell scripting
-                },
-            })
-            local opts = { noremap = true, silent = true }
-            vim.keymap.set("n", "<leader>f", "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
-        end,
-    },
 }
