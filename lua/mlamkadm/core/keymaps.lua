@@ -16,14 +16,6 @@ vim.g.mapleader = ' '
 -- Neovim shortcuts
 -----------------------------------------------------------
 
--- -- restore the session for the current directory
--- vim.api.nvim_set_keymap("n", "<leader>qs", [[<cmd>lua require("persistence").load()<cr>]], {})
---
--- -- restore the last session
--- vim.api.nvim_set_keymap("n", "<leader>ql", [[<cmd>lua require("persistence").load({ last = true })<cr>]], {})
---
--- -- stop Persistence => session won't be saved on exit
--- vim.api.nvim_set_keymap("n", "<leader>qd", [[<cmd>lua require("persistence").stop()<cr>]], {})
 --
 -- Disable arrow keys
 map('', '<up>', '<nop>')
@@ -87,5 +79,5 @@ map('n', '<leader>g', ':Glow<CR>')
 
 -- Formatting
 
-map('n', '<leader>p', '<cmd>LspZeroFormat<CR>', { noremap = true, silent = true })
-
+-- map('n', '<leader>p', '<cmd>LspZeroFormat<CR>', { noremap = true, silent = true })
+map('n', '<leader>p', ':CFormat42<CR>', { noremap = true, silent = true })

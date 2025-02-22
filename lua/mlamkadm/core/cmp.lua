@@ -25,7 +25,3 @@ cmp.setup({
 -- Add capabilities for nvim-cmp
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
--- Setup lua_ls LSP server as an example
-require('lspconfig').lua_ls.setup {
-    capabilities = capabilities,
-}

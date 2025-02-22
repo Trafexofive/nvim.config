@@ -77,113 +77,6 @@ require("toggleterm").setup {
 }
 
 local Terminal = require('toggleterm.terminal').Terminal
-local lazygit  = Terminal:new({ cmd = "lazygit", hidden = true })
-
-function _lazygit_toggle()
-    lazygit:toggle()
-end
-
-vim.api.nvim_set_keymap("n", "<leader>jj", "<cmd>lua _lazygit_toggle()<CR>", { noremap = true, silent = true })
-
-local btop_terminal = Terminal:new({
-    cmd = "btop",
-    dir = "git_dir", -- Optional: opens in git repo root
-    direction = "float",
-    float_opts = {
-        border = "curved",
-    },
-    shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
-})
-
-local lazydocker_terminal = Terminal:new({
-    cmd = "lazydocker",
-    dir = "git_dir", -- Optional: opens in git repo root
-    direction = "float",
-    float_opts = {
-        border = "curved",
-        winblend = 13,      -- Transparency (0-100)
-    },
-    shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
-})
-
-local yazi_terminal = Terminal:new({
-    cmd = "yazi",
-    dir = "git_dir", -- Optional: opens in git repo root
-    direction = "float",
-    float_opts = {
-        border = "curved",
-        winblend = 13,      -- Transparency (0-100)
-    },
-    shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
-})
-
-local make_run_terminal = function(cmd)
-    return Terminal:new({
-        cmd = "make run",
-        dir = "git_dir", -- Optional: opens in git repo root
-        direction = "float",
-        float_opts = {
-            border = "curved",
-            winblend = 13,      -- Transparency (0-100)
-        },
-        shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
-    })
-end
-
-local make_terminal = function(cmd)
-    return Terminal:new({
-        cmd = "make",
-        dir = "git_dir", -- Optional: opens in git repo root
-        height = 10,
-        direction = "float",
-        float_opts = {
-            border = "curved",
-            winblend = 13,      -- Transparency (0-100)
-        },
-        shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
-    })
-end
-
-local ai_terminal = function(cmd)
-    return Terminal:new({
-        cmd = "~/repos/prompt-library/tools/groq_chat.sh -i",
-        dir = "git_dir", -- Optional: opens in git repo root
-        direction = "float",
-        float_opts = {
-            border = "curved", -- Can be "single", "double", "shadow", "curved", etc.
-            -- width = 120,        -- Terminal width
-            -- height = 40,        -- Terminal height
-            winblend = 13,      -- Transparency (0-100)
-        },
-        shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
-    })
-end
-
-local glow_terminal = function(cmd)
-    return Terminal:new({
-        cmd = "glow -a",
-        dir = "git_dir", -- Optional: opens in git repo root
-        direction = "float",
-        float_opts = {
-            border = "curved",
-            winblend = 13,      -- Transparency (0-100)
-        },
-        shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
-    })
-end
-
-local glow_open_current_file = function(cmd)
-    return Terminal:new({
-        cmd = "glow -p " .. vim.fn.expand("%"),
-        dir = "git_dir", -- Optional: opens in git repo root
-        direction = "float",
-        float_opts = {
-            border = "curved",
-            winblend = 13,      -- Transparency (0-100)
-        },
-        shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
-    })
-end
 
 -- local options = {
 --     dir = "git_dir", -- Optional: opens in git repo root
@@ -194,6 +87,40 @@ end
 --     },
 --     shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
 -- }
+
+local openGlowCurrentFile = function()
+    local openGlow = Terminal:new({
+        cmd = "glow " .. vim.fn.expand("%"),
+        dir = "git_dir", -- Optional: opens in git repo root
+        direction = "float",
+        float_opts = {
+            border = "curved",
+            winblend = 13,      -- Transparency (0-100)
+        },
+        shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
+    })
+    return openGlow
+end
+
+local function renderMdFile() 
+    local open_glow = Terminal:new({
+        cmd = "md-tui " .. vim.fn.expand("%"),
+        direction = "float",
+        float_opts = {
+            border = "curved",
+            winblend = 13,      -- Transparency (0-100)
+        },
+        shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
+    })
+    return open_glow
+end
+
+function GetFileNames()
+    local file = vim.fn.expand("%")
+    local file_name = vim.fn.fnamemodify(file, ":t")
+    local file_extension = vim.fn.fnamemodify(file, ":e")
+    return file_name, file_extension
+end
 
 local function get_term(cmd)
     return Terminal:new({
@@ -208,14 +135,15 @@ local function get_term(cmd)
     })
 end
 
-local function poptui(cmd)
+function Poptui(cmd)
     get_term(cmd):toggle()
 end
 
 
+
 vim.keymap.set("n", "<leader>jh", function()
-    poptui(
-    "python3 /home/mlamkadm/repos/IRC-TUI-python/irc_tui.py --password Alilepro135! --user testuser --port 22200 --nick clevo --real testreal")
+    Poptui(
+    "python3 /home/mlamkadm/repos/IRC-TUI-python/irc_tui.py --password Alilepro135! --user testuser --port 16000 --nick testnick --real testreal")
 end)
 
 -- vim.keymap.set("n", "<leader>jh", function ()
@@ -223,22 +151,20 @@ end)
 
 -- end)
 
+vim.api.nvim_set_keymap("n", "<leader>jj", "<cmd>lua Poptui('lazygit')<CR>", { noremap = true, silent = true })
 -- Keymap to toggle btop terminal
-vim.keymap.set("n", "<leader>jt", "<cmd> lua btop_terminal:toggle() <CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>jt", "<cmd> lua Poptui('btop')<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>jd", "<cmd> lua lazydocker_terminal:toggle() <CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>jd", "<cmd> lua Poptui('lazydocker')<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>jy", "<cmd> lua yazi_terminal:toggle() <CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>jy", "<cmd> lua Poptui('yazi')<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>jr", "<cmd> lua make_run_terminal('make run'):toggle() <CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>jr", "<cmd> lua Poptui('make run')<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>jm", "<cmd> lua make_terminal('make'):toggle() <CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>jm", "<cmd> lua Poptui('make')<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>ja", "<cmd> lua ai_terminal():toggle() <CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>ja", "<cmd> lua Poptui('ai')<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>jg", "<cmd> lua glow_terminal():toggle() <CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>jg", "<cmd> lua Poptui('glow')<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>jo", "<cmd> lua glow_open_current_file():toggle() <CR>", { noremap = true, silent = true })
-
-vim.keymap.set("n", "<leader>jp", "<cmd> lua get_term('python3'):toggle() <CR>", { noremap = true, silent = true })
-
+vim.keymap.set("n", "<leader>jo", "<cmd> lua renderMdFile:toggle()<CR>", { noremap = true, silent = true })

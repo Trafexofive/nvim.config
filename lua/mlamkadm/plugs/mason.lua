@@ -82,24 +82,4 @@ return {
             vim.keymap.set("n", "<leader>gr", "<cmd>GoRun<CR>", opts)
         end,
     },
-    {
-        "mfussenegger/nvim-lint", -- Linting
-        config = function()
-            require("lint").linters_by_ft = {
-                cpp = { "clangtidy" },
-                c = { "clangtidy" },
-                python = { "pylint" },
-                lua = { "luacheck" },
-                go = { "golangci-lint" },
-                sh = { "shellcheck" },
-            }
-            vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-                callback = function()
-                    require("lint").try_lint()
-                end,
-            })
-            local opts = { noremap = true, silent = true }
-            vim.keymap.set("n", "<leader>p", "<cmd>lua require('lint').try_lint()<CR>", opts)
-        end,
-    },
 }
