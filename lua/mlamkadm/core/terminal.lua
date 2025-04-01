@@ -159,12 +159,15 @@ vim.keymap.set("n", "<leader>jd", "<cmd> lua Poptui('lazydocker')<CR>", { norema
 
 vim.keymap.set("n", "<leader>jy", "<cmd> lua Poptui('yazi')<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>jr", "<cmd> lua Poptui('make run')<CR>", { noremap = true, silent = true })
-
-vim.keymap.set("n", "<leader>jm", "<cmd> lua Poptui('make')<CR>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<leader>ja", "<cmd> lua Poptui('ai')<CR>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<leader>jg", "<cmd> lua Poptui('glow')<CR>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<leader>jo", "<cmd> lua renderMdFile:toggle()<CR>", { noremap = true, silent = true })
+
+-- Makefile
+
+vim.keymap.set("n", "<leader>jr", "<cmd> lua Poptui('make run')<CR>", { noremap = true, silent = true })
+
+vim.keymap.set("n", "<leader>jm", "<cmd> lua Poptui('make')<CR>", { noremap = true, silent = true })

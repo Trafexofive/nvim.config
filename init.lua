@@ -17,14 +17,28 @@ require("mlamkadm.core.sessions")
 require("mlamkadm.core.terminal")
 require("mlamkadm.core.cmp")
 require("mlamkadm.core.winshift")
-
+-- require("mlamkadm.core.ollama-mk2").setup()
+-- require("mlamkadm.core.ollama-vi-mk2").setup()
+-- require("mlamkadm.core.ollama").setup()
+-- require("mlamkadm.core.ollama-mk2").setup({
+--     -- Custom configuration (optional)
+--     host = "http://localhost",
+--     port = 11434,
+--     default_model = "llama2",
+--     keymaps = {
+--         prompt = "<leader>op",
+--         inline = "<leader>oi",
+--         selection = "<leader>os",
+--         chat = "<leader>oc",
+--     }
+-- })
 -- Comment.nvim setup
 require('Comment').setup()
 
 -- Mason and LSP setup
 require("mason").setup()
 require("mason-lspconfig").setup({
-    ensure_installed = { "lua_ls", "clangd", "typos_lsp", "rust_analyzer", "jsonls", "html", "cssls","tailwindcss", "yamlls", "dockerls", "bashls", "vimls", "pyright", "gopls", "jdtls", "sqlls", "graphql", "efm", "diagnosticls" },
+    ensure_installed = { "lua_ls", "clangd", "typos_lsp", "rust_analyzer", "jsonls", "html", "cssls", "dockerls", "bashls", "vimls", "pyright", "gopls", "diagnosticls" },
 })
 
 local lspconfig = require("lspconfig")
@@ -40,9 +54,9 @@ local server_configs = {
     typos_lsp = {},
 }
 
--- for server, config in pairs(server_configs) do
---     lspconfig[server].setup(config)
--- end
+for server, config in pairs(server_configs) do
+    lspconfig[server].setup(config)
+end
 
 -- Automatically stop terminal jobs on exit
 vim.api.nvim_create_autocmd("VimLeavePre", {
@@ -129,3 +143,4 @@ require("symbols-outline").setup()
 --     },
 --   },
 -- })
+--
