@@ -3,7 +3,7 @@ local M = {}
 -- Configuration
 local config = {
     api_key = "AIzaSyDRKg7kYPJPSCxYhsSWC73xK1iCoaDA3Z4",
-    model = "gemini-1.5-pro-latest",
+    model = "gemini-2.5-pro-exp-03-25",
     max_tokens = 2048,
     temperature = 0.3,
     popup_border = "rounded",

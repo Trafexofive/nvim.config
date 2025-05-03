@@ -42,7 +42,7 @@ return {
                     enable_character_fade = true
                 },
                 indent = {
-                    indent_size = 2,
+                    indent_size = 4,
                     padding = 2, -- extra padding on left hand side
                     -- indent guides
                     with_markers = true,
@@ -176,7 +176,7 @@ return {
             filesystem = {
                 filtered_items = {
                     visible = false, -- when true, they will just be displayed differently than normal items
-                    hide_dotfiles = true,
+                    hide_dotfiles = false,
                     hide_gitignored = true,
                     hide_hidden = nil, -- only works on Windows for hidden files/directories
                     hide_by_name = {

@@ -14,10 +14,10 @@
 require("mlamkadm.core")
 require("mlamkadm.lazy")
 require("mlamkadm.core.sessions")
-require("mlamkadm.core.terminal")
+-- require("mlamkadm.core.terminal")
 require("mlamkadm.core.cmp")
 require("mlamkadm.core.winshift")
-require("mlamkadm.core.gemini-integration").setup()
+-- require("mlamkadm.core.gemini-integration").setup()
 -- require("mlamkadm.core.ollama-mk2").setup()
 -- require("mlamkadm.core.ollama-vi-mk2").setup()
 -- require("mlamkadm.core.ollama").setup()
@@ -33,14 +33,6 @@ require("mlamkadm.core.gemini-integration").setup()
 --         chat = "<leader>oc",
 --     }
 -- })
-local gemini = require("mlamkadm.core.gemini")
-
-local response, err = gemini.generate("What is the capital of France?")
-if err then
-    print("Error:", err)
-else
-    print(response)
-end
 -- Comment.nvim setup
 require('Comment').setup()
 

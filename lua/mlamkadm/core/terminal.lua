@@ -171,3 +171,6 @@ vim.keymap.set("n", "<leader>jo", "<cmd> lua renderMdFile:toggle()<CR>", { norem
 vim.keymap.set("n", "<leader>jr", "<cmd> lua Poptui('make run')<CR>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<leader>jm", "<cmd> lua Poptui('make')<CR>", { noremap = true, silent = true })
+
+vim.keymap.set("n", "<leader>ja", "<cmd> lua Poptui('agent')<CR>", { noremap = true, silent = true })
+

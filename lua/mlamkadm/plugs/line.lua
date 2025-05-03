@@ -35,7 +35,7 @@ return {
             "%=",                  -- Align the rest to the right
             "diagnostics",         -- LSP diagnostics
             "lsps-formatters",     -- Active LSP clients and formatters
-            "copilot",             -- GitHub Copilot status
+            -- "copilot",             -- GitHub Copilot status
             "indent",              -- Indentation settings
             "encoding",            -- File encoding
             "pos-cursor",          -- Cursor position (line:column)

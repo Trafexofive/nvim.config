@@ -3,10 +3,10 @@ local luasnip = require('luasnip')
 
 cmp.setup({
     sources = {
+        { name = "copilot" },
         { name = 'nvim_lsp' },
         { name = 'buffer' },
         { name = 'path' },
-        { name = "copilot" },
     },
     mapping = cmp.mapping.preset.insert({
         ['<C-Space>'] = cmp.mapping.complete(),
