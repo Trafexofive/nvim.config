@@ -10,7 +10,7 @@ return {
                     return 15
                 elseif term.direction == "vertical" then
                     return vim.o.columns * 0.4
-                else -- Float
+                else          -- Float
                     return 50 -- Keep your original float size
                 end
             end,
@@ -65,8 +65,10 @@ return {
 
         -- Your keymaps using Poptui
         vim.keymap.set("n", "<leader>jh",
-            function() Poptui(
-                "python3 /home/mlamkadm/repos/IRC-TUI-python/irc_tui.py --password Alilepro135! --user testuser --port 16000 --nick testnick --real testreal") end,
+            function()
+                Poptui(
+                    "python3 /home/mlamkadm/repos/IRC-TUI-python/irc_tui.py --password Alilepro135! --user testuser --port 16000 --nick testnick --real testreal")
+            end,
             { desc = "Toggle IRC TUI" })
         vim.keymap.set("n", "<leader>jj", function() Poptui('lazygit') end, { desc = "Toggle Lazygit" })
         vim.keymap.set("n", "<leader>jt", function() Poptui('btop') end, { desc = "Toggle Btop" })
@@ -79,8 +81,8 @@ return {
 
         -- Makefile keymaps
         vim.keymap.set("n", "<leader>mr", function() Poptui('make run') end, { desc = "Makefile Run" })
-        vim.keymap.set("n", "<leader>mm", function() Poptui('make') end, { desc = "Makefile Build" })     -- Changed from jm -> mm
-        vim.keymap.set("n", "<leader>mc", function() Poptui('make clean') end, { desc = "Makefile Clean" }) -- Example for clean
+        vim.keymap.set("n", "<leader>mm", function() Poptui('make') end, { desc = "Makefile Build" })         -- Changed from jm -> mm
+        vim.keymap.set("n", "<leader>mc", function() Poptui('make clean') end, { desc = "Makefile Clean" })   -- Example for clean
         vim.keymap.set("n", "<leader>mf", function() Poptui('make fclean') end, { desc = "Makefile Fclean" }) -- Example for fclean
 
         -- Terminal specific keymap (remapped from init.lua)
