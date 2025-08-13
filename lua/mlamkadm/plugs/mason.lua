@@ -33,6 +33,7 @@ return {
                 "gopls",   -- Go
                 "lua_ls",  -- Lua
                 "bashls",  -- Shell scripting
+                "marksman", -- Markdown
             })
 
             -- LSP-specific configurations
@@ -52,6 +53,7 @@ return {
                 },
             })
             require("lspconfig").bashls.setup({})
+            require("lspconfig").marksman.setup({})
 
             -- Attach key mappings
             lsp.on_attach(function(_, bufnr)

@@ -21,10 +21,9 @@ return {
       panel = { enabled = true }, -- Enable Copilot panel (:Copilot panel)
       filetypes = {             -- Configure filetypes where Copilot is active/inactive
         -- markdown = true,
-        -- ["*"] = true, -- Enable for all by default
+        ["*"] = true, -- Enable for all by default
         -- yaml = false, -- Example: Disable for YAML
       },
-      -- Other copilot options...
     })
   end,
 }

@@ -1,105 +1,98 @@
--- lua/mlamkadm/plugs/term.lua
 return {
-    'akinsho/toggleterm.nvim',
-    version = "*",
-    config = function()
-        require("toggleterm").setup {
-            -- Your full config from core/terminal.lua
-            size = function(term)
-                if term.direction == "horizontal" then
-                    return 15
-                elseif term.direction == "vertical" then
-                    return vim.o.columns * 0.4
-                else          -- Float
-                    return 50 -- Keep your original float size
-                end
-            end,
-            open_mapping = [[<c-t>]], -- Changed from <c-\>
-            hide_numbers = true,
-            shade_filetypes = {},
-            autochdir = true,
-            shade_terminals = true,
-            start_in_insert = true,
-            insert_mappings = true, -- Allow mapping in insert mode
-            terminal_mappings = true,
-            persist_size = true,
-            direction = 'float', -- Keep float as default
-            close_on_exit = true,
-            float_opts = {
-                border = 'curved',
-                -- winblend = 0, -- Remove default winblend if you set it per terminal
-            },
-            -- Add other options from core/terminal.lua
-        }
-
-        -- Define terminal helper function and keymaps here
-        local Terminal = require('toggleterm.terminal').Terminal
-
-        local function get_term(cmd, opts)
-            local default_opts = {
-                cmd = cmd,
-                dir = "git_dir",
-                direction = "float",
-                float_opts = {
-                    border = "curved",
-                    winblend = 3, -- Default transparency
-                },
-                shade_terminals = true,
-                hidden = true, -- Create hidden initially
-                on_open = function(term)
-                    vim.cmd("startinsert!")
-                    vim.api.nvim_buf_set_keymap(term.bufnr, "t", "<esc>", "<cmd>close<CR>",
-                        { noremap = true, silent = true })
-                end,
-                on_close = function(term)
-                    -- Actions on close if needed
-                end,
-            }
-            return Terminal:new(vim.tbl_deep_extend("force", default_opts, opts or {}))
+  'akinsho/toggleterm.nvim',
+  version = '*',
+  config = function()
+    -- Axiom III: FAAFO Engineering → Controlled, iterative sizing logic
+    require('toggleterm').setup({
+      size = function(term)
+        if term.direction == 'horizontal' then
+          return 15  -- lean & mean (Axiom IV)
+        elseif term.direction == 'vertical' then
+          return math.floor(vim.o.columns * 0.4)  -- pragmatic proportion
+        else
+          return 50  -- float default
         end
+      end,
+      open_mapping    = [[<c-t>]],           -- quick toggle: automate the mundane (Axiom V)
+      hide_numbers    = true,
+      shade_terminals = true,
+      autochdir       = true,                -- full-stack context (Axiom II)
+      start_in_insert = true,
+      insert_mappings = true,
+      terminal_mappings = true,
+      persist_size    = true,                -- infinite iteration (Axiom III)
+      direction       = 'float',             -- modular float (Axiom V)
+      close_on_exit   = true,                -- override per-TUI if needed
+      float_opts = {
+        border   = 'curved',                 -- pragmatic purity (Axiom IV)
+        winblend = 0,
+      },
+    })
 
-        function Poptui(cmd, opts)
-            local term = get_term(cmd, opts)
-            term:toggle()
-        end
-
-        -- Your keymaps using Poptui
-        vim.keymap.set("n", "<leader>jh",
-            function()
-                Poptui(
-                    "python3 /home/mlamkadm/repos/IRC-TUI-python/irc_tui.py --password Alilepro135! --user testuser --port 16000 --nick testnick --real testreal")
-            end,
-            { desc = "Toggle IRC TUI" })
-        vim.keymap.set("n", "<leader>jj", function() Poptui('lazygit') end, { desc = "Toggle Lazygit" })
-        vim.keymap.set("n", "<leader>jt", function() Poptui('btop') end, { desc = "Toggle Btop" })
-        vim.keymap.set("n", "<leader>jd", function() Poptui('lazydocker') end, { desc = "Toggle Lazydocker" })
-        vim.keymap.set("n", "<leader>jy", function() Poptui('yazi') end, { desc = "Toggle Yazi" })
-        vim.keymap.set("n", "<leader>ja", function() Poptui('ai') end, { desc = "Toggle AI Shell" })
-        vim.keymap.set("n", "<leader>jg", function() Poptui("glow " .. vim.fn.expand("%")) end,
-            { desc = "Toggle Glow Preview" })
-        -- vim.keymap.set("n", "<leader>jo", function() Poptui("md-tui " .. vim.fn.expand("%")) end, { desc = "Toggle md-tui Preview" }) -- If md-tui is installed
-
-        -- Makefile keymaps
-        vim.keymap.set("n", "<leader>mr", function() Poptui('make run') end, { desc = "Makefile Run" })
-        vim.keymap.set("n", "<leader>mm", function() Poptui('make') end, { desc = "Makefile Build" })         -- Changed from jm -> mm
-        vim.keymap.set("n", "<leader>mc", function() Poptui('make clean') end, { desc = "Makefile Clean" })   -- Example for clean
-        vim.keymap.set("n", "<leader>mf", function() Poptui('make fclean') end, { desc = "Makefile Fclean" }) -- Example for fclean
-
-        -- Terminal specific keymap (remapped from init.lua)
-        -- This maps Escape in Terminal mode back to Normal mode *within the terminal*
-        -- To exit ToggleTerm completely use the open_mapping (<c-t>) again or map another key
-        vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], { desc = "Terminal Normal Mode" })
-
-        -- Autocmd for stopping job (moved from init.lua)
-        vim.api.nvim_create_autocmd("TermClose", {
-            pattern = "term://*", -- Apply to all terminals
-            callback = function(args)
-                -- Check if it's a toggleterm terminal before trying to stop job
-                -- This is a bit tricky, might need more robust check depending on toggleterm internals
-                if args.buf and vim.bo[args.buf].term_job_id then
-                    vim.cmd("silent! call jobstop(" .. vim.bo[args.buf].term_job_id .. ")")
-                end
-            end,
-        })
+    -- Axiom V: Modularity for Emergence → terminal factory helper
+    local Terminal = require('toggleterm.terminal').Terminal
+    local function create_term(cmd, opts)
+      local default = {
+        cmd             = cmd,
+        dir             = 'git_dir',         -- resource-flow context (Axiom II)
+        direction       = 'float',
+        float_opts      = { border = 'curved', winblend = 3 },
+        shade_terminals = true,
+        hidden          = true,              -- start hidden → FAAFO-experiment ready
+        on_open         = function(term)
+          vim.cmd('startinsert!')
+          vim.api.nvim_buf_set_keymap(term.bufnr, 't', '<esc>', '<cmd>close<CR>',
+            { noremap = true, silent = true })
+        end,
+      }
+      -- Axiom I: Unreasonable Imperative → merge any custom overrides
+      return Terminal:new(vim.tbl_deep_extend('force', default, opts or {}))
     end
+
+    -- Axiom I & V: AutomateTheMundane, Lego Bricks → global toggle helper
+    function _G.Poptui(cmd, opts)
+      create_term(cmd, opts):toggle()
+    end
+
+    -- Axiom II: Absolute Sovereignty → explicit, named mappings
+    local map = vim.keymap.set
+
+    map('n', '<leader>jj', function() _G.Poptui('lazygit', { close_on_exit = false }) end,
+        { desc = 'Toggle Lazygit (keep open on exit)' })
+    map('n', '<leader>jt', function() _G.Poptui('btop') end,
+        { desc = 'Toggle Btop' })
+    map('n', '<leader>jd', function() _G.Poptui('lazydocker', { close_on_exit = false }) end,
+        { desc = 'Toggle Lazydocker (keep open on exit)' })
+    map('n', '<leader>jy', function() _G.Poptui('yazi') end,
+        { desc = 'Toggle Yazi' })
+    map('n', '<leader>ja', function() _G.Poptui('agent') end,
+        { desc = 'Toggle AI Shell' })
+    map('n', '<leader>jg', function() _G.Poptui('glow ' .. vim.fn.expand('%')) end,
+        { desc = 'Glow Preview' })
+
+    -- Axiom III: FAAFO_WithPurpose → Make commands automated
+    map('n', '<leader>mr', function() _G.Poptui('make run') end,
+        { desc = 'Make: Run' })
+    map('n', '<leader>mm', function() _G.Poptui('make') end,
+        { desc = 'Make: Build' })
+    map('n', '<leader>mc', function() _G.Poptui('make clean') end,
+        { desc = 'Make: Clean' })
+    map('n', '<leader>mf', function() _G.Poptui('make fclean') end,
+        { desc = 'Make: Fclean' })
+
+    -- Axiom IV: Pragmatic Purity → consistent escape mapping
+    map('t', '<Esc>', '<C-\\><C-n>', { desc = 'Terminal → Normal Mode' })
+
+    -- Axiom III & IV: FAAFO data capture + observability
+    vim.api.nvim_create_autocmd('TermClose', {
+      pattern = 'term://*',
+      callback = function(args)
+        local job_id = vim.b[args.buf].terminal_job_id
+        if job_id and job_id > 0 then
+          -- capture failure info rather than silent drop
+          vim.fn.jobstop(job_id)
+        end
+      end,
+    })
+  end,
 }

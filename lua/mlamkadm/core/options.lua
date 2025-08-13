@@ -19,7 +19,7 @@ vim.opt.backspace = "indent,eol,start"
 
 -- Example using a list of specs with the default options
 vim.g.mapleader = " "       -- Make sure to set `mapleader` before lazy so your mappings are correct
-vim.g.maplocalleader = "\\" -- Same for `maplocalleader`
+vim.g.maplocalleader = "\\\\" -- Same for `maplocalleader`
 
 -- wl-clipboard
 vim.opt.clipboard = "unnamedplus"
@@ -29,5 +29,10 @@ vim.keymap.set("n", "<leader>p", '"+p', { desc = "Paste from clipboard" })
 
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
+
+-- Markdown options
+vim.opt.wrap = true
+vim.opt.linebreak = true
+vim.opt.spell = false -- Enable per buffer in filetype autocommand
 
 

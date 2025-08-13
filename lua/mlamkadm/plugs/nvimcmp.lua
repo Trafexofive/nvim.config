@@ -112,6 +112,15 @@ return {
                     ghost_text = false, -- Set to true to try ghost text completion
                 },
             })
+            
+            -- Markdown-specific configuration
+            cmp.setup.filetype("markdown", {
+                sources = cmp.config.sources({
+                    { name = "luasnip" },
+                    { name = "buffer" },
+                    { name = "path" },
+                })
+            })
         end,
     },
 
@@ -122,6 +131,26 @@ return {
         build = "make install_jsregexp",               -- For regex support in snippets
         event = "InsertEnter",                         -- Load snippets when entering insert mode
         dependencies = { "rafamadriz/friendly-snippets" }, -- Load snippet collection
+        config = function()
+            require("luasnip.loaders.from_vscode").lazy_load()
+            
+            -- Markdown-specific snippets
+            local ls = require("luasnip")
+            local s = ls.snippet
+            local t = ls.text_node
+            local i = ls.insert_node
+            
+            -- Add markdown snippets
+            ls.add_snippets("markdown", {
+                s("h1", { t("# "), i(1, "Heading") }),
+                s("h2", { t("## "), i(1, "Heading") }),
+                s("h3", { t("### "), i(1, "Heading") }),
+                s("link", { t("["), i(1, "text"), t("]("), i(2, "url"), t(")") }),
+                s("img", { t("!["), i(1, "alt"), t("]("), i(2, "url"), t(")") }),
+                s("codeb", { t("`"), i(1, "code"), t("`") }),
+                s("codeblock", { t("```"), i(1, "language"), t("\n"), i(2), t("\n```") }),
+            })
+        end,
     },
 
     -- Zsh Completion Source Config

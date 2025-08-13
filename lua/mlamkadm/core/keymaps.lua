@@ -60,6 +60,24 @@ map('n', '<leader>s', ':w<CR>')
 map('n', '<leader>q', ':qall!<CR>')
 
 -----------------------------------------------------------
+-- Markdown shortcuts
+-----------------------------------------------------------
+
+-- Markdown preview
+map('n', '<leader>mp', '<cmd>MarkdownPreview<CR>', { desc = 'Markdown Preview' })
+map('n', '<leader>ms', '<cmd>MarkdownPreviewStop<CR>', { desc = 'Stop Markdown Preview' })
+map('n', '<leader>mt', '<cmd>MarkdownPreviewToggle<CR>', { desc = 'Toggle Markdown Preview' })
+
+-- Run code blocks
+map('n', '<leader>rr', '<cmd>SnipRun<CR>', { desc = 'Run code block' })
+map('v', '<leader>rr', '<cmd>SnipRun<CR>', { desc = 'Run selected code' })
+
+-- Markdown utilities
+map('n', '<leader>ml', '<cmd>lua require("mlamkadm.core.markdown-utils").paste_markdown_link()<CR>', { desc = 'Paste as Markdown Link' })
+map('n', '<leader>mt', '<cmd>lua require("mlamkadm.core.markdown-utils").toggle_checkbox()<CR>', { desc = 'Toggle Checkbox' })
+map('n', '<leader>mc', '<cmd>lua require("mlamkadm.core.markdown-utils").insert_code_block()<CR>', { desc = 'Insert Code Block' })
+
+-----------------------------------------------------------
 -- Applications and Plugins shortcuts
 -----------------------------------------------------------
 
@@ -81,3 +99,23 @@ map('n', '<leader>g', ':Glow<CR>')
 
 -- map('n', '<leader>p', '<cmd>LspZeroFormat<CR>', { noremap = true, silent = true })
 map('n', '<leader>p', ':CFormat42<CR>', { noremap = true, silent = true })
+
+-- Tab Management mappings
+map('n', '<leader>t', ':tabnew<CR>') -- open new tab
+map('n', '<leader>tc', ':tabclose<CR>') -- close current tab
+map('n', '<leader>to', ':tabonly<CR>') -- close all tabs except current
+
+map('n', '<c-j>', ':tabprevious<CR>') -- go to previous tab
+map('n', '<c-k>', ':tabNext<CR>') -- go to previous tab
+
+-----------------------------------------------------------
+-- automation shortcuts
+-----------------------------------------------------------
+---
+-----------------------------------------------------------
+-- Pop-ups shortcuts
+-----------------------------------------------------------
+
+
+
+

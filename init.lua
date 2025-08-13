@@ -14,7 +14,7 @@
 require("mlamkadm.core")
 require("mlamkadm.lazy")
 -- require("mlamkadm.core.mason")
-require("mlamkadm.core.terminal")
+-- require("mlamkadm.core.terminal")
 -- require("mlamkadm.core.cmp")
 -- require("mlamkadm.core.winshift")
 -- require("mlamkadm.core.gemini-integration").setup()
@@ -35,6 +35,7 @@ require("mlamkadm.core.terminal")
 -- })
 -- Comment.nvim setup
 require('Comment').setup()
+require("mlamkadm.core.bespokePlugs.monkeytype")
 
 -- Mason and LSP setup
 require("mason").setup()
@@ -64,18 +65,6 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
     callback = function()
         vim.cmd("silent! call jobstop(b:terminal_job_id)")
     end,
-})
-
--- Glow.nvim setup
-require('glow').setup({
-    glow_path = "/home/linuxbrew/.linuxbrew/bin/glow",
-    install_path = "~/.local/bin",
-    border = "shadow",
-    style = "dark",
-    width = 80,
-    height = 100,
-    width_ratio = 1,
-    height_ratio = 1,
 })
 
 -- Cmp_zsh setup
@@ -124,24 +113,17 @@ require 'nvim-web-devicons'.setup {
 -- Symbols-outline setup
 require("symbols-outline").setup()
 
--- Placeholder for advanced functionality (future-proofing with comments)
--- require('img-clip').setup({
---     -- configuration here
--- })
--- require('render-markdown').setup({
---     -- configuration here
--- })
--- require('avante_lib').load()
--- require('avante').setup({
---   provider = "copilot",
---   auto_suggestions_provider = "copilot",
---   mappings = {
---     suggestion = {
---       accept = "<M-l>",
---       next = "<M-]>",
---       prev = "<M-[>",
---       dismiss = "<C-]>",
---     },
---   },
--- })
---
+-- Markdown setup
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function()
+    -- Enable spell checking for markdown files
+    vim.opt_local.spell = true
+    -- Enable text wrapping
+    vim.opt_local.wrap = true
+    -- Enable line breaking at word boundaries
+    vim.opt_local.linebreak = true
+    -- Highlight matching brackets
+    vim.opt_local.showmatch = true
+  end,
+})

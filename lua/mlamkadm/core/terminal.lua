@@ -174,3 +174,12 @@ vim.keymap.set("n", "<leader>jm", "<cmd> lua Poptui('make')<CR>", { noremap = tr
 
 vim.keymap.set("n", "<leader>ja", "<cmd> lua Poptui('agent')<CR>", { noremap = true, silent = true })
 
+-- Markdown preview with glow
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function()
+    vim.keymap.set("n", "<leader>gp", "<cmd>lua require('mlamkadm.core.terminal').Poptui('glow ' .. vim.fn.expand('%'))<CR>", 
+      { noremap = true, silent = true, buffer = 0, desc = "Preview Markdown with Glow" })
+  end,
+})
+
