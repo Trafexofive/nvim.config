@@ -1,0 +1,158 @@
+# Neovim Configuration Documentation
+
+This document provides an overview of the Neovim configuration, detailing the workflow philosophy, key plugins, and important key mappings.
+
+## Workflow Philosophy
+
+The configuration is built around the principles of efficiency, modularity, and seamless integration, aiming to create a powerful development environment within Neovim.
+
+- **Efficiency**: Leverage powerful plugins for common tasks (fuzzy finding, file browsing, LSP) to minimize manual effort and maximize productivity.
+- **Modularity**: Organize the configuration into distinct, self-contained plugin configurations (`lua/mlamkadm/plugs/`) for easy maintenance and extensibility.
+- **Native Integration**: Prioritize the use of Neovim's built-in capabilities and standard plugin interfaces (like `nvim-lspconfig`) for a stable and well-supported setup.
+- **Automation**: Automate repetitive tasks, such as formatting (`auto-save.nvim`, `42-C-Formatter.nvim`), session management (`auto-session`), and terminal operations (`toggleterm.nvim` mappings).
+- **Extensibility**: Design the structure to easily add new plugins or modify existing ones without disrupting the core setup.
+
+## Core Plugin Categories and Highlights
+
+### Language Server Protocol (LSP) & Completion
+
+Provides intelligent code assistance.
+
+- **`neovim/nvim-lspconfig`**: Core plugin for configuring LSP servers.
+- **`williamboman/mason.nvim` & `williamboman/mason-lspconfig.nvim`**: Manage and install LSP servers, ensuring `clangd`, `pyright`, `gopls`, `lua_ls`, `bashls`, and `marksman` are available.
+- **`hrsh7th/nvim-cmp`**: Autocompletion engine.
+  - Sources: LSP (`cmp-nvim-lsp`), Buffers (`cmp-buffer`), Paths (`cmp-path`), LuaSnip (`cmp_luasnip`), Zsh (`cmp-zsh`), Copilot (`copilot-cmp`).
+  - Integrates with `LuaSnip` for snippet expansion.
+- **`zbirenbaum/copilot.lua`**: GitHub Copilot integration, providing AI-powered suggestions.
+
+### File Navigation & Management
+
+Efficiently find and manage files and buffers.
+
+- **`nvim-telescope/telescope.nvim`**: Fuzzy finder for files, buffers, LSP symbols, git status, etc.
+  - Enhanced with `telescope-fzf-native.nvim` for faster sorting.
+  - Includes `telescope-frecency.nvim` for accessing frequently used files.
+- **`nvim-neo-tree/neo-tree.nvim`**: File explorer with git integration and intuitive mappings.
+- **`akinsho/toggleterm.nvim`**: Manage integrated terminal instances.
+
+### Syntax Highlighting & Code Analysis
+
+Enhanced code readability and understanding.
+
+- **`nvim-treesitter/nvim-treesitter`**: Improved syntax highlighting and code analysis for numerous languages.
+  - Includes `nvim-treesitter-refactor` for smart renaming and navigation features.
+
+### Markdown & Writing
+
+Comprehensive Markdown editing experience.
+
+- **`jakewvincent/mkdnflow.nvim`**: Navigation and utilities for Markdown files.
+- **`iamcco/markdown-preview.nvim`**: Real-time browser preview.
+- **`lukas-reineke/headlines.nvim`**: Enhanced headings and code block highlighting.
+- **`michaelb/sniprun`**: Execute code blocks directly from Markdown.
+
+### Utilities & UI
+
+Enhance the overall user experience.
+
+- **`numToStr/Comment.nvim`**: Easy code commenting.
+- **`windwp/nvim-autopairs`**: Auto-close brackets and quotes.
+- **`Pocco81/auto-save.nvim`**: Automatically save files.
+- **`rmagatti/auto-session`**: Automatically save and restore sessions.
+- **`sontungexpt/sttusline`**: Customizable status line.
+- **`folke/which-key.nvim`**: Shows available keybindings.
+- **`sindrets/winshift.nvim`**: Easily move and resize windows.
+
+## Key Mappings (Leader is Space)
+
+### General
+
+- `<leader>c`: Clear search highlighting.
+- `<leader>r`: Reload configuration.
+- `<leader>s`: Save file.
+- `<leader>q`: Quit all.
+
+### Window Management
+
+- `<C-h/j/k/l>`: Move between windows.
+- `<leader>-`: Horizontal split.
+- `<leader>=`: Vertical split.
+- `<C-Left/Right/Up/Down>`: Resize windows.
+- `<leader>tk`: Change split orientation (vertical to horizontal).
+- `<leader>th`: Change split orientation (horizontal to vertical).
+
+### File Navigation
+
+- `<leader><leader>`: Find files (Telescope).
+- `<C-n>`: Toggle Neo-tree file explorer.
+- `<leader><tab>`: Toggle Neo-tree (float).
+- `<leader>b`: List buffers (Telescope).
+- `<leader>i`: Find git files (Telescope).
+- `<leader>f`: Refresh Neo-tree.
+- `<leader>n`: Find current file in Neo-tree.
+
+### Search & Find
+
+- `:`: Command line history (Telescope).
+- `<leader>/`: Live grep with arguments (Telescope).
+- `<leader>fw`: Find word under cursor (Telescope).
+- `<leader>fr`: Recent files (Telescope).
+- `<leader>fu`: Undo tree (Telescope).
+
+### LSP & Code Actions
+
+- `gd`: Go to definition (Telescope LSP).
+- `K`: Hover.
+- `<leader>rn`: Rename.
+- `<leader>ca`: Code actions.
+- `<leader>ds`: Document symbols (Telescope LSP).
+- `<leader>ws`: Workspace symbols (Telescope LSP).
+- `<leader>gr`: Find references (Telescope LSP).
+- `<leader>e`: Show line diagnostics.
+- `[d` / `]d`: Navigate diagnostics.
+- `grr`: Smart rename (Treesitter).
+- `gnd`: Go to definition (Treesitter).
+- `gnD`: List definitions (Treesitter).
+- `gO`: List definitions (TOC - Treesitter).
+
+### Git Integration (Telescope)
+
+- `<leader>gc`: Git commits.
+- `<leader>gb`: Git branches.
+- `<leader>gs`: Git status.
+
+### Terminal & External Tools
+
+- `<C-t>`: Toggle terminal (`toggleterm.nvim`).
+- `<leader>jj`: Toggle Lazygit.
+- `<leader>jt`: Toggle Btop.
+- `<leader>jd`: Toggle Lazydocker.
+- `<leader>jy`: Toggle Yazi (file manager).
+- `<leader>ja`: Toggle AI Shell.
+- `<leader>jg`: Preview current file with Glow.
+- `<leader>mr`: Run `make run`.
+- `<leader>mm`: Run `make`.
+- `<leader>mc`: Run `make clean`.
+- `<leader>mf`: Run `make fclean`.
+
+### Markdown
+
+- `<leader>mp`: Start Markdown preview.
+- `<leader>ms`: Stop Markdown preview.
+- `<leader>mt`: Toggle Markdown preview (or toggle checkbox via `keymaps.lua`).
+- `<leader>rr`: Run code block (normal or visual mode).
+- `<leader>ml`: Paste clipboard content as Markdown link.
+- `<leader>mc`: Insert a code block.
+
+### Copilot
+
+- `<C-l>`: Accept Copilot suggestion.
+- `<C-]>`: Dismiss Copilot suggestion.
+- `<M-]>` / `<M-[>`: Cycle through Copilot suggestions.
+
+### Snippets & Completion
+
+- `<Tab>`: Navigate/select next item in completion/snippet.
+- `<S-Tab>`: Navigate/select previous item in completion/snippet.
+- `<C-Space>`: Trigger completion menu.
+- `<CR>`: Confirm completion selection.
