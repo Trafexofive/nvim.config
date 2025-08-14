@@ -35,10 +35,36 @@ return {
     end,
   },
   {
+    "jay-babu/mason-null-ls.nvim", -- Bridge between mason and null-ls
+    event = { "BufReadPre", "BufNewFile" },
+    dependencies = {
+      "williamboman/mason.nvim",
+      "jose-elias-alvarez/null-ls.nvim",
+    },
+    config = function()
+      require("mason-null-ls").setup({
+        ensure_installed = {
+          -- Formatters
+          "prettierd",     -- JavaScript, TypeScript, CSS, HTML, JSON, YAML, Markdown
+          "stylua",        -- Lua
+          "black",         -- Python
+          "isort",         -- Python imports
+          "shfmt",         -- Shell scripts
+          "clang_format",  -- C/C++
+          -- Linters
+          "eslint_d",      -- JavaScript, TypeScript
+          "shellcheck",    -- Shell scripts
+        },
+        automatic_installation = true,
+      })
+    end,
+  },
+  {
     -- Core LSP configuration
     "neovim/nvim-lspconfig",
     dependencies = {
       "mason-lspconfig.nvim", -- Ensure mason-lspconfig is loaded first
+      "jose-elias-alvarez/null-ls.nvim", -- For formatting and linting
       -- Autocompletion plugins (if not configured elsewhere)
       -- { "hrsh7th/nvim-cmp" },
       -- { "hrsh7th/cmp-nvim-lsp" },
@@ -98,6 +124,47 @@ return {
           vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float({ bufnr = ev.buf }) end, opts)
           vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
           vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
+          
+          -- Formatting
+          vim.keymap.set('n', '<leader>f', function() vim.lsp.buf.format({ async = true }) end, 
+            { buffer = ev.buf, noremap = true, silent = true, desc = "Format buffer" })
+        end,
+      })
+    end,
+  },
+  {
+    "jose-elias-alvarez/null-ls.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      local null_ls = require("null-ls")
+      
+      null_ls.setup({
+        sources = {
+          -- Formatters
+          null_ls.builtins.formatting.prettierd,
+          null_ls.builtins.formatting.stylua,
+          null_ls.builtins.formatting.black,
+          null_ls.builtins.formatting.isort,
+          null_ls.builtins.formatting.shfmt,
+          null_ls.builtins.formatting.clang_format,
+          
+          -- Linters
+          null_ls.builtins.diagnostics.eslint_d,
+          null_ls.builtins.diagnostics.shellcheck,
+        },
+        -- Enable formatting on save
+        on_attach = function(client, bufnr)
+          if client.supports_method("textDocument/formatting") then
+            vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })
+            vim.api.nvim_create_autocmd("BufWritePre", {
+              group = augroup,
+              buffer = bufnr,
+              callback = function()
+                vim.lsp.buf.format({ bufnr = bufnr })
+              end,
+            })
+          end
         end,
       })
     end,

@@ -93,9 +93,10 @@ map('n', '<leader>z', ':TagbarToggle<CR>') -- open/close
 map('n', '<leader>g', ':Glow<CR>')
 
 -- Formatting
-
--- map('n', '<leader>p', '<cmd>LspZeroFormat<CR>', { noremap = true, silent = true })
-map('n', '<leader>p', ':CFormat42<CR>', { noremap = true, silent = true })
+-- General LSP formatting (for non-C files)
+map('n', '<leader>f', '<cmd>lua vim.lsp.buf.format({ async = true })<CR>', { desc = 'Format buffer' })
+-- C-family files use 42 formatter
+map('n', '<leader>p', ':CFormat42<CR>', { noremap = true, silent = true, desc = 'Format C/C++ with 42 Norm' })
 
 -- Tab Management mappings
 map('n', '<leader>t', ':tabnew<CR>') -- open new tab

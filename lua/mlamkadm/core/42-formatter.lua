@@ -3,6 +3,7 @@ return {
   {
     "Diogo-ss/42-C-Formatter.nvim",
     cmd = "CFormat42",  -- Ensures plugin loads when command is called
+    ft = { "c", "cpp", "h", "hpp" }, -- Only load for C/C++ files
     config = function()
       local formatter = require("42-formatter")
       formatter.setup({

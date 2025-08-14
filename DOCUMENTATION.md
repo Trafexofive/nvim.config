@@ -24,6 +24,8 @@ Provides intelligent code assistance.
   - Sources: LSP (`cmp-nvim-lsp`), Buffers (`cmp-buffer`), Paths (`cmp-path`), LuaSnip (`cmp_luasnip`), Zsh (`cmp-zsh`), Copilot (`copilot-cmp`).
   - Integrates with `LuaSnip` for snippet expansion.
 - **`zbirenbaum/copilot.lua`**: GitHub Copilot integration, providing AI-powered suggestions.
+- **`jose-elias-alvarez/null-ls.nvim`**: Provides formatting and linting capabilities through external tools.
+- **`jay-babu/mason-null-ls.nvim`**: Bridge between Mason and null-ls for automatic tool installation.
 
 ### File Navigation & Management
 
@@ -62,6 +64,7 @@ Enhance the overall user experience.
 - **`sontungexpt/sttusline`**: Customizable status line.
 - **`folke/which-key.nvim`**: Shows available keybindings.
 - **`sindrets/winshift.nvim`**: Easily move and resize windows.
+- **`jose-elias-alvarez/null-ls.nvim`**: Provides formatting and linting capabilities through external tools.
 
 ## Key Mappings (Leader is Space)
 
@@ -149,6 +152,12 @@ Enhance the overall user experience.
 - `<C-l>`: Accept Copilot suggestion.
 - `<C-]>`: Dismiss Copilot suggestion.
 - `<M-]>` / `<M-[>`: Cycle through Copilot suggestions.
+
+### Formatting
+
+- `<leader>f`: Format the current buffer using LSP or external formatters.
+- `<leader>p`: Format C/C++ files with the 42 Norm formatter.
+- Auto-formatting on save is enabled for all supported filetypes.
 
 ### Snippets & Completion
 
