@@ -57,7 +57,7 @@ return {
     -- Axiom II: Absolute Sovereignty → explicit, named mappings
     local map = vim.keymap.set
 
-    map('n', '<leader>jj', function() _G.Poptui('lazygit', { close_on_exit = false }) end,
+    map('n', '<leader>gg', function() _G.Poptui('lazygit', { close_on_exit = false }) end,
         { desc = 'Toggle Lazygit (keep open on exit)' })
     map('n', '<leader>jt', function() _G.Poptui('btop') end,
         { desc = 'Toggle Btop' })

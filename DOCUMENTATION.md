@@ -124,7 +124,7 @@ Enhance the overall user experience.
 ### Terminal & External Tools
 
 - `<C-t>`: Toggle terminal (`toggleterm.nvim`).
-- `<leader>jj`: Toggle Lazygit.
+- `<leader>gg`: Toggle Lazygit.
 - `<leader>jt`: Toggle Btop.
 - `<leader>jd`: Toggle Lazydocker.
 - `<leader>jy`: Toggle Yazi (file manager).

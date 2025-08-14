@@ -105,8 +105,9 @@ map('n', '<leader>t', ':tabnew<CR>') -- open new tab
 map('n', '<leader>tc', ':tabclose<CR>') -- close current tab
 map('n', '<leader>to', ':tabonly<CR>') -- close all tabs except current
 
-map('n', '<c-j>', ':tabprevious<CR>') -- go to previous tab
-map('n', '<c-k>', ':tabNext<CR>') -- go to previous tab
+-- Use standard Ctrl+PageUp/PageDown for tab navigation
+-- map('n', '<c-j>', ':tabprevious<CR>') -- go to previous tab (conflicts with leader+j)
+-- map('n', '<c-k>', ':tabNext<CR>') -- go to next tab (conflicts with leader+k)
 
 -----------------------------------------------------------
 -- automation shortcuts
