@@ -85,10 +85,7 @@ map('n', '<leader>mc', '<cmd>lua require("mlamkadm.core.markdown-utils").insert_
 map('n', '<C-t>', ':ToggleTerm<CR>', { noremap = true }) -- open
 map('t', '<C-t>', '<C-\\><C-n>')                   -- exit
 
--- NvimTree
-map('n', '<C-n>', ':NvimTreeToggle<CR>')       -- open/close
-map('n', '<leader>f', ':NvimTreeRefresh<CR>')  -- refresh
-map('n', '<leader>n', ':NvimTreeFindFile<CR>') -- search file
+-- Neo-tree mappings are now handled in the explorer plugin configuration
 
 -- Tagbar
 map('n', '<leader>z', ':TagbarToggle<CR>') -- open/close
