@@ -155,8 +155,7 @@ Enhance the overall user experience.
 
 ### Formatting
 
-- `<leader>f`: Format the current buffer using LSP or external formatters.
-- `<leader>p`: Format C/C++ files with the 42 Norm formatter.
+- `<leader>f`: Format the current buffer using LSP or external formatters (including 42 Norm for C/C++ files).
 - Auto-formatting on save is enabled for all supported filetypes.
 
 ### Snippets & Completion
@@ -165,3 +164,4 @@ Enhance the overall user experience.
 - `<S-Tab>`: Navigate/select previous item in completion/snippet.
 - `<C-Space>`: Trigger completion menu.
 - `<CR>`: Confirm completion selection.
+
