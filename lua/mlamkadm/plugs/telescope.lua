@@ -21,28 +21,35 @@ return {
     },
     keys = {
         -- Essential operations
-        { ':',                '<cmd>Telescope cmdline<cr>',                          desc = 'Command Line' },
-        { '<leader><leader>', '<cmd>Telescope find_files hidden=true<cr>',           desc = 'Find Files' },
-        { '<leader>b',        '<cmd>Telescope buffers sort_mru=true<cr>',            desc = 'Buffers' },
-        { '<leader>i',        '<cmd>Telescope git_files<cr>',                        desc = 'Git Files' },
+        { '<leader><leader>', '<cmd>Telescope find_files hidden=true<cr>', desc = 'Find Files' },
+        { '<leader>b',        '<cmd>Telescope buffers sort_mru=true<cr>',  desc = 'Buffers' },
+        { '<leader>i',        '<cmd>Telescope git_files<cr>',              desc = 'Git Files' },
+        { '<leader>r',        '<cmd>Telescope resume<cr>',                 desc = 'Resume Last Picker' },
 
         -- Advanced search
-        { '<leader>/',        '<cmd>Telescope live_grep_args<cr>',                   desc = 'Live Grep with Args' },
-        { '<leader>fw',       '<cmd>Telescope grep_string<cr>',                      desc = 'Find Word Under Cursor' },
-        { '<leader>fr',       '<cmd>Telescope frecency<cr>',                         desc = 'Recent Files' },
-        { '<leader>fu',       '<cmd>Telescope undo<cr>',                             desc = 'Undo Tree' },
+        { '<leader>/',        '<cmd>Telescope live_grep_args<cr>',         desc = 'Live Grep with Args' },
+        { '<leader>fw',       '<cmd>Telescope grep_string<cr>',            desc = 'Find Word Under Cursor' },
+        { '<leader>fr',       '<cmd>Telescope frecency<cr>',               desc = 'Recent Files' },
+        { '<leader>fu',       '<cmd>Telescope undo<cr>',                   desc = 'Undo Tree' },
+        { '<leader>fh',       '<cmd>Telescope help_tags<cr>',              desc = 'Help Tags' },
+        { '<leader>fk',       '<cmd>Telescope keymaps<cr>',                desc = 'Key Maps' },
+        { '<leader>fc',       '<cmd>Telescope commands<cr>',               desc = 'Commands' },
+        { '<leader>fm',       '<cmd>Telescope marks<cr>',                  desc = 'Marks' },
+        { '<leader>fo',       '<cmd>Telescope oldfiles<cr>',               desc = 'Recent Files (Old)' },
 
-        -- LSP operations
-        { 'gd',               '<cmd>Telescope lsp_definitions jump_type=vsplit<cr>', desc = 'Go to Definition' },
-        { 'gr',               '<cmd>Telescope lsp_references<cr>',                   desc = 'Find References' },
-        { 'gl',               '<cmd>Telescope lsp_implementations<cr>',              desc = 'Find Implementations' },
-        { 'gs',               '<cmd>Telescope lsp_document_symbols<cr>',             desc = 'Document Symbols' },
-        { '<leader>ws',       '<cmd>Telescope lsp_workspace_symbols<cr>',            desc = 'Workspace Symbols' },
+        -- LSP operations (using different keys to avoid conflicts)
+        { '<leader>ld',       '<cmd>Telescope lsp_definitions<cr>',        desc = 'LSP Definitions' },
+        { '<leader>lr',       '<cmd>Telescope lsp_references<cr>',         desc = 'LSP References' },
+        { '<leader>li',       '<cmd>Telescope lsp_implementations<cr>',    desc = 'LSP Implementations' },
+        { '<leader>ls',       '<cmd>Telescope lsp_document_symbols<cr>',   desc = 'LSP Document Symbols' },
+        { '<leader>lw',       '<cmd>Telescope lsp_workspace_symbols<cr>',  desc = 'LSP Workspace Symbols' },
+        { '<leader>lt',       '<cmd>Telescope lsp_type_definitions<cr>',   desc = 'LSP Type Definitions' },
 
         -- Git operations
-        { '<leader>gc',       '<cmd>Telescope git_commits<cr>',                      desc = 'Git Commits' },
-        { '<leader>gb',       '<cmd>Telescope git_branches<cr>',                     desc = 'Git Branches' },
-        { '<leader>gs',       '<cmd>Telescope git_status<cr>',                       desc = 'Git Status' },
+        { '<leader>gc',       '<cmd>Telescope git_commits<cr>',            desc = 'Git Commits' },
+        { '<leader>gb',       '<cmd>Telescope git_branches<cr>',           desc = 'Git Branches' },
+        { '<leader>gs',       '<cmd>Telescope git_status<cr>',             desc = 'Git Status' },
+        { '<leader>gf',       '<cmd>Telescope git_files<cr>',              desc = 'Git Files' },
     },
     opts = {
         defaults = {
@@ -93,6 +100,16 @@ return {
                     ["<C-k>"] = "move_selection_previous",
                     ["<C-u>"] = "preview_scrolling_up",
                     ["<C-d>"] = "preview_scrolling_down",
+                    ["<C-s>"] = "select_horizontal",
+                    ["<C-v>"] = "select_vertical",
+                    ["<C-t>"] = "select_tab",
+                    ["<C-c>"] = "close",
+                    ["<Esc>"] = "close",
+                },
+                n = {
+                    ["<C-s>"] = "select_horizontal",
+                    ["<C-v>"] = "select_vertical",
+                    ["<C-t>"] = "select_tab",
                 },
             },
         },
@@ -119,6 +136,9 @@ return {
                     },
                 },
             },
+            colorscheme = {
+                enable_preview = true,
+            },
         },
 
         extensions = {
@@ -132,13 +152,6 @@ return {
                 history = true,
                 previewer = true,
                 history_style = 'dropdown',
-                mappings = {
-                    i = {
-                        -- Optionally, you might want to add these for consistent navigation
-                        ["<Down>"] = false, -- Optionally disable arrows
-                        ["<Up>"] = false,   -- Optionally disable arrows
-                    },
-                },
             },
             ["ui-select"] = {
                 require("telescope.themes").get_dropdown(),
@@ -165,9 +178,30 @@ return {
     },
     config = function(_, opts)
         local telescope = require("telescope")
+        local actions = require("telescope.actions")
+        local action_state = require("telescope.actions.state")
 
-        -- Setup telescope
-        telescope.setup(opts)
+        -- Setup telescope with custom actions
+        telescope.setup(vim.tbl_deep_extend("force", opts, {
+            defaults = {
+                mappings = {
+                    i = {
+                        ["<C-s>"] = actions.select_horizontal,
+                        ["<C-v>"] = actions.select_vertical,
+                        ["<C-t>"] = actions.select_tab,
+                        ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
+                        ["<M-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
+                    },
+                    n = {
+                        ["<C-s>"] = actions.select_horizontal,
+                        ["<C-v>"] = actions.select_vertical,
+                        ["<C-t>"] = actions.select_tab,
+                        ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
+                        ["<M-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
+                    },
+                },
+            },
+        }))
 
         -- Load extensions
         local extensions = {
@@ -186,32 +220,5 @@ return {
                 telescope.load_extension(extension)
             end)
         end
-
-        -- Custom action to open files in splits
-        local actions = require('telescope.actions')
-        local action_state = require('telescope.actions.state')
-
-        telescope.setup({
-            defaults = {
-                mappings = {
-                    i = {
-                        ["<C-s>"] = function()
-                            local selection = action_state.get_selected_entry()
-                            if selection then
-                                actions.close(vim.api.nvim_get_current_buf())
-                                vim.cmd("split " .. selection.path)
-                            end
-                        end,
-                        ["<C-v>"] = function()
-                            local selection = action_state.get_selected_entry()
-                            if selection then
-                                actions.close(vim.api.nvim_get_current_buf())
-                                vim.cmd("vsplit " .. selection.path)
-                            end
-                        end,
-                    },
-                },
-            },
-        })
     end,
 }

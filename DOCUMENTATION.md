@@ -93,24 +93,32 @@ Enhance the overall user experience.
 - `<leader>i`: Find git files (Telescope).
 - `<leader>f`: Refresh Neo-tree.
 - `<leader>n`: Find current file in Neo-tree.
+- `<leader>r`: Resume last Telescope picker.
 
 ### Search & Find
 
-- `:`: Command line history (Telescope).
 - `<leader>/`: Live grep with arguments (Telescope).
 - `<leader>fw`: Find word under cursor (Telescope).
 - `<leader>fr`: Recent files (Telescope).
 - `<leader>fu`: Undo tree (Telescope).
+- `<leader>fh`: Help tags (Telescope).
+- `<leader>fk`: Key maps (Telescope).
+- `<leader>fc`: Commands (Telescope).
+- `<leader>fm`: Marks (Telescope).
+- `<leader>fo`: Recent files (old) (Telescope).
 
 ### LSP & Code Actions
 
-- `gd`: Go to definition (Telescope LSP).
+- `gd`: Go to definition (LSP).
 - `K`: Hover.
 - `<leader>rn`: Rename.
 - `<leader>ca`: Code actions.
-- `<leader>ds`: Document symbols (Telescope LSP).
-- `<leader>ws`: Workspace symbols (Telescope LSP).
-- `<leader>gr`: Find references (Telescope LSP).
+- `<leader>ld`: LSP definitions (Telescope).
+- `<leader>lr`: LSP references (Telescope).
+- `<leader>li`: LSP implementations (Telescope).
+- `<leader>ls`: LSP document symbols (Telescope).
+- `<leader>lw`: LSP workspace symbols (Telescope).
+- `<leader>lt`: LSP type definitions (Telescope).
 - `<leader>e`: Show line diagnostics.
 - `[d` / `]d`: Navigate diagnostics.
 - `grr`: Smart rename (Treesitter).
@@ -123,6 +131,7 @@ Enhance the overall user experience.
 - `<leader>gc`: Git commits.
 - `<leader>gb`: Git branches.
 - `<leader>gs`: Git status.
+- `<leader>gf`: Git files.
 
 ### Terminal & External Tools
 
