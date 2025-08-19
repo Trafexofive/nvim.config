@@ -35,7 +35,7 @@ require("mlamkadm.lazy")
 -- })
 -- Comment.nvim setup
 require('Comment').setup()
-require("mlamkadm.core.bespokePlugs.monkeytype")
+
 
 -- Mason and LSP setup
 require("mason").setup()
