@@ -18,35 +18,7 @@ require("mlamkadm.lazy")
 -- require("mlamkadm.core.cmp")
 -- require("mlamkadm.core.winshift")
 
--- require("mlamkadm.core.ollama-mk2").setup()
--- require("mlamkadm.core.ollama-vi-mk2").setup()
--- require("mlamkadm.core.ollama").setup()
--- require("mlamkadm.core.ollama-mk2").setup({
---     -- Custom configuration (optional)
---     host = "http://localhost",
---     port = 11434,
---     default_model = "llama2",
---     keymaps = {
---         prompt = "<leader>op",
---         inline = "<leader>oi",
---         selection = "<leader>os",
---         chat = "<leader>oc",
---     }
--- })
--- Comment.nvim setup
-require('Comment').setup()
 
-
--- Mason and LSP setup
-require("mason").setup()
-
-
--- Automatically stop terminal jobs on exit
-vim.api.nvim_create_autocmd("VimLeavePre", {
-    callback = function()
-        vim.cmd("silent! call jobstop(b:terminal_job_id)")
-    end,
-})
 
 -- Cmp_zsh setup
 require 'cmp_zsh'.setup {
