@@ -58,71 +58,56 @@ return {
     -- Core LSP configuration
     "neovim/nvim-lspconfig",
     dependencies = {
-      "mason-lspconfig.nvim", -- Ensure mason-lspconfig is loaded first
-      "jose-elias-alvarez/null-ls.nvim", -- For formatting and linting
-      -- Autocompletion plugins (if not configured elsewhere)
-      -- { "hrsh7th/nvim-cmp" },
-      -- { "hrsh7th/cmp-nvim-lsp" },
+      "mason-lspconfig.nvim",
+      "jose-elias-alvarez/null-ls.nvim",
     },
     config = function()
       local lspconfig = require("lspconfig")
-      local capabilities = require('cmp_nvim_lsp').default_capabilities() -- Integrate with nvim-cmp if available
+      local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-      -- LSP-specific configurations
-      lspconfig.clangd.setup({
-        capabilities = capabilities,
-        cmd = { "clangd", "--background-index", "--cross-file-rename" },
-      })
-      lspconfig.pyright.setup({
-        capabilities = capabilities,
-      })
-      lspconfig.gopls.setup({
-        capabilities = capabilities,
-      })
-      lspconfig.lua_ls.setup({
-        capabilities = capabilities,
-        settings = {
-          Lua = {
-            runtime = { version = "LuaJIT" },
-            diagnostics = { globals = { "vim" } },
-            workspace = { library = vim.api.nvim_get_runtime_file("", true) },
-            telemetry = { enable = false },
-          },
-        },
-      })
-      lspconfig.bashls.setup({
-        capabilities = capabilities,
-      })
-      lspconfig.marksman.setup({
-        capabilities = capabilities,
-      })
+      local function on_attach(client, bufnr)
+        vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
+        local opts = { buffer = bufnr, noremap = true, silent = true }
+        vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+        vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+        vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+        vim.keymap.set({ 'n', 'v' }, '<leader>ca', vim.lsp.buf.code_action, opts)
+        vim.keymap.set('n', '<leader>ds', vim.lsp.buf.document_symbol, opts)
+        vim.keymap.set('n', '<leader>ws', vim.lsp.buf.workspace_symbol, opts)
+        vim.keymap.set('n', '<leader>gr', vim.lsp.buf.references, opts)
+        vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float({ bufnr = bufnr }) end, opts)
+        vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
+        vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
+        vim.keymap.set('n', '<leader>f', function() vim.lsp.buf.format({ async = true }) end, opts)
+      end
 
-      -- Attach key mappings for LSP functions
-      -- This function will be called when an LSP server attaches to a buffer
-      vim.api.nvim_create_autocmd("LspAttach", {
-        group = vim.api.nvim_create_augroup("UserLspConfig", {}),
-        callback = function(ev)
-          -- Enable completion triggered by <c-x><c-o>
-          vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
-
-          -- Buffer local mappings.
-          -- See `:help vim.lsp.*` for documentation on any of the below functions
-          local opts = { buffer = ev.buf, noremap = true, silent = true }
-
-          vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-          vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-          vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
-          vim.keymap.set({ 'n', 'v' }, '<leader>ca', vim.lsp.buf.code_action, opts)
-          vim.keymap.set('n', '<leader>ds', vim.lsp.buf.document_symbol, opts)
-          vim.keymap.set('n', '<leader>ws', vim.lsp.buf.workspace_symbol, opts)
-          vim.keymap.set('n', '<leader>gr', vim.lsp.buf.references, opts)
-          vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float({ bufnr = ev.buf }) end, opts)
-          vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
-          vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
-          
-          -- Formatting
-          vim.keymap.set('n', '<leader>f', function() vim.lsp.buf.format({ async = true }) end, 
-            { buffer = ev.buf, noremap = true, silent = true, desc = "Format buffer" })
+      require('mason-lspconfig').setup_handlers({
+        function(server_name)
+          lspconfig[server_name].setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+          })
+        end,
+        ["lua_ls"] = function()
+          lspconfig.lua_ls.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            settings = {
+              Lua = {
+                runtime = { version = "LuaJIT" },
+                diagnostics = { globals = { "vim" } },
+                workspace = { library = vim.api.nvim_get_runtime_file("", true) },
+                telemetry = { enable = false },
+              },
+            },
+          })
+        end,
+        ["clangd"] = function()
+          lspconfig.clangd.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            cmd = { "clangd", "--background-index", "--cross-file-rename" },
+          })
         end,
       })
     end,
