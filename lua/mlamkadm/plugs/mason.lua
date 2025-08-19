@@ -64,7 +64,6 @@ return {
     config = function()
       local lspconfig = require("lspconfig")
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
-      local mason_lspconfig = require('mason-lspconfig')
 
       local function on_attach(client, bufnr)
         vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
@@ -82,7 +81,7 @@ return {
         vim.keymap.set('n', '<leader>f', function() vim.lsp.buf.format({ async = true }) end, opts)
       end
 
-      mason_lspconfig.setup_handlers({
+      require('mason-lspconfig').setup_handlers({
         function(server_name)
           lspconfig[server_name].setup({
             capabilities = capabilities,
