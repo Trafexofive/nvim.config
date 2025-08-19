@@ -17,7 +17,7 @@ require("mlamkadm.lazy")
 -- require("mlamkadm.core.terminal")
 -- require("mlamkadm.core.cmp")
 -- require("mlamkadm.core.winshift")
--- require("mlamkadm.core.gemini-integration").setup()
+
 -- require("mlamkadm.core.ollama-mk2").setup()
 -- require("mlamkadm.core.ollama-vi-mk2").setup()
 -- require("mlamkadm.core.ollama").setup()
@@ -39,26 +39,7 @@ require("mlamkadm.core.bespokePlugs.monkeytype")
 
 -- Mason and LSP setup
 require("mason").setup()
--- require("mason-lspconfig").setup({
---     ensure_installed = { "lua_ls", "clangd", "typos_lsp", "rust_analyzer", "jsonls", "html", "cssls", "dockerls", "bashls", "vimls", "pyright", "gopls", "diagnosticls" },
--- })
 
-local lspconfig = require("lspconfig")
-local server_configs = {
-    lua_ls = {
-        settings = {
-            Lua = {
-                diagnostics = { globals = { "vim" } },
-            },
-        },
-    },
-    clangd = {},
-    typos_lsp = {},
-}
-
-for server, config in pairs(server_configs) do
-    lspconfig[server].setup(config)
-end
 
 -- Automatically stop terminal jobs on exit
 vim.api.nvim_create_autocmd("VimLeavePre", {

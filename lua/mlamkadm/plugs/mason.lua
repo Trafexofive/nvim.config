@@ -22,12 +22,7 @@ return {
       require("mason-lspconfig").setup({
         -- Ensure these LSP servers are installed
         ensure_installed = {
-          "clangd",   -- C/C++
-          "pyright",  -- Python
-          "gopls",    -- Go
-          "lua_ls",   -- Lua
-          "bashls",   -- Shell scripting
-          "marksman", -- Markdown
+          "lua_ls", "clangd", "typos_lsp", "rust_analyzer", "jsonls", "html", "cssls", "dockerls", "bashls", "vimls", "pyright", "gopls", "diagnosticls", "marksman"
         },
         -- Automatically set up lspconfig for installed servers
         automatic_installation = true,
