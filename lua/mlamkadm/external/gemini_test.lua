@@ -1,5 +1,5 @@
 -- main.lua
-local SimpleGemini = require('gemini')
+local SimpleGemini = require('mlamkadm.core.gemini')
 
 -- Create a client instance (uses environment variable for API key by default)
 -- You can override defaults:
