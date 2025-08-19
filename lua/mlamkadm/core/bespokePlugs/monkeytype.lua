@@ -87,7 +87,7 @@ local function highlight_text()
   if not line then return end
   
   -- Calculate actual buffer line number
-  local buffer_line = state.start_line + state.current_line - 2
+  local buffer_line = state.start_line + state.current_line - 1
 
   local correct_chars = 0
   

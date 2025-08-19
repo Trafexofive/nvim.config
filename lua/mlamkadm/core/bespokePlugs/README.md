@@ -112,10 +112,10 @@ Add these to your Neovim configuration for quick access:
 
 ```lua
 -- Key mappings for monkeytype
-vim.keymap.set('n', '<leader>mt', '<cmd>MonkeytypeStart<cr>', { desc = 'Start typing practice' })
-vim.keymap.set('n', '<leader>ms', '<cmd>MonkeytypeStop<cr>', { desc = 'Stop typing practice' })
-vim.keymap.set('n', '<leader>mr', '<cmd>MonkeytypeReset<cr>', { desc = 'Reset typing practice' })
-vim.keymap.set('n', '<leader>mx', '<cmd>MonkeytypeStats<cr>', { desc = 'Show typing stats' })
+vim.keymap.set('n', '<leader>mY', '<cmd>MonkeytypeStart<cr>', { desc = 'Start typing practice' })
+vim.keymap.set('n', '<leader>mS', '<cmd>MonkeytypeStop<cr>', { desc = 'Stop typing practice' })
+vim.keymap.set('n', '<leader>mR', '<cmd>MonkeytypeReset<cr>', { desc = 'Reset typing practice' })
+vim.keymap.set('n', '<leader>mX', '<cmd>MonkeytypeStats<cr>', { desc = 'Show typing stats' })
 ```
 
 ## How It Works
