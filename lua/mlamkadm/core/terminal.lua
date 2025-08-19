@@ -33,7 +33,7 @@ function M.Poptui(cmd)
     get_term(cmd):toggle()
 end
 
-local function renderMdFile()
+function M.renderMdFile()
     local open_glow = Terminal:new({
         cmd = "md-tui " .. vim.fn.expand("%"),
         direction = "float",
@@ -46,10 +46,7 @@ local function renderMdFile()
     return open_glow
 end
 
-vim.keymap.set("n", "<leader>jh", function()
-    require('mlamkadm.core.terminal').Poptui(
-    "python3 /home/mlamkadm/repos/IRC-TUI-python/irc_tui.py --password Alilepro135! --user testuser --port 16000 --nick testnick --real testreal")
-end)
+vim.keymap.set("n", "<leader>jh", "<cmd>lua require('mlamkadm.core.terminal').Poptui('python3 /home/mlamkadm/repos/IRC-TUI-python/irc_tui.py --password Alilepro135! --user testuser --port 16000 --nick testnick --real testreal')<CR>", { noremap = true, silent = true })
 
 vim.api.nvim_set_keymap("n", "<leader>jj", "<cmd>lua require('mlamkadm.core.terminal').Poptui('lazygit')<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>jt", "<cmd>lua require('mlamkadm.core.terminal').Poptui('btop')<CR>", { noremap = true, silent = true })
@@ -60,7 +57,7 @@ vim.keymap.set("n", "<leader>jy", "<cmd>lua require('mlamkadm.core.terminal').Po
 
 vim.keymap.set("n", "<leader>jg", "<cmd>lua require('mlamkadm.core.terminal').Poptui('glow')<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>jo", "<cmd>lua renderMdFile:toggle()<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>jo", "<cmd>lua require('mlamkadm.core.terminal').renderMdFile():toggle()<CR>", { noremap = true, silent = true })
 
 -- Makefile
 vim.keymap.set("n", "<leader>jr", "<cmd>lua require('mlamkadm.core.terminal').Poptui('make run')<CR>", { noremap = true, silent = true })
