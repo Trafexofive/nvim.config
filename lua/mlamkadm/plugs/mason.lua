@@ -11,6 +11,18 @@ return {
             package_pending = "➜",
             package_uninstalled = "✗"
           }
+        },
+        ensure_installed = {
+          -- Formatters
+          "prettierd",
+          "stylua",
+          "black",
+          "isort",
+          "shfmt",
+          "clang_format",
+          -- Linters
+          "eslint_d",
+          "shellcheck",
         }
       })
     end,
@@ -18,49 +30,6 @@ return {
   {
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "mason.nvim" }, -- Ensure mason is loaded first
-    config = function()
-      require("mason-lspconfig").setup({
-        -- Ensure these LSP servers are installed
-        ensure_installed = {
-          "lua_ls", "clangd", "typos_lsp", "rust_analyzer", "jsonls", "html", "cssls", "dockerls", "bashls", "vimls", "pyright", "gopls", "diagnosticls", "marksman"
-        },
-        -- Automatically set up lspconfig for installed servers
-        automatic_installation = true,
-      })
-    end,
-  },
-  {
-    "jay-babu/mason-null-ls.nvim", -- Bridge between mason and null-ls
-    event = { "BufReadPre", "BufNewFile" },
-    dependencies = {
-      "williamboman/mason.nvim",
-      "jose-elias-alvarez/null-ls.nvim",
-    },
-    config = function()
-      require("mason-null-ls").setup({
-        ensure_installed = {
-          -- Formatters
-          "prettierd",     -- JavaScript, TypeScript, CSS, HTML, JSON, YAML, Markdown
-          "stylua",        -- Lua
-          "black",         -- Python
-          "isort",         -- Python imports
-          "shfmt",         -- Shell scripts
-          "clang_format",  -- C/C++
-          -- Linters
-          "eslint_d",      -- JavaScript, TypeScript
-          "shellcheck",    -- Shell scripts
-        },
-        automatic_installation = true,
-      })
-    end,
-  },
-  {
-    -- Core LSP configuration
-    "neovim/nvim-lspconfig",
-    dependencies = {
-      "mason-lspconfig.nvim",
-      "jose-elias-alvarez/null-ls.nvim",
-    },
     config = function()
       local lspconfig = require("lspconfig")
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
@@ -81,71 +50,94 @@ return {
         vim.keymap.set('n', '<leader>f', function() vim.lsp.buf.format({ async = true }) end, opts)
       end
 
-      require('mason-lspconfig').setup_handlers({
-        function(server_name)
-          lspconfig[server_name].setup({
-            capabilities = capabilities,
-            on_attach = on_attach,
-          })
-        end,
-        ["lua_ls"] = function()
-          lspconfig.lua_ls.setup({
-            capabilities = capabilities,
-            on_attach = on_attach,
-            settings = {
-              Lua = {
-                runtime = { version = "LuaJIT" },
-                diagnostics = { globals = { "vim" } },
-                workspace = { library = vim.api.nvim_get_runtime_file("", true) },
-                telemetry = { enable = false },
+      require("mason-lspconfig").setup({
+        -- Ensure these LSP servers are installed
+        ensure_installed = {
+          "lua_ls", "clangd", "typos_lsp", "rust_analyzer", "jsonls", "html", "cssls", "dockerls", "bashls", "vimls", "pyright", "gopls", "diagnosticls", "marksman"
+        },
+        handlers = {
+          function(server_name)
+            lspconfig[server_name].setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+            })
+          end,
+          ["lua_ls"] = function()
+            lspconfig.lua_ls.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              settings = {
+                Lua = {
+                  runtime = { version = "LuaJIT" },
+                  diagnostics = { globals = { "vim" } },
+                  workspace = { library = vim.api.nvim_get_runtime_file("", true) },
+                  telemetry = { enable = false },
+                },
               },
-            },
-          })
-        end,
-        ["clangd"] = function()
-          lspconfig.clangd.setup({
-            capabilities = capabilities,
-            on_attach = on_attach,
-            cmd = { "clangd", "--background-index", "--cross-file-rename" },
-          })
-        end,
+            })
+          end,
+          ["clangd"] = function()
+            lspconfig.clangd.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              cmd = { "clangd", "--background-index", "--cross-file-rename" },
+            })
+          end,
+        }
       })
     end,
   },
   {
-    "jose-elias-alvarez/null-ls.nvim",
-    event = { "BufReadPre", "BufNewFile" },
-    dependencies = { "nvim-lua/plenary.nvim" },
+    -- Core LSP configuration
+    "neovim/nvim-lspconfig",
+    dependencies = {
+      "mason-lspconfig.nvim",
+    },
     config = function()
-      local null_ls = require("null-ls")
-      local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
-      
-      null_ls.setup({
-        sources = {
-          -- Formatters
-          null_ls.builtins.formatting.prettierd,
-          null_ls.builtins.formatting.stylua,
-          null_ls.builtins.formatting.black,
-          null_ls.builtins.formatting.isort,
-          null_ls.builtins.formatting.shfmt,
-          null_ls.builtins.formatting.clang_format,
-          
-          -- Linters
-          null_ls.builtins.diagnostics.eslint_d,
-          null_ls.builtins.diagnostics.shellcheck,
-        },
-        -- Enable formatting on save
-        on_attach = function(client, bufnr)
-          if client.supports_method("textDocument/formatting") then
-            vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })
-            vim.api.nvim_create_autocmd("BufWritePre", {
-              group = augroup,
-              buffer = bufnr,
-              callback = function()
-                vim.lsp.buf.format({ bufnr = bufnr })
-              end,
-            })
-          end
+      -- All setup is now handled by mason-lspconfig, so this can be empty
+    end,
+  },
+  {
+    "stevearc/conform.nvim",
+    event = { "BufWritePre" },
+    cmd = { "ConformInfo" },
+    opts = {
+      formatters_by_ft = {
+        lua = { "stylua" },
+        python = { "isort", "black" },
+        javascript = { "prettierd" },
+        typescript = { "prettierd" },
+        css = { "prettierd" },
+        html = { "prettierd" },
+        json = { "prettierd" },
+        yaml = { "prettierd" },
+        markdown = { "prettierd" },
+        sh = { "shfmt" },
+        c = { "clang_format" },
+        cpp = { "clang_format" },
+      },
+      format_on_save = {
+        timeout_ms = 500,
+        lsp_fallback = true,
+      },
+    },
+    config = function(_, opts)
+        require("conform").setup(opts)
+    end,
+  },
+  {
+    "mfussenegger/nvim-lint",
+    event = { "BufWritePost", "BufReadPost", "InsertLeave" },
+    config = function()
+      local lint = require("lint")
+      lint.linters_by_ft = {
+        javascript = { "eslint_d" },
+        typescript = { "eslint_d" },
+        sh = { "shellcheck" },
+      }
+      vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
+        callback = function()
+          lint.try_lint()
         end,
       })
     end,

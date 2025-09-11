@@ -4,8 +4,7 @@ vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.autoindent = true
 vim.opt.number = true
-vim.opt.relativenumber = true
---vim.opt.undo_history = true
+vim.opt.undofile = true
 
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
@@ -34,5 +33,15 @@ vim.g.loaded_netrwPlugin = 1
 vim.opt.wrap = true
 vim.opt.linebreak = true
 vim.opt.spell = false -- Enable per buffer in filetype autocommand
+
+-- Auto-save buffers on focus lost or leaving insert mode
+vim.api.nvim_create_autocmd({ "InsertLeave", "FocusLost" }, {
+    pattern = "*",
+    command = "silent! wall",
+    desc = "Auto save all files on leaving insert mode or losing focus"
+})
+
+
+
 
 
