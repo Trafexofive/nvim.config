@@ -64,15 +64,13 @@ return {
             { type = 'footer' }
         }
 
-        alpha.setup(dashboard.opts)
+        alpha.setup(dashboard.config)
 
         -- autocmd to close alpha if it's not the last window
         vim.api.nvim_create_autocmd('BufEnter', {
             pattern = '*',
             callback = function()
-                -- Check if the buffer is not alpha and there's more than one window
                 if vim.bo.filetype ~= 'alpha' and #vim.api.nvim_list_wins() > 1 then
-                    -- Find and close the alpha window
                     for _, win in ipairs(vim.api.nvim_list_wins()) do
                         local buf = vim.api.nvim_win_get_buf(win)
                         if vim.bo[buf].filetype == 'alpha' then
