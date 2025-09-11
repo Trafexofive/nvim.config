@@ -15,3 +15,4 @@ require("mlamkadm.core")
 
 -- Load lazy.nvim plugin manager
 require("mlamkadm.lazy")
+

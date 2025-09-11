@@ -49,7 +49,7 @@ map('n', '<leader>r', ':so %<CR>')
 map('n', '<leader>s', ':w<CR>')
 
 -- Quit all
-map('n', '<leader>q', ':qall!<CR>')
+map('n', '<leader>q', ':xa<CR>')
 
 -----------------------------------------------------------
 -- Applications and Plugins shortcuts
