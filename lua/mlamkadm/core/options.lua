@@ -16,6 +16,9 @@ vim.opt.signcolumn = "yes"
 
 vim.opt.backspace = "indent,eol,start"
 
+-- Session options
+vim.opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,localoptions"
+
 -- Example using a list of specs with the default options
 vim.g.mapleader = " "       -- Make sure to set `mapleader` before lazy so your mappings are correct
 vim.g.maplocalleader = "\\\\" -- Same for `maplocalleader`
