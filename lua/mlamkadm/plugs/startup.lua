@@ -6,6 +6,16 @@ return {
         local alpha = require('alpha')
         local dashboard = require('alpha.themes.dashboard')
 
+        -- Define a command for restoring the session
+        vim.api.nvim_create_user_command('RestoreLastSessionAlpha', function()
+            local ok, session = pcall(require, "auto-session.lib")
+            if ok and session.RestoreLastSession then
+                session.RestoreLastSession()
+            else
+                vim.notify("auto-session not available", vim.log.levels.WARN)
+            end
+        end, {})
+
         -- ASCII Art Header
         dashboard.section.header.val = {
             '██████╗ ███████╗██████╗  ██████╗███████╗ ██████╗',
@@ -15,26 +25,25 @@ return {
             '██████╔╝███████╗██████╔╝╚██████╗███████╗╚██████╗',
             '╚═════╝ ╚══════╝╚═════╝  ╚═════╝╚══════╝ ╚═════╝',
         }
+        dashboard.section.header.opts.hl = "AlphaHeader"
+
 
         -- Buttons
         dashboard.section.buttons.val = {
             dashboard.button('f', '  Find file', ':Telescope find_files<CR>'),
             dashboard.button('r', '  Recent files', ':Telescope oldfiles<CR>'),
             dashboard.button('g', '  Find text', ':Telescope live_grep<CR>'),
-            dashboard.button('s', '  Restore Session', function()
-                local ok, session = pcall(require, "auto-session.lib")
-                if ok and session.RestoreLastSession then
-                    session.RestoreLastSession()
-                else
-                    vim.notify("auto-session not available", vim.log.levels.WARN)
-                end
-            end),
+            dashboard.button('s', '  Restore Session', '<cmd>RestoreLastSessionAlpha<CR>'),
             dashboard.button('l', '鈴  Lazy', '<cmd>Lazy<cr>'),
             dashboard.button('q', '  Quit', '<cmd>qa<cr>')
         }
+        dashboard.section.buttons.opts.hl = "AlphaButtons"
+
 
         -- Footer
         dashboard.section.footer.val = "“Our democracy has been hacked.” - Mr. Robot"
+        dashboard.section.footer.opts.hl = "AlphaFooter"
+
 
         -- Layout
         dashboard.config.layout = {
