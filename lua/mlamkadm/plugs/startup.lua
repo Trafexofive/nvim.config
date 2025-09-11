@@ -72,19 +72,29 @@ return {
     alpha.setup(config)
 
     -- autocmd to close alpha if it's not the last window
-    vim.api.nvim_create_autocmd('BufEnter', {
-        pattern = '*',
-        callback = function()
-            if vim.bo.filetype ~= 'alpha' and #vim.api.nvim_list_wins() > 1 then
-                for _, win in ipairs(vim.api.nvim_list_wins()) do
-                    local buf = vim.api.nvim_win_get_buf(win)
-                    if vim.bo[buf].filetype == 'alpha' then
-                        vim.api.nvim_win_close(win, true)
-                        break
+    alpha.setup(dashboard.config)
+
+        -- autocmd to close alpha when a file is opened
+        vim.api.nvim_create_autocmd('BufEnter', {
+            pattern = '*',
+            callback = function()
+                local bufnr = vim.api.nvim_get_current_buf()
+                -- Check if the new buffer is a normal file buffer and not alpha
+                if vim.bo[bufnr].buftype == '' and vim.bo[bufnr].filetype ~= 'alpha' then
+                    -- Find and close the alpha window
+                    for _, win in ipairs(vim.api.nvim_list_wins()) do
+                        local buf = vim.api.nvim_win_get_buf(win)
+                        if vim.bo[buf].filetype == 'alpha' then
+                            -- Only close if it's not the last window
+                            if #vim.api.nvim_list_wins() > 1 then
+                                vim.api.nvim_win_close(win, true)
+                            end
+                            break
+                        end
                     end
                 end
             end
-        end
-    })
+        })
+    end,
   end,
 }
