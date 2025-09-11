@@ -7,6 +7,7 @@ return {
     auto_session_root_dir = vim.fn.stdpath("data") .. "/sessions/",
     auto_session_create_root_dir = true,
     auto_session_suppress_dirs = { "~/", "/" },
+    auto_session_strategy = "dir",
   },
   keys = {
     {
