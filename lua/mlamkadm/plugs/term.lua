@@ -26,28 +26,14 @@ return {
       },
     })
 
-    -- Define a reusable global function to create and toggle a floating terminal
-    local Terminal = require('toggleterm.terminal').Terminal
-    function _G.Poptui(cmd)
-        local existing_term = require('toggleterm.terminal').get_by_cmd(cmd)
-        if existing_term then
-            existing_term:toggle()
-            return
-        end
-        Terminal:new({
-            cmd = cmd,
-            direction = "float",
-            hidden = true,
-            on_open = function(term)
-                vim.cmd("startinsert!")
-            end,
-        }):toggle()
-    end
+    -- NOTE: The global _G.Poptui function is now defined by the 'pop-up-bin' plugin.
+    -- The keymaps below will use the new global function.
 
     -- Setup keymaps for various terminal commands
     local map = vim.keymap.set
     map('n', '<leader>gg', function() _G.Poptui('lazygit') end, { desc = 'Toggle Lazygit' })
     map('n', '<leader>gd', function() _G.Poptui('lazydocker') end, { desc = 'Toggle Lazydocker' })
+    map('n', '<leader>dl', function() _G.Poptui('docker-compose logs -f') end, { desc = 'Docker Compose Logs' })
     map('n', '<leader>gt', function() _G.Poptui('btop') end, { desc = 'Toggle Btop' })
     map('n', '<leader>gf', function() _G.Poptui('yazi') end, { desc = 'Toggle File Manager (Yazi)' })
 

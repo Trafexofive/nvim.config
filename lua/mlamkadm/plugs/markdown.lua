@@ -22,6 +22,11 @@ return {
       vim.keymap.set("n", "<leader>mp", function()
         _G.Poptui('glow -p ' .. vim.fn.expand('%'))
       end, { desc = "Markdown Preview (Glow)" })
+
+      -- Keymap for browsing markdown files in the current directory with glow.
+      vim.keymap.set("n", "<leader>mP", function()
+        _G.Poptui('glow .')
+      end, { desc = "Browse Markdown with Glow" })
     end,
   },
 }
