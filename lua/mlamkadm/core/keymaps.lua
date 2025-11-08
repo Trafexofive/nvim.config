@@ -3,11 +3,11 @@
 -----------------------------------------------------------
 
 local function map(mode, lhs, rhs, opts)
-    local options = { noremap = true, silent = true }
+    local options = { silent = true } -- noremap is true by default with vim.keymap.set
     if opts then
         options = vim.tbl_extend('force', options, opts)
     end
-    vim.api.nvim_set_keymap(mode, lhs, rhs, options)
+    vim.keymap.set(mode, lhs, rhs, options)
 end
 
 vim.g.mapleader = ' '
@@ -24,6 +24,14 @@ map('', '<right>', '<nop>')
 
 -- Clear search highlighting
 map('n', '<leader>c', ':nohl<CR>')
+
+-- Better vertical movement - stay centered
+map('n', 'n', 'nzzzv')
+map('n', 'N', 'Nzzzv')
+
+-- Keep visual selection when indenting
+map('v', '<', '<gv')
+map('v', '>', '>gv')
 
 -- Window split management
 map('n', '<leader>-', '<cmd>split<cr>')
@@ -49,7 +57,28 @@ map('n', '<leader>r', ':so %<CR>')
 map('n', '<leader>s', ':w<CR>')
 
 -- Quit all
-map('n', '<leader>q', ':xa<CR>')
+-- Save all buffers, stop background jobs, and quit
+map('n', '<leader>q', ':wa<CR>:silent! call jobstop(0)<CR>:qa<CR>', { desc = 'Save all and quit' })
+
+-- Exit current session and return to startup
+map('n', '<leader>Q', function()
+    -- Save current session if in a project
+    pcall(vim.cmd, 'SessionSave')
+    -- Close all buffers except dashboard
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        local ft = vim.bo[buf].filetype
+        if vim.api.nvim_buf_is_loaded(buf) and ft ~= 'snacks_dashboard' and ft ~= 'alpha' then
+            vim.api.nvim_buf_delete(buf, { force = false })
+        end
+    end
+    -- Show dashboard (snacks or alpha fallback)
+    local has_snacks = pcall(require, 'snacks')
+    if has_snacks then
+        require('snacks').dashboard()
+    else
+        pcall(vim.cmd, 'Alpha')
+    end
+end, { desc = 'Save session and return to startup' })
 
 -----------------------------------------------------------
 -- Applications and Plugins shortcuts
@@ -62,6 +91,40 @@ map('n', '<leader>q', ':xa<CR>')
 map('n', '<leader>f', '<cmd>lua vim.lsp.buf.format({ async = true })<CR>', { desc = 'Format buffer' })
 
 -- Tab Management
-map('n', '<leader>t', ':tabnew<CR>')   -- open new tab
-map('n', '<leader>tc', ':tabclose<CR>') -- close current tab
-map('n', '<leader>to', ':tabonly<CR>')  -- close all other tabs
+map('n', '<leader>t', ':tabnew<CR>')     -- open new tab
+map('n', '<leader>tc', '<cmd>close<CR>') -- close current tab
+map('n', '<leader>to', ':tabonly<CR>')   -- close all other tabs
+
+-- Makefile build command
+map('n', '<leader>mm', 'make<CR>', { desc = 'Make: Build' })
+
+-- Consistent escape mapping for terminal mode
+vim.api.nvim_create_autocmd("TermOpen", {
+    pattern = "*",
+    callback = function()
+        vim.keymap.set('t', '<C-Esc>', [[<C-\><C-n>]], { buffer = true, desc = 'Exit terminal mode' })
+    end,
+})
+
+-- Your plugins and other setup here (e.g., require('lazy').setup({...}))
+
+-- Autocmd for .myl filetype alias
+vim.api.nvim_create_autocmd("BufRead", {
+    pattern = "*.sat",
+    callback = function()
+        vim.bo.filetype = "cpp" -- Swap to "c" for C-like, "lua" for Lua-like, etc.
+    end,
+})
+
+-- Optional: Also handle BufNewFile for new files
+vim.api.nvim_create_autocmd("BufNewFile", {
+    pattern = "*.sat",
+    callback = function()
+        vim.bo.filetype = "cpp"
+    end,
+})
+
+-- Uncategorized/staging mappings can go here
+
+-- New buffer with a terminal
+map('n', '<leader>nt', '<cmd>enew | terminal<CR>', { desc = 'New buffer with terminal' })

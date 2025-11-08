@@ -4,7 +4,6 @@ return {
     ft = "markdown", -- Load only for markdown files
     dependencies = {
       "nvim-telescope/telescope.nvim",
-      "akinsho/toggleterm.nvim",
     },
     config = function()
       require("mkdnflow").setup({
