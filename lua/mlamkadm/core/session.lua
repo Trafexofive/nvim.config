@@ -21,6 +21,9 @@ function M.save_terminals()
         return
     end
     
+    -- Instead of closing terminals, just record which ones are open
+    -- The actual preservation is handled by Neovim's session system
+    -- with bufhidden=hide and terminal in sessionoptions
     local terminals = terminal_module.list_terminals()
     
     terminal_states = {}
@@ -32,10 +35,6 @@ function M.save_terminals()
                 buf = terminal.buf,
                 is_open = terminal.is_open
             })
-            -- Hide the terminal to avoid issues during session save
-            if vim.api.nvim_win_is_valid(terminal.win) then
-                vim.api.nvim_win_close(terminal.win, false)
-            end
         end
     end
 end
@@ -58,21 +57,9 @@ function M.restore_terminals()
         for _, term_data in ipairs(terminal_states) do
             -- Only restore if terminal was open when saved
             if term_data.is_open then
-                -- Instead of restarting the command, try to reconnect to existing buffer
-                local existing_popup = terminal_module.popups and terminal_module.popups[term_data.cmd]
-                if existing_popup and existing_popup.buf and vim.api.nvim_buf_is_loaded(existing_popup.buf) then
-                    -- Terminal already exists, just hide/show it as needed
-                    if vim.api.nvim_buf_is_valid(existing_popup.buf) then
-                        -- The buffer exists, but we need to check if window needs to be reopened
-                        if not (existing_popup.win and vim.api.nvim_win_is_valid(existing_popup.win)) then
-                            -- Buffer exists but window is closed, reopen it
-                            terminal_module.toggle_popup(term_data.cmd)
-                        end
-                    end
-                else
-                    -- Terminal doesn't exist, start it
-                    terminal_module.toggle_popup(term_data.cmd)
-                end
+                -- For each saved terminal, we'll call toggle_popup to recreate it if needed
+                -- This will either show an existing terminal or create a new one
+                terminal_module.toggle_popup(term_data.cmd)
             end
         end
         -- Clear stored state after restoration
@@ -194,20 +181,8 @@ end
 -- Setup functions and keymaps
 ---
 function M.setup()
-    -- Set up autocommands to handle state preservation
-    vim.api.nvim_create_autocmd("User", {
-        pattern = "SessionSavePre",
-        callback = function()
-            M.save_all_states()
-        end,
-    })
-
-    vim.api.nvim_create_autocmd("User", {
-        pattern = "SessionLoadPost",
-        callback = function()
-            M.restore_all_states()
-        end,
-    })
+    -- Don't set up global autocommands that might interfere with Neovim's session management
+    -- The save/restore functions are called explicitly by our enhanced session commands
     
     -- Keymaps for enhanced session management
     vim.keymap.set("n", "<leader>sS", function() M.save_session() end, { desc = "Enhanced Session: Save" })

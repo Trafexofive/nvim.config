@@ -283,28 +283,7 @@ function M.setup(opts)
         desc = "Close all pop-up bins before exiting Neovim"
     })
     
-    -- Add autocommands to handle session save/restore for terminals
-    vim.api.nvim_create_autocmd("User", {
-        pattern = "SessionSavePre",
-        callback = function()
-            -- Hide terminals before saving session to avoid issues
-            for cmd, popup in pairs(popups) do
-                if popup and vim.api.nvim_win_is_valid(popup.win) then
-                    vim.api.nvim_win_hide(popup.win)
-                end
-            end
-        end,
-        desc = "Hide terminals before saving session"
-    })
-    
-    vim.api.nvim_create_autocmd("User", {
-        pattern = "SessionLoadPost",
-        callback = function()
-            -- Terminals will be handled by the session module
-            -- after the session is fully loaded
-        end,
-        desc = "Handle terminals after loading session"
-    })
+
 end
 
 -- ----------------------------------------------------------------------------
