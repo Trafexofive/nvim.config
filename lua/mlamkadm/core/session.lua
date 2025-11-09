@@ -12,6 +12,9 @@ local widget_states = {}
 -- Store dashboard state
 local dashboard_state = nil
 
+-- Store additional info about floating windows
+local floating_window_states = {}
+
 ---
 -- Save terminal states before session operation
 ---
@@ -25,15 +28,30 @@ function M.save_terminals()
     -- Since floating windows might not be properly saved by Neovim's session system,
     -- we need to store their window options and recreate them after session restore
     terminal_states = {}
+    floating_window_states = {} -- Reset floating window states
+    
     for cmd, popup in pairs(terminal_module.popups) do
-        if popup and vim.api.nvim_buf_is_valid(popup.buf) and vim.api.nvim_win_is_valid(popup.win) then
-            -- Store complete information needed to recreate the terminal
+        if popup and vim.api.nvim_buf_is_valid(popup.buf) then
+            -- Store terminal command and buffer info
             table.insert(terminal_states, {
                 cmd = cmd,
                 buf = popup.buf,
-                win_opts = vim.deepcopy(popup.win_opts),
-                is_open = vim.api.nvim_win_is_valid(popup.win)
+                -- Get window position and size if window is valid
+                has_window = vim.api.nvim_win_is_valid(popup.win),
+                win = popup.win  -- Store the window ID to check later
             })
+            
+            -- If window is valid, store its floating window configuration
+            if vim.api.nvim_win_is_valid(popup.win) then
+                local win_conf = vim.api.nvim_win_get_config(popup.win)
+                floating_window_states[popup.buf] = {
+                    cmd = cmd,
+                    config = vim.deepcopy(win_conf),
+                    pos = {vim.api.nvim_win_get_position(popup.win)[1], vim.api.nvim_win_get_position(popup.win)[2]},
+                    width = vim.api.nvim_win_get_width(popup.win),
+                    height = vim.api.nvim_win_get_height(popup.win),
+                }
+            end
         end
     end
 end
@@ -55,24 +73,27 @@ function M.restore_terminals()
     vim.schedule(function()
         -- Process each saved terminal state
         for _, term_data in ipairs(terminal_states) do
-            -- Check if this terminal exists in the current popups table
-            local existing_popup = terminal_module.popups[term_data.cmd]
-            
-            if existing_popup and vim.api.nvim_buf_is_valid(existing_popup.buf) then
-                -- Terminal buffer exists, check if it's visible
-                if not (existing_popup.win and vim.api.nvim_win_is_valid(existing_popup.win)) then
-                    -- Buffer exists but window is not visible, we need to recreate the floating window
-                    -- Since toggle_popup will create a new window if the old one is gone
-                    terminal_module.toggle_popup(term_data.cmd)
+            -- Check if the terminal buffer still exists
+            if vim.api.nvim_buf_is_valid(term_data.buf) then
+                -- Terminal buffer exists, check if it has a window
+                local win = vim.fn.win_findbuf(term_data.buf)
+                
+                if win and #win == 0 then
+                    -- Buffer exists but no window is showing it
+                    -- We need to recreate the floating window with original position/size
+                    if floating_window_states[term_data.buf] then
+                        -- Use toggle_popup to recreate the terminal window
+                        terminal_module.toggle_popup(term_data.cmd)
+                    end
                 end
             else
-                -- Terminal doesn't exist, need to start it again
-                -- This handles the case where the buffer was lost during session restore
+                -- Buffer doesn't exist, restart the terminal
                 terminal_module.toggle_popup(term_data.cmd)
             end
         end
         -- Clear stored state after restoration
         terminal_states = {}
+        floating_window_states = {}
     end)
 end
 
