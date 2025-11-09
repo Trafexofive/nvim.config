@@ -21,19 +21,18 @@ function M.save_terminals()
         return
     end
     
-    -- Instead of closing terminals, just record which ones are open
-    -- The actual preservation is handled by Neovim's session system
-    -- with bufhidden=hide and terminal in sessionoptions
-    local terminals = terminal_module.list_terminals()
-    
+    -- Save information about all open pop-up terminals
+    -- Since floating windows might not be properly saved by Neovim's session system,
+    -- we need to store their window options and recreate them after session restore
     terminal_states = {}
-    for _, terminal in ipairs(terminals) do
-        if terminal.is_open then
-            -- Store terminal info for later restoration
+    for cmd, popup in pairs(terminal_module.popups) do
+        if popup and vim.api.nvim_buf_is_valid(popup.buf) and vim.api.nvim_win_is_valid(popup.win) then
+            -- Store complete information needed to recreate the terminal
             table.insert(terminal_states, {
-                cmd = terminal.cmd,
-                buf = terminal.buf,
-                is_open = terminal.is_open
+                cmd = cmd,
+                buf = popup.buf,
+                win_opts = vim.deepcopy(popup.win_opts),
+                is_open = vim.api.nvim_win_is_valid(popup.win)
             })
         end
     end
@@ -54,11 +53,21 @@ function M.restore_terminals()
     
     -- Schedule restoration after session load completes
     vim.schedule(function()
+        -- Process each saved terminal state
         for _, term_data in ipairs(terminal_states) do
-            -- Only restore if terminal was open when saved
-            if term_data.is_open then
-                -- For each saved terminal, we'll call toggle_popup to recreate it if needed
-                -- This will either show an existing terminal or create a new one
+            -- Check if this terminal exists in the current popups table
+            local existing_popup = terminal_module.popups[term_data.cmd]
+            
+            if existing_popup and vim.api.nvim_buf_is_valid(existing_popup.buf) then
+                -- Terminal buffer exists, check if it's visible
+                if not (existing_popup.win and vim.api.nvim_win_is_valid(existing_popup.win)) then
+                    -- Buffer exists but window is not visible, we need to recreate the floating window
+                    -- Since toggle_popup will create a new window if the old one is gone
+                    terminal_module.toggle_popup(term_data.cmd)
+                end
+            else
+                -- Terminal doesn't exist, need to start it again
+                -- This handles the case where the buffer was lost during session restore
                 terminal_module.toggle_popup(term_data.cmd)
             end
         end

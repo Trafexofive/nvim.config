@@ -98,7 +98,7 @@ function M.toggle_popup(cmd, position, opts)
     vim.api.nvim_win_set_option(win, 'winblend', config.winblend)
 
     -- Store window and buffer info
-    popups[cmd] = { win = win, buf = buf }
+    popups[cmd] = { win = win, buf = buf, cmd = cmd, win_opts = vim.deepcopy(win_opts) }
 
     -- Start terminal with scrollback
     local term_opts = { 
@@ -331,4 +331,5 @@ vim.keymap.set('n', '<leader>mc', function() _G.Poptui('make clean') end, { desc
 vim.keymap.set('n', '<leader>ts', M.switch_terminal, { desc = 'Switch Terminal' })
 vim.keymap.set('n', '<leader>tt', M.show_tui_registry, { desc = 'Show TUI Registry' })
 
+M.popups = popups  -- Make popups accessible to other modules
 return M
