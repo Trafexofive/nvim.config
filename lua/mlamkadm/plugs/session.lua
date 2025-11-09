@@ -7,7 +7,7 @@ return {
             log_level = "error",
             auto_save_enabled = true,
             auto_restore_enabled = false, -- Manual restore only
-            auto_session_suppress_dirs = { "~/", "/", "~/Downloads", "~/Documents", "~/repos", "~/services" },
+            auto_session_suppress_dirs = { "~/", "/", "~/Downloads", "~/repos", "~/services", "~/Desktop", "~/tmp", "~/temp" },
             auto_session_use_git_branch = false,
             session_lens = {
                 load_on_setup = true,
