@@ -15,42 +15,68 @@ local dashboard_state = nil
 -- Store additional info about floating windows
 local floating_window_states = {}
 
+-- Store all terminal information (both normal and floating)
+local all_terminals = {}
+
 ---
 -- Save terminal states before session operation
 ---
 function M.save_terminals()
     local ok, terminal_module = pcall(require, "mlamkadm.core.terminal")
-    if not ok then
-        return
+    local terminal_ok = ok
+    
+    -- Reset all states
+    terminal_states = {}
+    floating_window_states = {}
+    all_terminals = {}
+    
+    -- First, handle pop-up terminals
+    if terminal_ok then
+        for cmd, popup in pairs(terminal_module.popups) do
+            if popup and vim.api.nvim_buf_is_valid(popup.buf) then
+                table.insert(all_terminals, {
+                    type = "popup",
+                    cmd = cmd,
+                    buf = popup.buf,
+                    win = popup.win,
+                    win_opts = popup.win_opts,
+                    has_window = vim.api.nvim_win_is_valid(popup.win)
+                })
+            end
+        end
     end
     
-    -- Save information about all open pop-up terminals
-    -- Since floating windows might not be properly saved by Neovim's session system,
-    -- we need to store their window options and recreate them after session restore
-    terminal_states = {}
-    floating_window_states = {} -- Reset floating window states
-    
-    for cmd, popup in pairs(terminal_module.popups) do
-        if popup and vim.api.nvim_buf_is_valid(popup.buf) then
-            -- Store terminal command and buffer info
-            table.insert(terminal_states, {
-                cmd = cmd,
-                buf = popup.buf,
-                -- Get window position and size if window is valid
-                has_window = vim.api.nvim_win_is_valid(popup.win),
-                win = popup.win  -- Store the window ID to check later
-            })
+    -- Next, handle all terminal buffers (including regular terminal buffers)
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_get_option(buf, 'buftype') == 'terminal' then
+            local bufname = vim.api.nvim_buf_get_name(buf)
+            -- Check if it's already tracked as a popup to avoid duplication
+            local is_popup = false
+            if terminal_ok then
+                for popup_cmd, popup in pairs(terminal_module.popups) do
+                    if popup.buf == buf then
+                        is_popup = true
+                        break
+                    end
+                end
+            end
             
-            -- If window is valid, store its floating window configuration
-            if vim.api.nvim_win_is_valid(popup.win) then
-                local win_conf = vim.api.nvim_win_get_config(popup.win)
-                floating_window_states[popup.buf] = {
-                    cmd = cmd,
-                    config = vim.deepcopy(win_conf),
-                    pos = {vim.api.nvim_win_get_position(popup.win)[1], vim.api.nvim_win_get_position(popup.win)[2]},
-                    width = vim.api.nvim_win_get_width(popup.win),
-                    height = vim.api.nvim_win_get_height(popup.win),
-                }
+            if not is_popup then
+                -- This is a regular terminal buffer (not a popup)
+                -- Try to get the job command if available
+                local job_info = vim.b[buf].term_title or vim.api.nvim_buf_get_option(buf, 'buftype') 
+                -- Attempt to get the actual command running in the terminal
+                local command = vim.b[buf].term_title or bufname or tostring(buf)
+                
+                table.insert(all_terminals, {
+                    type = "regular",
+                    buf = buf,
+                    bufname = bufname,
+                    command = command,  -- The command that was running
+                    is_open = vim.fn.bufwinid(buf) ~= -1, -- Check if buffer is currently displayed
+                    win_id = vim.fn.bufwinid(buf),
+                    job_pid = vim.fn.jobpid(vim.b[buf].terminal_job_id) or nil
+                })
             end
         end
     end
@@ -60,40 +86,56 @@ end
 -- Restore terminal states after session operation
 ---
 function M.restore_terminals()
-    if vim.tbl_isempty(terminal_states) then
+    if vim.tbl_isempty(all_terminals) then
         return
     end
     
     local ok, terminal_module = pcall(require, "mlamkadm.core.terminal")
-    if not ok then
-        return
-    end
+    local terminal_ok = ok
     
     -- Schedule restoration after session load completes
     vim.schedule(function()
         -- Process each saved terminal state
-        for _, term_data in ipairs(terminal_states) do
-            -- Check if the terminal buffer still exists
-            if vim.api.nvim_buf_is_valid(term_data.buf) then
-                -- Terminal buffer exists, check if it has a window
-                local win = vim.fn.win_findbuf(term_data.buf)
-                
-                if win and #win == 0 then
-                    -- Buffer exists but no window is showing it
-                    -- We need to recreate the floating window with original position/size
-                    if floating_window_states[term_data.buf] then
-                        -- Use toggle_popup to recreate the terminal window
+        for _, term_data in ipairs(all_terminals) do
+            if term_data.type == "popup" then
+                -- Handle popup terminals
+                if terminal_ok and vim.api.nvim_buf_is_valid(term_data.buf) then
+                    -- Check if popup exists in current popups
+                    local popup_exists = terminal_module.popups[term_data.cmd] and 
+                                        terminal_module.popups[term_data.cmd].buf == term_data.buf
+                    
+                    if not popup_exists or not vim.api.nvim_win_is_valid(terminal_module.popups[term_data.cmd].win) then
+                        -- Popup doesn't exist or window is invalid, recreate it
                         terminal_module.toggle_popup(term_data.cmd)
                     end
+                elseif terminal_ok then
+                    -- Buffer doesn't exist anymore, restart the terminal
+                    terminal_module.toggle_popup(term_data.cmd)
                 end
-            else
-                -- Buffer doesn't exist, restart the terminal
-                terminal_module.toggle_popup(term_data.cmd)
+            elseif term_data.type == "regular" then
+                -- Handle regular terminal buffers
+                if vim.api.nvim_buf_is_valid(term_data.buf) then
+                    -- If the terminal buffer exists but wasn't visible, we might want to show it
+                    -- (This part depends on the user's preference)
+                    if term_data.is_open and vim.fn.bufwinid(term_data.buf) == -1 then
+                        -- Terminal was open before but isn't now, might want to reopen
+                        -- Try to switch to the buffer
+                        vim.api.nvim_command('b' .. term_data.buf)
+                    end
+                else
+                    -- Terminal buffer is gone, need to recreate it if we have the command
+                    if term_data.command and term_data.command ~= "" and term_data.command ~= tostring(term_data.buf) then
+                        -- Try to recreate the terminal with the original command
+                        -- This is complex and may not be possible in all cases
+                        -- For now, we'll skip recreating vanished terminal buffers
+                        -- because the process is already gone and creating a new terminal
+                        -- would start a new process, not restore the old one
+                    end
+                end
             end
         end
         -- Clear stored state after restoration
-        terminal_states = {}
-        floating_window_states = {}
+        all_terminals = {}
     end)
 end
 
