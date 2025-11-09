@@ -1,5 +1,23 @@
 # Neovim Configuration Documentation
 
+## Enhanced Session Management
+
+Full session state preservation across switches. Terminals, widgets, and all buffers are maintained when switching between sessions.
+
+### Key Features
+- Auto-saves current session before switching
+- Terminals persist across session switches
+- Widget states maintained during session transitions
+- Smooth session switching with `<leader>ss`
+- Session saving with `<leader>sS`
+- Session restoration with `<leader>sr`
+
+### Quick Start
+- Press `<leader>ss` to open session picker (current session auto-saved)
+- Press `<leader>sS` to save current session
+- Press `<leader>sr` to restore a session
+- Running terminals will be preserved across sessions
+
 ## Widget System
 
 Custom widget system with full buffer control, live updates, and TUI support.
@@ -30,7 +48,8 @@ Zen-focused dashboard using snacks.nvim with custom ASCII art.
 ### Keybindings
 - `f` - Find files
 - `r` - Recent files
-- `s` - Sessions
+- `s` - Enhanced Sessions
+- `S` - Restore Session
 - `t` - TUI commands
 - `w` - Widgets
 - `l` - Lazy

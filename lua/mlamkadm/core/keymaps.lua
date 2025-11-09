@@ -128,3 +128,25 @@ vim.api.nvim_create_autocmd("BufNewFile", {
 
 -- New buffer with a terminal
 map('n', '<leader>nt', '<cmd>enew | terminal<CR>', { desc = 'New buffer with terminal' })
+
+-- Smart ctrl-tab behavior, that remembers last used buffer
+local last_buffer = nil
+
+vim.api.nvim_create_autocmd("BufEnter", {
+    callback = function()
+        local current_buffer = vim.api.nvim_get_current_buf()
+        -- Only update if it's a different buffer and it's a real file buffer
+        if last_buffer ~= current_buffer and vim.bo[current_buffer].buflisted then
+            last_buffer = vim.fn.bufnr('#') -- Get the alternate buffer (previous)
+        end
+    end,
+})
+
+map('n', '<C-Tab>', function()
+    if last_buffer and vim.api.nvim_buf_is_valid(last_buffer) and vim.bo[last_buffer].buflisted then
+        vim.api.nvim_set_current_buf(last_buffer)
+    else
+        -- Fallback to :bnext if no valid last buffer
+        vim.cmd('bnext')
+    end
+end, { desc = 'Switch to last used buffer' })

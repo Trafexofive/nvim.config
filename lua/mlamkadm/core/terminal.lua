@@ -92,7 +92,7 @@ function M.toggle_popup(cmd, position, opts)
 
     -- Otherwise, create a new terminal from scratch.
     local buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_option(buf, 'bufhidden', 'hide') -- Use 'hide' to persist
+    vim.api.nvim_buf_set_option(buf, 'bufhidden', 'hide') -- Use 'hide' to persist across sessions
 
     local win = vim.api.nvim_open_win(buf, true, win_opts)
     vim.api.nvim_win_set_option(win, 'winblend', config.winblend)
@@ -101,7 +101,15 @@ function M.toggle_popup(cmd, position, opts)
     popups[cmd] = { win = win, buf = buf }
 
     -- Start terminal with scrollback
-    local term_opts = { scrollback = config.scrollback }
+    local term_opts = { 
+        scrollback = config.scrollback,
+        on_exit = function(job, code, event)
+            -- Clean up when terminal exits
+            if popups[cmd] and popups[cmd].buf == buf then
+                popups[cmd] = nil
+            end
+        end
+    }
     
     -- Disable gruvbox colors if use_theme is false
     if not use_theme then
@@ -273,6 +281,29 @@ function M.setup(opts)
             end
         end,
         desc = "Close all pop-up bins before exiting Neovim"
+    })
+    
+    -- Add autocommands to handle session save/restore for terminals
+    vim.api.nvim_create_autocmd("User", {
+        pattern = "SessionSavePre",
+        callback = function()
+            -- Hide terminals before saving session to avoid issues
+            for cmd, popup in pairs(popups) do
+                if popup and vim.api.nvim_win_is_valid(popup.win) then
+                    vim.api.nvim_win_hide(popup.win)
+                end
+            end
+        end,
+        desc = "Hide terminals before saving session"
+    })
+    
+    vim.api.nvim_create_autocmd("User", {
+        pattern = "SessionLoadPost",
+        callback = function()
+            -- Terminals will be handled by the session module
+            -- after the session is fully loaded
+        end,
+        desc = "Handle terminals after loading session"
     })
 end
 

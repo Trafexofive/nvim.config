@@ -34,7 +34,7 @@ return {
             "git-diff",            -- Git changes (added, modified, removed)
             "%=",                  -- Align the rest to the right
             "diagnostics",         -- LSP diagnostics
-            -- "lsps-formatters",     -- Active LSP clients and formatters
+            "lsps-formatters",     -- Active LSP clients and formatters
             -- "copilot",             -- GitHub Copilot status
             "indent",              -- Indentation settings
             "encoding",            -- File encoding
@@ -43,19 +43,19 @@ return {
         },
 
         -- Customize component settings
-        -- mode = {
-        --     colors = {
-        --         NORMAL = "#8aadf4",
-        --         INSERT = "#a6da95",
-        --         VISUAL = "#ed8796",
-        --         V_LINE = "#ed8796",
-        --         V_BLOCK = "#ed8796",
-        --         REPLACE = "#f5a97f",
-        --         COMMAND = "#c6a0f6",
-        --         TERMINAL = "#a6da95",
-        --         SELECT = "#ed8796",
-        --     },
-        -- },
+        mode = {
+            colors = {
+                NORMAL = "#8aadf4",
+                INSERT = "#a6da95",
+                VISUAL = "#ed8796",
+                V_LINE = "#ed8796",
+                V_BLOCK = "#ed8796",
+                REPLACE = "#f5a97f",
+                COMMAND = "#c6a0f6",
+                TERMINAL = "#a6da95",
+                SELECT = "#ed8796",
+            },
+        },
 
         -- Filename component configuration
         filename = {

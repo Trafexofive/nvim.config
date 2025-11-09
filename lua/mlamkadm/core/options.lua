@@ -30,7 +30,7 @@ vim.opt.incsearch = true
 vim.opt.backspace = "indent,eol,start"
 
 -- Session options
-vim.opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,localoptions"
+vim.opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 -- Example using a list of specs with the default options
 vim.g.mapleader = " "         -- Make sure to set `mapleader` before lazy so your mappings are correct

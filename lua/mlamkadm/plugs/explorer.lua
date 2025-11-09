@@ -7,8 +7,8 @@ return {
         "MunifTanjim/nui.nvim",
     },
     keys = {
-        { "<leader><tab>", "<cmd>Neotree float<cr>", desc = "Toggle Floating NeoTree" },
-        { "<C-n>", "<cmd>Neotree toggle left<cr>", desc = "Toggle NeoTree" },
+        { "<leader><tab>", "<cmd>Neotree float<cr>",       desc = "Toggle Floating NeoTree" },
+        { "<C-n>",         "<cmd>Neotree toggle left<cr>", desc = "Toggle NeoTree" },
     },
     config = function()
         -- If you want icons for diagnostic errors, you'll need to define them somewhere:
@@ -35,7 +35,7 @@ return {
                     enable_character_fade = true
                 },
                 indent = {
-                    indent_size = 2,
+                    indent_size = 4,
                     padding = 1,
                     with_markers = true,
                     indent_marker = "│",
