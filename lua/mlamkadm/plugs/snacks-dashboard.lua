@@ -14,10 +14,18 @@ return {
           keys = {
             { icon = "󰈞", key = "f", desc = "Find File", action = ":Telescope find_files" },
             { icon = "", key = "r", desc = "Recent Files", action = ":Telescope oldfiles" },
-            { icon = "", key = "s", desc = "Sessions", action = ":Telescope session-lens" },
-            { icon = "", key = "S", desc = "Restore Session", action = ":SessionRestore" },
-            { icon = "", key = "t", desc = "TUI Commands", action = function() require("mlamkadm.core.terminal").show_tui_registry() end },
-            { icon = "", key = "w", desc = "Widgets", action = function() require("mlamkadm.core.widgets").open("1_system") end },
+
+            { icon = "󱍾", key = "s", desc = "Sessions", action = ":Telescope session-lens" },
+            { icon = "󰽤", key = "S", desc = "Restore Session", action = ":SessionRestore" },
+            { icon = "󱌣", key = "n", desc = "New Session", action = function() 
+                require("mlamkadm.core.session_manager").create_new_session() 
+            end },
+            { icon = "", key = "t", desc = "TUI Commands", action = function() require("mlamkadm.core.terminal").show_tui_registry() end },
+            { icon = "󱌣", key = "b", desc = "btop", action = function() require("mlamkadm.core.ui").open_page("btop") end },
+            { icon = "󰺢", key = "d", desc = "lazydocker", action = function() require("mlamkadm.core.ui").open_page("lazydocker") end },
+            { icon = "󰺢", key = "h", desc = "Change Theme", action = function()
+                require("mlamkadm.core.theme").select_theme()
+            end },
             { icon = "󰒲", key = "l", desc = "Lazy", action = ":Lazy" },
             { icon = "", key = "q", desc = "Quit", action = ":qa" },
           },
@@ -46,14 +54,11 @@ return {
   config = function(_, opts)
     require("snacks").setup(opts)
     
-    -- Initialize widget system
-    require("mlamkadm.core.widgets").setup()
-    
     vim.api.nvim_create_autocmd("User", {
       pattern = "SnacksDashboardOpened",
       callback = function()
         vim.defer_fn(function()
-          vim.notify("Press 'w' or Ctrl-j to open widgets", vim.log.levels.INFO, { timeout = 2000 })
+          vim.notify("Press 'b' for btop, 'd' for lazydocker, 'h' to change theme", vim.log.levels.INFO, { timeout = 2000 })
         end, 1000)
       end,
     })

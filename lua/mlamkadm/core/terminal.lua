@@ -303,6 +303,7 @@ M.setup({
     scrollback = 100000,
 })
 
+
 -- Register TUI commands
 M.register_tui("Terminal", vim.o.shell)
 M.register_tui("Lazygit", "lazygit")
@@ -317,6 +318,8 @@ M.register_tui("Copilot", "copilot --allow-tool write", "right")
 M.register_tui("Make Run", "make run")
 M.register_tui("Make Clean", "make clean")
 
+M.register_tui("Qwen Full", "qwen -a -y") -- we will feed in custom sys prompts from core.LLM.prompts later
+
 -- Define keymaps now that _G.Poptui is guaranteed to exist
 vim.keymap.set('n', '<c-t>', function() _G.Poptui(vim.o.shell) end, { desc = 'Toggle floating terminal' })
 vim.keymap.set('n', '<leader>jj', function() _G.Poptui('lazygit') end, { desc = 'Toggle Lazygit' })
@@ -326,6 +329,7 @@ vim.keymap.set('n', '<leader>jt', function() _G.Poptui('btop', nil, { use_theme 
 vim.keymap.set('n', '<leader>jf', function() _G.Poptui('yazi') end, { desc = 'Toggle File Manager (Yazi)' })
 vim.keymap.set('n', '<leader>jc', function() _G.Poptui('copilot --allow-tool write', 'right') end,
     { desc = 'Toggle Copilot' })
+vim.keymap.set('n', '<leader>mg', function() _G.Poptui('glow') end, { desc = 'Make: Glow' })
 vim.keymap.set('n', '<leader>mr', function() _G.Poptui('make run') end, { desc = 'Make: Run' })
 vim.keymap.set('n', '<leader>mc', function() _G.Poptui('make clean') end, { desc = 'Make: Clean' })
 vim.keymap.set('n', '<leader>ts', M.switch_terminal, { desc = 'Switch Terminal' })

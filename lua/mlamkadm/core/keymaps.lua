@@ -60,25 +60,33 @@ map('n', '<leader>s', ':w<CR>')
 -- Save all buffers, stop background jobs, and quit
 map('n', '<leader>q', ':wa<CR>:silent! call jobstop(0)<CR>:qa<CR>', { desc = 'Save all and quit' })
 
--- Exit current session and return to startup
+-- Save current session and return to dashboard
 map('n', '<leader>Q', function()
-    -- Save current session if in a project
-    pcall(vim.cmd, 'SessionSave')
+    -- Save current session while preserving CWD to prevent session corruption
+    local current_dir = vim.fn.getcwd()
+    
+    -- Use auto-session command to save the session (since rmagatti/auto-session is being used)
+    vim.cmd('silent! SessionSave')
+    
+    -- Ensure we're still in the same directory after saving
+    vim.fn.chdir(current_dir)
+    
     -- Close all buffers except dashboard
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         local ft = vim.bo[buf].filetype
         if vim.api.nvim_buf_is_loaded(buf) and ft ~= 'snacks_dashboard' and ft ~= 'alpha' then
-            vim.api.nvim_buf_delete(buf, { force = false })
+            vim.api.nvim_buf_delete(buf, { force = true })
         end
     end
-    -- Show dashboard (snacks or alpha fallback)
-    local has_snacks = pcall(require, 'snacks')
-    if has_snacks then
-        require('snacks').dashboard()
+    
+    -- Show dashboard (using snacks if available, otherwise alpha fallback)
+    local snacks_ok, snacks = pcall(require, 'snacks')
+    if snacks_ok and snacks.dashboard then
+        snacks.dashboard()
     else
-        pcall(vim.cmd, 'Alpha')
+        vim.cmd('Alpha')
     end
-end, { desc = 'Save session and return to startup' })
+end, { desc = 'Save session and return to dashboard' })
 
 -----------------------------------------------------------
 -- Applications and Plugins shortcuts

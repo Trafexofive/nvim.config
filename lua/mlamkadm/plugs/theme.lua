@@ -1,4 +1,5 @@
 return {
+  {
     "ellisonleao/gruvbox.nvim",
     priority = 1000,
     config = function()
@@ -33,4 +34,17 @@ return {
         vim.g.terminal_color_14 = '#8ec07c'
         vim.g.terminal_color_15 = '#ebdbb2'
     end,
+  },
+  {
+    "folke/tokyonight.nvim",
+    lazy = true,
+  },
+  {
+    "Mofiqul/dracula.nvim",
+    lazy = true,
+  },
+  {
+    "navarasu/onedark.nvim",
+    lazy = true,
+  },
 }

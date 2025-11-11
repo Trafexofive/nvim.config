@@ -96,40 +96,7 @@ return {
             -- All setup is now handled by mason-lspconfig, so this can be empty
         end,
     },
-    {
-        "stevearc/conform.nvim",
-        event = { "BufWritePre" },
-        cmd = { "ConformInfo" },
-        opts = {
-            formatters_by_ft = {
-                lua = { "stylua" },
-                python = { "isort", "black" },
-                javascript = { "prettierd" },
-                typescript = { "prettierd" },
-                css = { "prettierd" },
-                html = { "prettierd" },
-                json = { "prettierd" },
-                yaml = { "prettierd" },
-                markdown = { "prettierd" },
-                sh = { "shfmt" },
-                c = { "clang_format" },
-                cpp = { "clang_format" },
-            },
-            format_on_save = function(bufnr)
-                -- Disable format on save for .sat files
-                if vim.bo[bufnr].filetype == "sat" or vim.api.nvim_buf_get_name(bufnr):match("%.sat$") then
-                    return
-                end
-                return {
-                    timeout_ms = 500,
-                    lsp_fallback = true,
-                }
-            end,
-        },
-        config = function(_, opts)
-            require("conform").setup(opts)
-        end,
-    },
+
     {
         "mfussenegger/nvim-lint",
         event = { "BufWritePost", "BufReadPost", "InsertLeave" },

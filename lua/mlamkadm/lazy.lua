@@ -15,10 +15,28 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup("mlamkadm.plugs",
     {
+        -- Performance optimizations
+        defaults = {
+            lazy = true, -- default to lazy loading
+        },
+        performance = {
+            cache = {
+                enabled = true,
+            },
+            reset_packpath = true, -- reset the package path to improve startup time
+            rtp = {
+                reset = true, -- reset the runtime path to $VIMRUNTIME and your config directory
+                paths = {}, -- add any custom paths here
+            },
+        },
         change_detection = {
             -- automatically check for config file changes and reload the ui
             enabled = false,
             notify = false, -- get a notification when changes are found
+        },
+        -- Show loading status
+        ui = {
+            backdrop = 100, -- to make the UI stand out more
         },
     }
 )
