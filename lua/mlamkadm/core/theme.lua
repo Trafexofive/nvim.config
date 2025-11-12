@@ -129,17 +129,24 @@ function M.setup()
     desc = "Save current theme when colorscheme changes",
     group = vim.api.nvim_create_augroup("ThemePersistence", { clear = true })
   })
-  
   -- Initialize the current theme from what's currently active
-  vim.defer_fn(function()
-    local active_theme = vim.g.colors_name or "gruvbox"
+  -- If no theme is active (colors_name is still none), explicitly apply the default theme
+  if not vim.g.colors_name or vim.g.colors_name == "" then
+    local default_theme = "gruvbox"
+    if M.themes[default_theme] then
+      M.themes[default_theme].setup()  -- Apply the full theme setup
+      M.current_theme = default_theme
+      M.save_theme()
+    end
+  else
+    -- If a theme is already active, just initialize our current theme to match
+    local active_theme = vim.g.colors_name
     if M.themes[active_theme] then
       M.current_theme = active_theme
       M.save_theme()
     end
-  end, 50) -- Initialize current theme early
-  
-  -- Restore theme if available (deferred to after startup)
+  end
+
   -- Use a later timer to ensure plugins are fully loaded
   vim.defer_fn(function()
     -- Only restore if a theme was previously saved and it's different from the default
