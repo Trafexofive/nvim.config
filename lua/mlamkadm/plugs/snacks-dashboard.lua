@@ -20,6 +20,9 @@ return {
             { icon = "󱌣", key = "n", desc = "New Session", action = function() 
                 require("mlamkadm.core.session_manager").create_new_session() 
             end },
+            { icon = "", key = "D", desc = "Delete Session", action = function()
+                require("mlamkadm.core.session_manager").delete_session()
+            end },
             { icon = "", key = "t", desc = "TUI Commands", action = function() require("mlamkadm.core.terminal").show_tui_registry() end },
             { icon = "󱌣", key = "b", desc = "btop", action = function() require("mlamkadm.core.ui").open_page("btop") end },
             { icon = "󰺢", key = "d", desc = "lazydocker", action = function() require("mlamkadm.core.ui").open_page("lazydocker") end },

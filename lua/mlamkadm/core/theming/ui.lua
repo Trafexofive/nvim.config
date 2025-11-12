@@ -31,7 +31,9 @@ function M.select_theme()
     end
     local input = vim.fn.input("Enter theme name to switch to: ")
     if input and input ~= "" then
-      theming.switch_theme(input)
+      vim.schedule(function()
+        theming.switch_theme(input)
+      end)
     end
     return
   end
@@ -54,9 +56,11 @@ function M.select_theme()
       map('i', '<CR>', function()
         local selection = action_state.get_current_line()
         actions.close(prompt_bufnr)
-        if theme_map[selection] and theme_map[selection] ~= theming.current_theme then
-          theming.switch_theme(theme_map[selection])
-        end
+        vim.schedule(function()
+          if theme_map[selection] and theme_map[selection] ~= theming.current_theme then
+            theming.switch_theme(theme_map[selection])
+          end
+        end)
       end)
       -- Close picker with escape
       map('i', '<Esc>', actions.close)
@@ -75,7 +79,9 @@ function M.select_theme()
     vim.notify("Theme picker failed: " .. tostring(err), vim.log.levels.WARN, { title = "Theme Manager" })
     local input = vim.fn.input("Enter theme name to switch to: ")
     if input and input ~= "" then
-      theming.switch_theme(input)
+      vim.schedule(function()
+        theming.switch_theme(input)
+      end)
     end
   end
 end

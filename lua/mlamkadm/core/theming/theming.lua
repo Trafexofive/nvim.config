@@ -186,7 +186,9 @@ function M.switch_theme(theme_name)
     -- For other themes, try to load them using lazy if possible
     local success, lazy_plugins = pcall(require, "lazy.core.config")
     if success then
-      local plugin = lazy_plugins.plugins[theme_info.plugin]
+      -- Extract just the plugin name from the path (e.g., "folke/tokyonight.nvim" -> "tokyonight.nvim")
+      local plugin_name = theme_info.plugin:match("[^/]+")
+      local plugin = lazy_plugins.plugins[plugin_name]
       if plugin then
         -- Load the plugin if it's not already loaded
         if not plugin._.loaded then
@@ -198,7 +200,9 @@ function M.switch_theme(theme_name)
     
     -- If plugin wasn't loaded via lazy, try a regular require
     if not plugin_loaded then
-      local _, module = pcall(require, theme_info.plugin:match("([^/]+)$"))  -- Extract theme name from plugin path
+      -- Extract theme name from plugin path (e.g., "folke/tokyonight.nvim" -> "tokyonight")
+      local theme_module_name = theme_info.plugin:match("([^/]+)$"):gsub("%.nvim$", "")
+      local _, module = pcall(require, theme_module_name)  
       if module then
         plugin_loaded = true
       end
@@ -252,9 +256,22 @@ end
 function M.restore_theme()
   local saved_theme = vim.g.saved_theme
   if saved_theme and M.themes[saved_theme] then
-    vim.defer_fn(function()
+    -- Ensure the theme plugin is properly loaded before switching
+    local theme_info = M.themes[saved_theme]
+    
+    -- For gruvbox, it should already be loaded via plugin manager
+    local theme_info = M.themes[saved_theme]
+    if saved_theme == "gruvbox" then
+      -- Just run the setup again to ensure it's properly applied
+      local ok, _ = pcall(theme_info.setup)
+      if ok then
+        M.current_theme = saved_theme
+        vim.notify("Restored " .. theme_info.name .. " theme", vim.log.levels.INFO, { title = "Theme Manager" })
+      end
+    else
+      -- For other themes, switch normally
       M.switch_theme(saved_theme)
-    end, 100) -- Delay slightly to make sure everything is loaded
+    end
   end
 end
 

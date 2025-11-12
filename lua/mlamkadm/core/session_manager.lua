@@ -1,6 +1,12 @@
 -- Session management utilities
 local M = {}
 
+-- Function to delete a session using telescope session-lens
+function M.delete_session()
+  -- Use the AutoSession deletePicker command which should open a picker to select a session to delete
+  vim.cmd("AutoSession deletePicker")
+end
+
 -- Create a new session by prompting for directory
 function M.create_new_session()
   -- Prompt for a new directory path

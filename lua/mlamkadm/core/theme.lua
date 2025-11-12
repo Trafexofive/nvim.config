@@ -126,9 +126,14 @@ function M.setup()
   })
   
   -- Restore theme if available (deferred to after startup)
+  -- Use a later timer to ensure plugins are fully loaded
   vim.defer_fn(function()
-    M.restore_theme()
-  end, 100) -- Delay restoration slightly to ensure everything is loaded
+    -- Only restore if a theme was previously saved and it's different from the default
+    local saved_theme = vim.g.saved_theme
+    if saved_theme and saved_theme ~= "gruvbox" then
+      M.restore_theme()
+    end
+  end, 500) -- Delay restoration slightly to ensure everything is loaded
 end
 
 return M

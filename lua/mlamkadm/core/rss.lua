@@ -1,183 +1,318 @@
--- RSS feed reader module for Neovim
--- Provides functionality to fetch, parse, and display RSS feeds
+-- ============================================================================
+-- FeedMe.nvim - Single File Edition
+-- A beautiful, configurable RSS reader for Neovim
+-- ============================================================================
+-- Installation (Lazy.nvim):
+-- {
+--   "yourusername/feedme.nvim",
+--   dependencies = { "nvim-lua/plenary.nvim" },
+--   config = function() require("feedme").setup() end
+-- }
+--
+-- Usage: :FeedMe
+-- ============================================================================
 
 local M = {}
 
--- Import required libraries
-local curl_builtin = require("plenary.curl")
-local utils = require("mlamkadm.utils")
-
--- Default RSS feeds
-M.default_feeds = {
-  {
-    name = "Hacker News",
-    url = "https://news.ycombinator.com/rss"
-  },
-  {
-    name = "Reddit Programming",
-    url = "https://www.reddit.com/r/programming/.rss"
-  },
-  {
-    name = "Neovim Discourse",
-    url = "https://neovim.discourse.group/posts.rss"
-  },
-  {
-    name = "Planet Linux",
-    url = "http://planetlinux.org/rss.xml"
-  }
+-- =============================================================================
+-- CONFIGURATION
+-- =============================================================================
+M.config = {
+	feeds = {
+		{ name = "Hacker News", url = "https://news.ycombinator.com/rss", icon = "󰃶", color = "#ff6600" },
+		{ name = "Neovim Discourse", url = "https://neovim.discourse.group/posts.rss", icon = "" },
+		{ name = "Reddit Programming", url = "https://www.reddit.com/r/programming/.rss", icon = "󰞱" },
+	},
+	max_items = 30,
+	cache_ttl = 600, -- 10 minutes
+	window = {
+		width = 0.9,
+		height = 0.8,
+		border = "rounded",
+		title = " 󰼛 FeedMe ",
+	},
+	format = {
+		title_length = 70,
+		description_length = 100,
+	},
+	keys = {
+		close = "q",
+		open_link = "<CR>",
+		refresh = "R",
+		toggle_read = "r",
+	},
 }
 
--- Parse RSS XML content
-local function parse_rss(content)
-  local items = {}
-  
-  -- Simple regex-based parsing (in a real implementation, you'd want a proper XML parser)
-  -- Extract titles
-  for title in content:gmatch("<title>(.-)</title>") do
-    if not title:match("^<!%-%-") and not title:match("CDATA") then  -- Skip comment titles
-      local item = { title = title:gsub("<!%[CDATA%[(.-)%]%]>", "%1"):gsub("<.->", "") }
-      
-      -- Extract link for this item
-      for link in content:gmatch("<link>(.-)</link>") do
-        item.link = link:gsub("<!%[CDATA%[(.-)%]%]>", "%1"):gsub("<.->", "")
-        break -- Get first link after title
-      end
-      
-      -- Extract description
-      for desc in content:gmatch("<description>(.-)</description>") do
-        item.description = desc:gsub("<!%[CDATA%[(.-)%]%]>", "%1"):gsub("<.->", "")
-        break -- Get first description after title
-      end
-      
-      table.insert(items, item)
-      
-      -- Limit to 10 items per feed to prevent too much data
-      if #items >= 10 then break end
-    end
-  end
-  
-  return items
+-- =============================================================================
+-- MINIMAL XML PARSER (inlined, RSS/Atom only)
+-- =============================================================================
+local function parse_rss_xml(xml)
+	local items = {}
+	local current = {}
+	local in_item = false
+	local tag_stack = {}
+
+	-- Simple state machine for RSS/Atom
+	for tag, text in xml:gmatch("<([%w_:]+)[^>]->(.-)</%1>") do
+		if tag == "item" or tag == "entry" then
+			if in_item then
+				table.insert(items, current)
+				current = {}
+				if #items >= M.config.max_items then
+					break
+				end
+			end
+			in_item = true
+		end
+
+		if in_item then
+			if tag == "title" then
+				current.title = text:gsub("<!%[CDATA%[(.-)%]%]>", "%1"):gsub("<.->", "")
+			elseif tag == "link" then
+				current.link = text
+			elseif tag == "description" or tag == "summary" then
+				current.description = text:gsub("<!%[CDATA%[(.-)%]%]>", "%1")
+			elseif tag == "pubDate" or tag == "published" or tag == "updated" then
+				current.pubDate = text
+			end
+		end
+	end
+
+	if in_item then
+		table.insert(items, current)
+	end
+	return items
 end
 
--- Fetch a single RSS feed
-function M.fetch_feed(url)
-  local response = curl_builtin.get(url)
-  
-  if response and response.status == 200 then
-    return parse_rss(response.body)
-  else
-    utils.SmpNotify.error("Failed to fetch RSS feed: " .. url)
-    return {}
-  end
+-- =============================================================================
+-- ASYNC FETCHER (non-blocking)
+-- =============================================================================
+local function fetch_feed_async(feed, callback)
+	local curl = require("plenary.curl")
+
+	curl.get(feed.url, {
+		timeout = 10000,
+		headers = { ["User-Agent"] = "FeedMe.nvim/1.0" },
+		callback = vim.schedule_wrap(function(response)
+			if not response or response.status ~= 200 then
+				vim.notify(
+					string.format("❌ %s: %s", feed.name, response and response.status or "timeout"),
+					vim.log.levels.WARN
+				)
+				callback(nil)
+				return
+			end
+
+			local items = parse_rss_xml(response.body)
+			for _, item in ipairs(items) do
+				item.feed_name = feed.name
+				item.feed_icon = feed.icon or "󰼛"
+				item.read = false
+			end
+			callback(items)
+		end),
+	})
 end
 
--- Fetch all configured feeds
-function M.fetch_all_feeds(feeds)
-  feeds = feeds or M.default_feeds
-  local all_items = {}
-  
-  for _, feed in ipairs(feeds) do
-    local items = M.fetch_feed(feed.url)
-    for _, item in ipairs(items) do
-      item.feed_name = feed.name
-      table.insert(all_items, item)
-    end
-  end
-  
-  -- Sort by some pseudo-date or just return as-is
-  return all_items
+-- =============================================================================
+-- CACHE SYSTEM (simple JSON file)
+-- =============================================================================
+local cache_path = vim.fn.stdpath("cache") .. "/feedme_cache.json"
+
+local function save_cache(items)
+	local data = { timestamp = os.time(), items = items }
+	vim.fn.writefile({ vim.json.encode(data) }, cache_path)
 end
 
--- Create a buffer to display RSS feed
-function M.show_feeds(feeds)
-  feeds = feeds or M.default_feeds
-  
-  -- Create a new buffer
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_option(buf, 'buftype', 'nofile')
-  vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
-  vim.api.nvim_buf_set_option(buf, 'modifiable', true)
-  vim.api.nvim_buf_set_option(buf, 'filetype', 'rss')
-  
-  -- Fetch feeds
-  local items = M.fetch_all_feeds(feeds)
-  
-  -- Prepare content
-  local lines = { "RSS Feeds", string.rep("=", 30), "" }
-  
-  for i, item in ipairs(items) do
-    table.insert(lines, string.format("%d. %s", i, item.title or "No title"))
-    table.insert(lines, string.format("   Feed: %s", item.feed_name or "Unknown"))
-    if item.link then
-      table.insert(lines, string.format("   Link: %s", item.link))
-    end
-    if item.description then
-      local desc = item.description:gsub("<.->", ""):gsub("%s+", " "):sub(1, 100) .. "..."
-      table.insert(lines, string.format("   Summary: %s", desc))
-    end
-    table.insert(lines, "")
-    
-    if i >= 20 then -- Limit display to 20 items
-      table.insert(lines, "... (truncated)")
-      break
-    end
-  end
-  
-  -- Set content to buffer
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.api.nvim_buf_set_option(buf, 'modifiable', false)
-  
-  -- Open in a new tab
-  vim.cmd("tabnew")
-  vim.api.nvim_win_set_buf(0, buf)
-  
-  -- Set up keymaps for the RSS buffer
-  vim.api.nvim_buf_set_keymap(buf, 'n', 'q', '<cmd>tabclose<CR>', { noremap = true, silent = true, desc = "Close RSS view" })
-  vim.api.nvim_buf_set_keymap(buf, 'n', '<CR>', ':lua require("mlamkadm.core.rss").open_link()<CR>', { noremap = true, silent = true, desc = "Open link in browser" })
-  vim.api.nvim_buf_set_keymap(buf, 'n', 'r', ':lua require("mlamkadm.core.rss").refresh()<CR>', { noremap = true, silent = true, desc = "Refresh feeds" })
-  
-  return buf
+local function load_cache()
+	if vim.fn.filereadable(cache_path) == 0 then
+		return {}
+	end
+	local ok, data = pcall(vim.json.decode, table.concat(vim.fn.readfile(cache_path), "\n"))
+	if ok and data.timestamp and (os.time() - data.timestamp) < M.config.cache_ttl then
+		return data.items
+	end
+	return {}
 end
 
--- Open the link under the cursor (placeholder function)
-function M.open_link()
-  local line = vim.api.nvim_get_current_line()
-  -- Extract URL from the line (simplified approach)
-  local url = line:match("Link:%s*(https?://%S+)")
-  if url then
-    -- Use system command to open URL (this is OS-dependent)
-    local cmd = vim.o.shell:match("zsh") and "open" or "xdg-open"  -- macOS vs Linux
-    if vim.fn.has("win32") == 1 then cmd = "start" end  -- Windows
-    
-    vim.fn.jobstart({cmd, url}, {detach=true})
-  else
-    utils.SmpNotify.warn("No link found on current line")
-  end
+-- =============================================================================
+-- UI SYSTEM (floating window + highlights)
+-- =============================================================================
+local ui_state = { win = nil, buf = nil, items = {} }
+
+local function setup_highlights()
+	vim.api.nvim_set_hl(0, "FeedMeTitle", { fg = "#7aa2f7", bold = true, default = true })
+	vim.api.nvim_set_hl(0, "FeedMeIcon", { fg = "#7dcfff", default = true })
+	vim.api.nvim_set_hl(0, "FeedMeLink", { fg = "#bb9af7", underline = true, default = true })
+	vim.api.nvim_set_hl(0, "FeedMeRead", { fg = "#565f89", strikethrough = true, default = true })
+	vim.api.nvim_set_hl(0, "FeedMeUnread", { fg = "#ff9e64", bold = true, default = true })
 end
 
--- Refresh the RSS view
+local function render_buffer()
+	if not ui_state.buf then
+		return
+	end
+	vim.api.nvim_buf_set_option(ui_state.buf, "modifiable", true)
+
+	local lines = {}
+	local hl_groups = {}
+
+	for i, item in ipairs(ui_state.items) do
+		local start = #lines
+
+		-- Title with icon
+		local icon = item.read and "✓" or "●"
+		table.insert(lines, string.format(" %s %s", icon, item.title:sub(1, M.config.format.title_length)))
+		table.insert(hl_groups, { line = start, hl = item.read and "FeedMeRead" or "FeedMeUnread" })
+
+		-- Metadata: icon + feed name
+		table.insert(lines, string.format("   %s %s", item.feed_icon, item.feed_name))
+		table.insert(hl_groups, { line = start + 1, hl = "FeedMeIcon" })
+
+		-- Link
+		if item.link then
+			table.insert(lines, "   " .. item.link)
+			table.insert(hl_groups, { line = start + 2, hl = "FeedMeLink" })
+		end
+
+		-- Preview
+		if item.description then
+			local preview = item.description
+				:gsub("%s+", " ")
+				:gsub("<.->", "")
+				:sub(1, M.config.format.description_length) .. "…"
+			table.insert(lines, "   " .. preview)
+		end
+
+		table.insert(lines, "") -- Spacer
+	end
+
+	vim.api.nvim_buf_set_lines(ui_state.buf, 0, -1, false, lines)
+
+	-- Apply highlights
+	for _, h in ipairs(hl_groups) do
+		if h.line < #lines then
+			vim.api.nvim_buf_add_highlight(ui_state.buf, -1, h.hl, h.line, 0, -1)
+		end
+	end
+
+	vim.api.nvim_buf_set_option(ui_state.buf, "modifiable", false)
+end
+
+local function open_window()
+	setup_highlights()
+
+	local width = math.floor(vim.o.columns * M.config.window.width)
+	local height = math.floor(vim.o.lines * M.config.window.height)
+	local col = math.floor((vim.o.columns - width) / 2)
+	local row = math.floor((vim.o.lines - height) / 2)
+
+	ui_state.buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_buf_set_option(ui_state.buf, "filetype", "feedme")
+
+	ui_state.win = vim.api.nvim_open_win(ui_state.buf, true, {
+		relative = "editor",
+		width = width,
+		height = height,
+		col = col,
+		row = row,
+		style = "minimal",
+		border = M.config.window.border,
+		title = M.config.window.title,
+		title_pos = "center",
+	})
+
+	-- Load cached items first
+	ui_state.items = load_cache()
+	render_buffer()
+
+	-- Fetch fresh data
+	M.refresh()
+
+	-- Keymaps
+	vim.keymap.set("n", M.config.keys.close, M.close, { buffer = ui_state.buf, silent = true })
+	vim.keymap.set("n", M.config.keys.refresh, M.refresh, { buffer = ui_state.buf, silent = true })
+	vim.keymap.set("n", M.config.keys.open_link, M.open_link, { buffer = ui_state.buf, silent = true })
+	vim.keymap.set("n", M.config.keys.toggle_read, M.toggle_read, { buffer = ui_state.buf, silent = true })
+end
+
+-- =============================================================================
+-- PUBLIC API
+-- =============================================================================
+function M.setup(opts)
+	M.config = vim.tbl_deep_extend("force", M.config, opts or {})
+
+	vim.api.nvim_create_user_command("FeedMe", function()
+		if ui_state.win and vim.api.nvim_win_is_valid(ui_state.win) then
+			M.close()
+		else
+			open_window()
+		end
+	end, {})
+end
+
 function M.refresh()
-  local buf = vim.api.nvim_get_current_buf()
-  local ft = vim.api.nvim_buf_get_option(buf, 'filetype')
-  if ft == 'rss' then
-    -- We'd need to re-fetch and re-populate the buffer
-    vim.api.nvim_buf_set_option(buf, 'modifiable', true)
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, {"Refreshing...", ""})
-    
-    -- In real implementation: refetch feeds and update content
-    vim.defer_fn(function()
-      local lines = {"Refreshed RSS Feeds", string.rep("=", 30), "This would show updated feed content"}
-      vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-      vim.api.nvim_buf_set_option(buf, 'modifiable', false)
-    end, 1000)
-  end
+	if not ui_state.buf then
+		return
+	end
+	vim.api.nvim_buf_set_lines(ui_state.buf, 0, -1, false, { " 󱑋 Fetching feeds..." })
+
+	local jobs = {}
+	local all_items = {}
+
+	for _, feed in ipairs(M.config.feeds) do
+		table.insert(jobs, function()
+			fetch_feed_async(feed, function(items)
+				if items then
+					vim.list_extend(all_items, items)
+				end
+			end)
+		end)
+	end
+
+	require("plenary.async").util.join(jobs, 6) -- Max 6 parallel
+
+	-- Sort and limit
+	table.sort(all_items, function(a, b)
+		return (a.pubDate or "") > (b.pubDate or "")
+	end)
+	ui_state.items = vim.list_slice(all_items, 1, M.config.max_items)
+
+	save_cache(ui_state.items)
+	render_buffer()
+	vim.notify(string.format("✅ Loaded %d articles", #ui_state.items), vim.log.levels.INFO)
 end
 
--- Open RSS feeds in a custom dashboard page
-function M.open_dashboard_page()
-  -- This would integrate with your dashboard widget system
-  -- For now, just show the feeds in a buffer
-  M.show_feeds()
+function M.close()
+	if ui_state.win and vim.api.nvim_win_is_valid(ui_state.win) then
+		vim.api.nvim_win_close(ui_state.win, true)
+	end
+	ui_state = { win = nil, buf = nil, items = {} }
+end
+
+function M.open_link()
+	local row = vim.fn.line(".")
+	local idx = math.floor(row / 5) + 1
+	local item = ui_state.items[idx]
+
+	if item and item.link then
+		local cmd = vim.fn.has("mac") == 1 and "open" or (vim.fn.has("win32") == 1 and "start" or "xdg-open")
+		vim.fn.jobstart({ cmd, item.link }, { detach = true })
+		item.read = true
+		save_cache(ui_state.items)
+		render_buffer()
+	end
+end
+
+function M.toggle_read()
+	local row = vim.fn.line(".")
+	local idx = math.floor(row / 5) + 1
+	if ui_state.items[idx] then
+		ui_state.items[idx].read = not ui_state.items[idx].read
+		save_cache(ui_state.items)
+		render_buffer()
+	end
 end
 
 return M
+
