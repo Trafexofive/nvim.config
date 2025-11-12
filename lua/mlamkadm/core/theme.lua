@@ -119,11 +119,25 @@ function M.setup()
   -- Set up autocommands to save theme when changing
   vim.api.nvim_create_autocmd("ColorScheme", {
     callback = function()
+      -- Update the current theme to match what's actually active
+      local theme_name = vim.g.colors_name or "gruvbox"
+      if M.themes[theme_name] then
+        M.current_theme = theme_name
+      end
       M.save_theme()
     end,
     desc = "Save current theme when colorscheme changes",
     group = vim.api.nvim_create_augroup("ThemePersistence", { clear = true })
   })
+  
+  -- Initialize the current theme from what's currently active
+  vim.defer_fn(function()
+    local active_theme = vim.g.colors_name or "gruvbox"
+    if M.themes[active_theme] then
+      M.current_theme = active_theme
+      M.save_theme()
+    end
+  end, 50) -- Initialize current theme early
   
   -- Restore theme if available (deferred to after startup)
   -- Use a later timer to ensure plugins are fully loaded
