@@ -134,9 +134,23 @@ function M.setup()
   if not vim.g.colors_name or vim.g.colors_name == "" then
     local default_theme = "gruvbox"
     if M.themes[default_theme] then
-      M.themes[default_theme].setup()  -- Apply the full theme setup
-      M.current_theme = default_theme
-      M.save_theme()
+      -- Apply the full theme setup in a safe way
+      local success, err = pcall(M.themes[default_theme].setup)
+      if success then
+        M.current_theme = default_theme
+        M.save_theme()
+      else
+        -- If direct setup fails, schedule it to run later
+        vim.schedule(function()
+          local retry_success, retry_err = pcall(M.themes[default_theme].setup)
+          if retry_success then
+            M.current_theme = default_theme
+            M.save_theme()
+          else
+            vim.notify("Failed to apply default theme: " .. tostring(retry_err), vim.log.levels.ERROR, { title = "Theme Manager" })
+          end
+        end)
+      end
     end
   else
     -- If a theme is already active, just initialize our current theme to match
@@ -147,6 +161,7 @@ function M.setup()
     end
   end
 
+  -- Restore theme if available (deferred to after startup)
   -- Use a later timer to ensure plugins are fully loaded
   vim.defer_fn(function()
     -- Only restore if a theme was previously saved and it's different from the default
@@ -155,6 +170,42 @@ function M.setup()
       M.restore_theme()
     end
   end, 500) -- Delay restoration slightly to ensure everything is loaded
+  
+  -- Additional safeguard: ensure default theme is applied if still none after setup
+  vim.schedule(function()
+    if not vim.g.colors_name or vim.g.colors_name == "" then
+      local default_theme = "gruvbox"
+      if M.themes[default_theme] then
+        local success, err = pcall(M.themes[default_theme].setup)
+        if success then
+          M.current_theme = default_theme
+          M.save_theme()
+        end
+      end
+    end
+  end)
+  
+  -- Ultimate safeguard: ensure theme is applied after full startup regardless of errors
+  vim.api.nvim_create_autocmd("VimEnter", {
+    callback = function()
+      vim.defer_fn(function()
+        if not vim.g.colors_name or vim.g.colors_name == "" then
+          local default_theme = "gruvbox"
+          if M.themes[default_theme] then
+            local success, err = pcall(M.themes[default_theme].setup)
+            if success then
+              M.current_theme = default_theme
+              M.save_theme()
+              vim.notify("Applied default theme after full startup", vim.log.levels.INFO, { title = "Theme Manager" })
+            end
+          end
+        end
+      end, 100) -- Small delay to ensure everything is ready
+    end,
+    desc = "Ensure default theme is applied after full startup",
+    group = vim.api.nvim_create_augroup("ThemeEnsureDefault", { clear = true }),
+    once = true,  -- Run only once
+  })
 end
 
 return M
