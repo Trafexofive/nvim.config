@@ -3,6 +3,7 @@
 local M = {}
 
 M.SmpNotify = require("mlamkadm.utils.SmpNotify")
+M.lsp = require("mlamkadm.utils.lsp")  -- LSP utilities
 
 --- Safely require a module.
 -- @param mod (string) The module name to require.

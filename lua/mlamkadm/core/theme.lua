@@ -125,6 +125,17 @@ function M.setup()
         M.current_theme = theme_name
       end
       M.save_theme()
+      
+      -- Also save to session if auto-session is enabled
+      if package.loaded["auto-session"] then
+        local auto_session = require("auto-session")
+        if auto_session.save then
+          -- Small delay to ensure theme is fully loaded before saving session
+          vim.defer_fn(function()
+            pcall(auto_session.save)  -- Don't error if session saving fails
+          end, 200)
+        end
+      end
     end,
     desc = "Save current theme when colorscheme changes",
     group = vim.api.nvim_create_augroup("ThemePersistence", { clear = true })
@@ -162,11 +173,10 @@ function M.setup()
   end
 
   -- Restore theme if available (deferred to after startup)
-  -- Use a later timer to ensure plugins are fully loaded
+  -- Restore saved theme regardless of whether it's different from default
   vim.defer_fn(function()
-    -- Only restore if a theme was previously saved and it's different from the default
     local saved_theme = vim.g.saved_theme
-    if saved_theme and saved_theme ~= "gruvbox" then
+    if saved_theme and M.themes[saved_theme] then
       M.restore_theme()
     end
   end, 500) -- Delay restoration slightly to ensure everything is loaded
@@ -202,9 +212,33 @@ function M.setup()
         end
       end, 100) -- Small delay to ensure everything is ready
     end,
-    desc = "Ensure default theme is applied after full startup",
+    desc = "Ensure theme is applied after full startup",
     group = vim.api.nvim_create_augroup("ThemeEnsureDefault", { clear = true }),
     once = true,  -- Run only once
+  })
+  
+  -- More robust theme restoration for session contexts
+  vim.api.nvim_create_autocmd("UIEnter", {
+    callback = function()
+      local saved_theme = vim.g.saved_theme
+      if saved_theme and M.themes[saved_theme] and saved_theme ~= (vim.g.colors_name or "gruvbox") then
+        vim.schedule(function()
+          M.restore_theme()
+        end)
+      end
+    end,
+    desc = "Restore theme on UI enter for session contexts",
+    group = vim.api.nvim_create_augroup("ThemeRestoreOnUIEnter", { clear = true }),
+  })
+  
+  -- Ensure theme is saved when session is about to be saved
+  vim.api.nvim_create_autocmd("BufWritePre", {
+    pattern = "Session.vim", -- When a session file is being written
+    callback = function()
+      M.save_theme() -- Ensure theme is saved before session
+    end,
+    desc = "Save theme before session write",
+    group = vim.api.nvim_create_augroup("ThemeBeforeSessionWrite", { clear = true }),
   })
 end
 

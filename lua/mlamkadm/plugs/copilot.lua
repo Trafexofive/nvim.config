@@ -8,21 +8,51 @@ return {
   },
   config = function()
     require("copilot").setup({
+      panel = {
+        enabled = true,
+        auto_refresh = false,
+        keymap = {
+          jump_prev = "[[",
+          jump_next = "]]",
+          accept = "<CR>",
+          refresh = "gr",
+          open = "<M-CR>",
+        },
+      },
       suggestion = {
         enabled = true,
         auto_trigger = true, -- Trigger suggestions automatically
+        debounce = 75, -- Faster debounce for more responsive suggestions
         keymap = {
-           accept = "<C-l>", -- Example: Accept with Ctrl+L
+           accept = "<C-l>", -- Accept with Ctrl+L
+           accept_word = false,
+           accept_line = false,
+           next = "<M-]>", -- Next suggestion
+           prev = "<M-[>", -- Previous suggestion
            dismiss = "<C-]>",
-           next = "<M-]>", -- Consider changing Meta keymaps if they conflict
-           prev = "<M-[>",
-        }
+        },
+        -- Filetype optimizations for better performance
+        filetypes = {
+          ["*"] = true, -- Enable for all by default
+        },
       },
-      panel = { enabled = true }, -- Enable Copilot panel (:Copilot panel)
       filetypes = {             -- Configure filetypes where Copilot is active/inactive
-        -- markdown = true,
+        yaml = false,
+        markdown = true,
+        help = false,
+        gitcommit = true,
         ["*"] = true, -- Enable for all by default
-        -- yaml = false, -- Example: Disable for YAML
+      },
+      server_opts_overrides = {
+        trace = "off", -- Disable tracing for better performance
+        settings = {
+          advanced = {
+            -- Improve the speed and quality of suggestions
+            completeInComMENTS = false, -- Don't suggest in comments
+            listCount = 6, -- Number of completions to fetch
+            inlineSuggestCount = 3, -- Number of inline suggestions
+          }
+        }
       },
     })
   end,

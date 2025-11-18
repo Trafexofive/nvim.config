@@ -16,6 +16,13 @@ vim.g.mapleader = ' '
 -- Neovim shortcuts
 -----------------------------------------------------------
 
+-----------------------------------------------------------
+-- Vim Motions Registry shortcuts
+-----------------------------------------------------------
+
+-- Open the Vim motions registry
+map('n', '<leader>vm', '<cmd>lua require("mlamkadm.utils.vim_motions_cmd").show_motions_cmd()<cr>', { desc = 'Open Vim Motions Registry' })
+
 -- Disable arrow keys in normal mode
 map('', '<up>', '<nop>')
 map('', '<down>', '<nop>')
@@ -71,11 +78,19 @@ map('n', '<leader>Q', function()
     -- Ensure we're still in the same directory after saving
     vim.fn.chdir(current_dir)
     
+    -- Close all windows except the current one (we'll replace it with dashboard)
+    local current_win = vim.api.nvim_get_current_win()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+        if win ~= current_win then
+            pcall(vim.api.nvim_win_close, win, true)  -- force close other windows
+        end
+    end
+    
     -- Close all buffers except dashboard
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         local ft = vim.bo[buf].filetype
-        if vim.api.nvim_buf_is_loaded(buf) and ft ~= 'snacks_dashboard' and ft ~= 'alpha' then
-            vim.api.nvim_buf_delete(buf, { force = true })
+        if vim.api.nvim_buf_is_loaded(buf) and ft ~= 'snacks_dashboard' and ft ~= 'alpha' and vim.api.nvim_buf_get_name(buf) ~= '' then
+            pcall(vim.api.nvim_buf_delete, buf, { force = true })
         end
     end
     

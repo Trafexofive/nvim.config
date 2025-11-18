@@ -6,12 +6,65 @@ M.themes = {
   gruvbox = {
     plugin = "ellisonleao/gruvbox.nvim",
     setup = function()
+      -- Try to load the plugin with error handling
       local ok, gruvbox = pcall(require, "gruvbox")
       if not ok then
-        vim.notify("gruvbox.nvim plugin not found. Please make sure it's installed via your plugin manager.", vim.log.levels.ERROR, { title = "Theme Manager" })
-        return false
+        -- Try to load it using lazy.nvim to ensure plugin is properly loaded
+        local lazy_ok, lazy = pcall(require, "lazy.core.loader")
+        if lazy_ok and lazy then
+          local plugin_name = "gruvbox.nvim"
+          local plugin = lazy.plugins[plugin_name]
+          if plugin and not plugin._.loaded then
+            lazy.load({ plugins = { plugin_name } })
+            ok, gruvbox = pcall(require, "gruvbox")
+          end
+        end
+        
+        -- If still not loaded, try a delayed approach
+        if not ok then
+          vim.schedule(function()
+            local retry_ok, retry_gruvbox = pcall(require, "gruvbox")
+            if retry_ok then
+              retry_gruvbox.setup({
+                -- contrast = "medium",
+                palette_overrides = {},
+                overrides = {
+                  SignColumn = { bg = "NONE" },
+                  NormalFloat = { bg = "NONE" },
+                  FloatBorder = { fg = "#928374", bg = "NONE" },
+                },
+                dim_inactive = false,
+                transparent_mode = false,
+              })
+              vim.cmd.colorscheme "gruvbox"
+
+              -- Set terminal colors to match gruvbox
+              vim.g.terminal_color_0 = '#282828'
+              vim.g.terminal_color_1 = '#cc241d'
+              vim.g.terminal_color_2 = '#98971a'
+              vim.g.terminal_color_3 = '#d79921'
+              vim.g.terminal_color_4 = '#458588'
+              vim.g.terminal_color_5 = '#b16286'
+              vim.g.terminal_color_6 = '#689d6a'
+              vim.g.terminal_color_7 = '#a89984'
+              vim.g.terminal_color_8 = '#928374'
+              vim.g.terminal_color_9 = '#fb4934'
+              vim.g.terminal_color_10 = '#b8bb26'
+              vim.g.terminal_color_11 = '#fabd2f'
+              vim.g.terminal_color_12 = '#83a598'
+              vim.g.terminal_color_13 = '#d3869b'
+              vim.g.terminal_color_14 = '#8ec07c'
+              vim.g.terminal_color_15 = '#ebdbb2'
+              vim.notify("Gruvbox theme applied after delayed loading", vim.log.levels.INFO, { title = "Theme Manager" })
+            else
+              vim.notify("gruvbox.nvim plugin still not found after attempting to load with lazy.nvim. Please make sure it's installed via your plugin manager.", vim.log.levels.ERROR, { title = "Theme Manager" })
+            end
+          end)
+          return false
+        end
       end
-      
+
+      -- If plugin was successfully loaded immediately, apply the setup
       gruvbox.setup({
         -- contrast = "medium",
         palette_overrides = {},
@@ -258,15 +311,34 @@ function M.restore_theme()
   if saved_theme and M.themes[saved_theme] then
     -- Ensure the theme plugin is properly loaded before switching
     local theme_info = M.themes[saved_theme]
-    
+
+    -- Try to ensure the plugin is loaded first
+    if saved_theme ~= "gruvbox" then
+      -- For other themes, try to load them using lazy if possible
+      local success, lazy_plugins = pcall(require, "lazy.core.config")
+      if success then
+        -- Extract just the plugin name from the path (e.g., "folke/tokyonight.nvim" -> "tokyonight.nvim")
+        local plugin_name = theme_info.plugin:match("[^/]+")
+        local plugin = lazy_plugins.plugins[plugin_name]
+        if plugin then
+          -- Load the plugin if it's not already loaded
+          if not plugin._.loaded then
+            require("lazy.core.loader").load(plugin, { only = plugin })
+          end
+        end
+      end
+    end
+
     -- For gruvbox, it should already be loaded via plugin manager
-    local theme_info = M.themes[saved_theme]
     if saved_theme == "gruvbox" then
       -- Just run the setup again to ensure it's properly applied
-      local ok, _ = pcall(theme_info.setup)
+      local ok, err = pcall(theme_info.setup)
       if ok then
         M.current_theme = saved_theme
+        vim.g.colors_name = saved_theme  -- Explicitly set colors_name
         vim.notify("Restored " .. theme_info.name .. " theme", vim.log.levels.INFO, { title = "Theme Manager" })
+      else
+        vim.notify("Failed to restore " .. theme_info.name .. " theme: " .. tostring(err), vim.log.levels.ERROR, { title = "Theme Manager" })
       end
     else
       -- For other themes, switch normally
