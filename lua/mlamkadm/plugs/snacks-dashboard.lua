@@ -17,8 +17,11 @@ return {
 
             { icon = "󱍾", key = "s", desc = "Sessions", action = ":Telescope session-lens" },
             { icon = "󰽤", key = "S", desc = "Restore Session", action = ":SessionRestore" },
-            { icon = "󱌣", key = "n", desc = "New Session", action = function() 
-                require("mlamkadm.core.session_manager").create_new_session() 
+            { icon = "󱌣", key = "n", desc = "New Session", action = function()
+                require("mlamkadm.core.session_manager").create_new_session()
+            end },
+            { icon = "󰦉", key = "w", desc = "Temp Workspace", action = function()
+                require("mlamkadm.core.session_manager").create_temp_session()
             end },
             { icon = "", key = "D", desc = "Delete Session", action = function()
                 require("mlamkadm.core.session_manager").delete_session()
@@ -56,7 +59,7 @@ return {
   end,
   config = function(_, opts)
     require("snacks").setup(opts)
-    
+
     vim.api.nvim_create_autocmd("User", {
       pattern = "SnacksDashboardOpened",
       callback = function()

@@ -108,6 +108,19 @@ function M.toggle_popup(cmd, position, opts)
             if popups[cmd] and popups[cmd].buf == buf then
                 popups[cmd] = nil
             end
+            -- Check if the window still exists and close it to prevent the exit status from showing
+            if vim.api.nvim_win_is_valid(win) then
+                -- Schedule the window closing to happen after the exit message is processed
+                vim.schedule(function()
+                    if vim.api.nvim_win_is_valid(win) then
+                        vim.api.nvim_win_close(win, true)
+                        -- Also try to delete the buffer to ensure cleanup
+                        if vim.api.nvim_buf_is_valid(buf) then
+                            pcall(vim.api.nvim_buf_delete, buf, { force = true })
+                        end
+                    end
+                end)
+            end
         end
     }
     
@@ -122,6 +135,10 @@ function M.toggle_popup(cmd, position, opts)
     -- Keymap to close from within the terminal
     vim.api.nvim_buf_set_keymap(buf, 't', config.close_key, [[<C-\><C-n><cmd>close<CR>]],
         { noremap = true, silent = true, desc = "Hide Terminal" })
+
+    -- Keymap to close terminal with ctrl-d (common exit key for many programs)
+    vim.api.nvim_buf_set_keymap(buf, 't', '<C-d>', [[<C-\><C-n>:close<CR>]],
+        { noremap = true, silent = true, desc = "Close Terminal" })
 
     -- Keymap to drop to normal mode with ctrl-escape
     vim.api.nvim_buf_set_keymap(buf, 't', '<C-Esc>', [[<C-\><C-n>]],
