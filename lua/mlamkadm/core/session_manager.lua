@@ -1,15 +1,6 @@
 -- Session management utilities
 local M = {}
 
--- Telescope dependencies for readme picker
-local telescope_avail, telescope = pcall(require, "telescope")
-local pickers_avail, pickers = pcall(require, "telescope.pickers")
-local finders_avail, finders = pcall(require, "telescope.finders")
-local previewers_avail, previewers = pcall(require, "telescope.previewers")
-local conf_avail, conf = pcall(require, "telescope.config")
-local actions_avail, actions = pcall(require, "telescope.actions")
-local action_state_avail, action_state = pcall(require, "telescope.actions.state")
-
 -- Get all possible auto-session directories
 local function get_auto_session_dirs()
   local session_dirs = {}
@@ -29,6 +20,7 @@ end
 
 -- Custom previewer to show README.md for the selected session
 local function session_readme_previewer(opts)
+  local previewers_avail, previewers = pcall(require, "telescope.previewers")
   if not previewers_avail then return nil end
   opts = opts or {}
 
@@ -112,8 +104,15 @@ end
 
 -- Function to create the session picker with README preview
 function M.sessions_with_readme(opts)
-  if not (telescope_avail and pickers_avail and finders_avail and conf_avail and actions_avail and action_state_avail) then
-    vim.notify("Telescope is not available", vim.log.levels.ERROR)
+  -- Require telescope components inside the function to ensure they are loaded
+  local pickers_avail, pickers = pcall(require, "telescope.pickers")
+  local finders_avail, finders = pcall(require, "telescope.finders")
+  local conf_avail, conf = pcall(require, "telescope.config")
+  local actions_avail, actions = pcall(require, "telescope.actions")
+  local action_state_avail, action_state = pcall(require, "telescope.actions.state")
+
+  if not (pickers_avail and finders_avail and conf_avail and actions_avail and action_state_avail) then
+    vim.notify("Telescope components not fully available", vim.log.levels.ERROR)
     return
   end
   
@@ -179,8 +178,6 @@ function M.sessions_with_readme(opts)
         actions.close(prompt_bufnr)
 
         if selection then
-          -- The issue here is that we need to determine the correct way to restore the session
-          -- Auto-session uses the directory context to determine which session to restore
           -- Try to restore by changing to the session directory name if it's a real path
           local project_dir = vim.fn.expand(selection.value)
           if vim.fn.isdirectory(project_dir) == 1 then
