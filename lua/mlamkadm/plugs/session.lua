@@ -2,6 +2,7 @@ return {
     "rmagatti/auto-session",
     dependencies = { "nvim-telescope/telescope.nvim" },
     lazy = false,
+    priority = 1001, -- Ensure it loads before dashboard (priority 1000) so auto-restore happens first
     config = function()
         require("auto-session").setup({
             log_level = "error",
