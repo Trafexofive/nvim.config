@@ -15,7 +15,7 @@ return {
             { icon = "󰈞", key = "f", desc = "Find File", action = ":Telescope find_files" },
             { icon = "", key = "r", desc = "Recent Files", action = ":Telescope oldfiles" },
 
-            { icon = "󱍾", key = "s", desc = "Sessions", action = ":Telescope session-lens" },
+            { icon = "󱍾", key = "s", desc = "Sessions", action = function() require("mlamkadm.core.session_manager").sessions_with_readme() end },
             { icon = "󰽤", key = "S", desc = "Restore Session", action = ":SessionRestore" },
             { icon = "󱌣", key = "n", desc = "New Session", action = function()
                 require("mlamkadm.core.session_manager").create_new_session()

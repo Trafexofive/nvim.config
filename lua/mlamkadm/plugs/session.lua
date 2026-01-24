@@ -6,9 +6,19 @@ return {
         require("auto-session").setup({
             log_level = "error",
             auto_save_enabled = true,
-            auto_restore_enabled = false, -- Manual restore only
+            auto_restore_enabled = true, -- Auto restore enabled
             auto_session_suppress_dirs = { "~/", "/", "~/Downloads", "~/repos", "~/services", "~/Desktop", "~/tmp", "~/temp" },
             auto_session_use_git_branch = false,
+            
+            -- Better flow for directory changes
+            cwd_change_handling = {
+                restore_upcoming_session = true, -- Restore session for upcoming CWD
+                pre_cwd_changed_hook = nil, -- Function to run before CWD changes
+                post_cwd_changed_hook = function() -- Refresh dashboard or lualine if needed
+                     require("lualine").refresh() 
+                end,
+            },
+
             session_lens = {
                 load_on_setup = true,
                 theme_conf = { border = true },
@@ -23,8 +33,8 @@ return {
         -- Load telescope extension
         pcall(require('telescope').load_extension, 'session-lens')
 
-        -- Keymaps for session management - these will be overridden by the enhanced session module
-        vim.keymap.set("n", "<leader>ss", "<cmd>Telescope session-lens<CR>", { desc = "Search sessions" })
+        -- Keymaps for session management
+        vim.keymap.set("n", "<leader>ss", function() require("mlamkadm.core.session_manager").sessions_with_readme() end, { desc = "Search sessions" })
         vim.keymap.set("n", "<leader>sr", "<cmd>SessionRestore<CR>", { desc = "Restore session for cwd" })
         vim.keymap.set("n", "<leader>sS", "<cmd>SessionSave<CR>", { desc = "Save session" })
         vim.keymap.set("n", "<leader>sd", "<cmd>AutoSession deletePicker<CR>", { desc = "Delete session" })
