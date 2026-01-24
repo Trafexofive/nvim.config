@@ -28,11 +28,34 @@ return {
 
         -- Statusline components configuration
         components = {
-            "mode",                -- Vim mode (Normal, Insert, Visual, etc.)
+            "mode", -- Vim mode (Normal, Insert, Visual, etc.)
+            function()
+                -- Get the current directory name as session name
+                local session_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+                local icon = "󱁿"
+                -- Add custom icons for important directories
+                if session_name == "nvim" then
+                    icon = ""
+                elseif session_name == ".config" then
+                    icon = ""
+                elseif session_name == "repos" then
+                    icon = "󰉋"
+                elseif session_name == "home" or session_name == "Desktop" or session_name == "Documents" then
+                    icon = ""
+                end
+                return icon .. " " .. session_name
+            end,
             "filename",            -- Current file name
             "git-branch",          -- Git branch name
             "git-diff",            -- Git changes (added, modified, removed)
             "%=",                  -- Align the rest to the right
+            -- Date and time information
+            function()
+                return os.date("%m/%d")  -- Date in MM/DD format
+            end,
+            function()
+                return " " .. os.date("%H:%M:%S")  -- Time with seconds
+            end,
             "diagnostics",         -- LSP diagnostics
             "lsps-formatters",     -- Active LSP clients and formatters
             -- "copilot",             -- GitHub Copilot status

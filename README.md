@@ -9,6 +9,8 @@ A simple yet opinionated Neovim configuration that enhances your coding experien
 - **Documentation Lookup**: Easy access to help documentation and cheat sheets
 - **Performance Optimized**: Fast startup and responsive editing
 - **Modern UI**: Clean, Zenful interface with customizable themes
+- **Session Management**: Full session state preservation across switches (terminals, widgets, buffers)
+- **Widget System**: Custom dashboard widgets with TUI support
 
 ## 🔧 Key Components
 
@@ -32,6 +34,26 @@ A simple yet opinionated Neovim configuration that enhances your coding experien
 - Multiple theme options with easy switching
 - Consistent UI across all components
 - Dark/light theme support
+
+### Enhanced Session Management
+Full session state preservation across switches. Terminals, widgets, and all buffers are maintained when switching between sessions.
+- Auto-saves current session before switching
+- Terminals persist across session switches
+- Widget states maintained during session transitions
+- Smooth session switching with `<leader>ss`
+- Session saving with `<leader>sS`
+- Session restoration with `<leader>sr`
+
+### Widget System
+Custom widget system with full buffer control, live updates, and TUI support.
+- Press `w` or `Ctrl-j` from dashboard to open widget pages
+- Use `Ctrl-j/k` to navigate between widget pages
+- Press `q` to return to dashboard
+- Press `r` to refresh current page
+
+**Pages:**
+1. **System** - Calendar, system info, disk usage
+2. **Dev** - Git status and recent commits
 
 ## 🚀 Quick Start
 
@@ -68,6 +90,31 @@ A simple yet opinionated Neovim configuration that enhances your coding experien
 - `<leader>fr` - Recent files
 - `<leader>fs` - Search history
 
+### Session Management
+- `<leader>ss` - Switch session (auto-saves current)
+- `<leader>sS` - Save current session
+- `<leader>sr` - Restore session
+
+### Dashboard Navigation
+| Key | Action |
+|-----|--------|
+| `f` | Find files (Telescope) |
+| `r` | Recent files |
+| `s` | Sessions |
+| `S` | Restore session |
+| `t` | TUI Commands |
+| `w` | Open widgets |
+| `l` | Lazy plugin manager |
+| `q` | Quit |
+
+### Widget Pages
+| Key | Action |
+|-----|--------|
+| `Ctrl-j` | Next widget page |
+| `Ctrl-k` | Previous widget page |
+| `r` | Refresh current page |
+| `q` / `Esc` | Return to dashboard |
+
 ### LSP
 - `<leader>ld` - LSP Definitions
 - `<leader>lr` - LSP References
@@ -101,6 +148,24 @@ return {
 ### Changing Theme
 - Run `:Telescope themes` to see available themes
 - Or modify the theme configuration in `lua/mlamkadm/core/theme.lua`
+
+### Widget Customization
+Edit `lua/mlamkadm/core/widgets/init.lua` to add/modify widgets.
+
+## Architecture
+
+```
+lua/mlamkadm/
+├── core/
+│   ├── widgets/       # Custom widget system
+│   │   ├── init.lua   # Main setup
+│   │   ├── page.lua   # Page management
+│   │   ├── buffer.lua # Buffer utilities
+│   │   └── types/     # Widget implementations
+│   └── terminal.lua   # TUI registry
+├── plugs/             # Plugin configurations
+└── utils/             # Utilities
+```
 
 ## 🤝 Contributing
 
