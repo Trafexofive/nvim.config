@@ -5,6 +5,7 @@ local M = {}
 local function get_auto_session_dirs()
   local session_dirs = {}
   local possible_paths = {
+    vim.fn.stdpath("data") .. "/sessions",      -- Default Neovim sessions
     vim.fn.stdpath("data") .. "/auto-session",  -- Newer format
     vim.fn.stdpath("data") .. "/auto_session",  -- Older format  
   }
@@ -18,6 +19,15 @@ local function get_auto_session_dirs()
   return session_dirs
 end
 
+-- Helper to decode auto-session filenames to actual paths
+local function decode_session_path(filename)
+  -- Remove .vim extension
+  local path = filename:gsub("%.vim$", "")
+  -- Replace escaped characters
+  path = path:gsub("%%2F", "/"):gsub("%%2E", "."):gsub("%%3A", ":"):gsub("%%5C", "\\")
+  return path
+end
+
 -- Custom previewer to show README.md for the selected session
 local function session_readme_previewer(opts)
   local previewers_avail, previewers = pcall(require, "telescope.previewers")
@@ -27,49 +37,19 @@ local function session_readme_previewer(opts)
   return previewers.new_buffer_previewer({
     title = "Session README",
     dyn_title = function(_, entry)
-      return "README.md for: " .. entry.value
+      return "README.md for: " .. entry.display
     end,
     define_preview = function(self, entry, status)
-      local session_name = entry.value
+      local project_path = entry.value
       local readme_content = {}
 
-      -- Auto-session typically names directories after the project paths
-      -- So the session_name here is likely the project directory name/path
-      local possible_project_paths = {
-        vim.fn.expand(session_name),                    -- Direct expansion
-        vim.fn.expand("~/") .. session_name,           -- Path relative to home
-        vim.fn.getcwd() .. "/" .. session_name,        -- Path relative to current dir
-      }
-
-      -- Also check in the auto-session directory structure
-      local session_dirs = get_auto_session_dirs()
-      local session_path_found = nil
-      
-      -- Check if session_name corresponds to a directory in any of the auto-session directories
-      for _, auto_session_dir in ipairs(session_dirs) do
-        local session_dir_path = auto_session_dir .. "/" .. session_name
-        if vim.fn.isdirectory(session_dir_path) == 1 then
-          session_path_found = session_dir_path
-          break
-        end
-      end
-
-      if session_path_found then
-        -- The session directory was found, so we can check for session files
-        table.insert(possible_project_paths, 1, session_name)
-      end
-
-      -- Look for README.md in possible project directories
+      -- Look for README.md in the project directory
+      local readme_path = project_path .. "/README.md"
       local readme_found = false
-      for _, project_path in ipairs(possible_project_paths) do
-        if vim.fn.isdirectory(project_path) == 1 then
-          local readme_path = project_path .. "/README.md"
-          if vim.fn.filereadable(readme_path) == 1 then
-            readme_content = vim.fn.readfile(readme_path)
-            readme_found = true
-            break
-          end
-        end
+      
+      if vim.fn.filereadable(readme_path) == 1 then
+        readme_content = vim.fn.readfile(readme_path)
+        readme_found = true
       end
 
       if not readme_found then
@@ -77,18 +57,11 @@ local function session_readme_previewer(opts)
         readme_content = {
           "No README.md file found in project directory.",
           "",
-          "Selected Session: " .. session_name,
+          "Project Path: " .. project_path,
           "",
           "This preview pane will show the README.md file",
           "from the project directory when available.",
-          "",
-          "Check the following locations for README.md:",
         }
-        for i, path in ipairs(possible_project_paths) do
-          if i <= 5 then  -- Limit the number of paths shown
-            table.insert(readme_content, "  - " .. path .. "/README.md")
-          end
-        end
       end
 
       -- Set the content to the preview buffer
@@ -118,41 +91,34 @@ function M.sessions_with_readme(opts)
   
   opts = opts or {}
 
-  -- Get available sessions from all auto-session directories
+  -- Get available sessions from all session directories
   local session_dirs = get_auto_session_dirs()
-  local sessions = {}
+  local session_data = {}
 
-  -- Process each session directory in all session directories
+  -- Process each session directory
   for _, session_dir in ipairs(session_dirs) do
-    local session_entries = vim.fn.glob(session_dir .. "/*/", 0, 1)  -- Get all directories
-    for _, session_path in ipairs(session_entries) do
-      local session_name = vim.fn.fnamemodify(session_path, ":t"):gsub("/$", "")  -- Get directory name without trailing slash
-
-      -- Check if the directory contains any session-related files
-      local all_files = vim.fn.glob(session_path .. "*", 0, 1)
-      if #all_files > 0 then
-        -- Avoid duplicates
-        local is_duplicate = false
-        for _, existing_session in ipairs(sessions) do
-          if existing_session == session_name then
-            is_duplicate = true
-            break
-          end
-        end
-        if not is_duplicate then
-          table.insert(sessions, session_name)
-        end
+    local session_files = vim.fn.glob(session_dir .. "/*.vim", 0, 1)
+    for _, session_file in ipairs(session_files) do
+      local filename = vim.fn.fnamemodify(session_file, ":t")
+      local project_path = decode_session_path(filename)
+      
+      -- Avoid duplicates
+      if not session_data[project_path] then
+        session_data[project_path] = {
+          path = project_path,
+          display = vim.fn.fnamemodify(project_path, ":t"),
+        }
       end
     end
   end
 
   -- Create picker entries
   local entries = {}
-  for _, session_name in ipairs(sessions) do
+  for path, data in pairs(session_data) do
     table.insert(entries, {
-      value = session_name,
-      ordinal = session_name,
-      display = session_name,
+      value = path,
+      ordinal = path .. " " .. data.display,
+      display = data.display .. " (" .. path .. ")",
     })
   end
 
@@ -178,15 +144,18 @@ function M.sessions_with_readme(opts)
         actions.close(prompt_bufnr)
 
         if selection then
-          -- Try to restore by changing to the session directory name if it's a real path
-          local project_dir = vim.fn.expand(selection.value)
+          -- Save current session before switching
+          vim.cmd("silent! SessionSave")
+          
+          local project_dir = selection.value
           if vim.fn.isdirectory(project_dir) == 1 then
             vim.cmd("cd " .. vim.fn.fnameescape(project_dir))
+            -- Clear all buffers before restoring to ensure a clean switch
+            -- This helps with terminals and other state
+            vim.cmd("silent! %bd!")
             vim.cmd("silent! SessionRestore")
           else
-            -- If it's not a valid directory, try to restore using auto-session API
-            pcall(vim.cmd, "cd ~") -- Go to home directory as fallback
-            vim.cmd("silent! SessionRestore " .. selection.value)
+            vim.notify("Directory not found: " .. project_dir, vim.log.levels.ERROR)
           end
         end
       end)
