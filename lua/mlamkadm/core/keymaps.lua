@@ -152,6 +152,9 @@ vim.api.nvim_create_autocmd("BufNewFile", {
 -- New buffer with a terminal
 map('n', '<leader>nt', '<cmd>enew | terminal<CR>', { desc = 'New buffer with terminal' })
 
+-- RSS Reader
+map('n', '<leader>fm', '<cmd>FeedMe<CR>', { desc = 'Open FeedMe RSS' })
+
 -- Smart ctrl-tab behavior, that remembers last used buffer
 local last_buffer = nil
 
