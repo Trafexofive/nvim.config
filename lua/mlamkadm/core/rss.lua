@@ -314,5 +314,65 @@ function M.toggle_read()
 	end
 end
 
+-- =============================================================================
+-- TELESCOPE INTEGRATION
+-- =============================================================================
+function M.telescope_search()
+	local has_telescope, telescope = pcall(require, "telescope")
+	if not has_telescope then
+		vim.notify("Telescope not found", vim.log.levels.ERROR)
+		return
+	end
+
+	local pickers = require("telescope.pickers")
+	local finders = require("telescope.finders")
+	local conf = require("telescope.config").values
+	local actions = require("telescope.actions")
+	local action_state = require("telescope.actions.state")
+
+	local items = load_cache()
+	if #items == 0 then
+		vim.notify("No cached feeds to search. Run :FeedMe first.", vim.log.levels.WARN)
+		return
+	end
+
+	pickers
+		.new({}, {
+			prompt_title = "Search RSS Feeds",
+			finder = finders.new_table({
+				results = items,
+				entry_maker = function(entry)
+					return {
+						value = entry,
+						display = string.format("%s %-20s │ %s", entry.feed_icon, entry.feed_name, entry.title),
+						ordinal = entry.feed_name .. " " .. entry.title,
+					}
+				end,
+			}),
+			sorter = conf.generic_sorter({}),
+			attach_mappings = function(prompt_bufnr, map)
+				actions.select_default:replace(function()
+					actions.close(prompt_bufnr)
+					local selection = action_state.get_selected_entry()
+					if selection and selection.value.link then
+						local cmd = vim.fn.has("mac") == 1 and "open"
+							or (vim.fn.has("win32") == 1 and "start" or "xdg-open")
+						vim.fn.jobstart({ cmd, selection.value.link }, { detach = true })
+						-- Mark as read in cache
+						for _, item in ipairs(items) do
+							if item.link == selection.value.link then
+								item.read = true
+								break
+							end
+						end
+						save_cache(items)
+					end
+				end)
+				return true
+			end,
+		})
+		:find()
+end
+
 return M
 

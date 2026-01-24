@@ -8,6 +8,40 @@ return {
     config = function()
       require("mkdnflow").setup({
         -- Sensible defaults are used. Customizations can be added here.
+        mappings = {
+            MkdnEnter = {{'i', 'n'}, '<CR>'},
+            MkdnTab = false,
+            MkdnSTab = false,
+            MkdnNextLink = {'n', '<Tab>'},
+            MkdnPrevLink = {'n', '<S-Tab>'},
+            MkdnNextHeading = {'n', ']]'},
+            MkdnPrevHeading = {'n', '[['},
+            MkdnGoBack = {'n', '<BS>'},
+            MkdnGoForward = {'n', '<Del>'},
+            MkdnFollowLink = false, -- We use CR
+            MkdnDestroyLink = {'n', '<leader>md'},
+            MkdnTagSpan = {'v', '<leader>mt'},
+            MkdnMoveSource = {'n', '<leader>mv'},
+            MkdnYankAnchor = {'n', '<leader>my'},
+            MkdnYankFileAnchor = {'n', '<leader>mY'},
+            MkdnIncreaseHeading = {'n', '<leader>m+'},
+            MkdnDecreaseHeading = {'n', '<leader>m-'},
+            MkdnToggleTodo = {{'n', 'v'}, '<leader>mt'},
+            MkdnNewListItem = false,
+            MkdnNewListItemBelow = {'n', '<leader>o'},
+            MkdnNewListItemAbove = {'n', '<leader>O'},
+            MkdnUpdateNumbering = {'n', '<leader>mn'},
+            MkdnTableNextCell = {'i', '<Tab>'},
+            MkdnTablePrevCell = {'i', '<S-Tab>'},
+            MkdnTableNextRow = false,
+            MkdnTablePrevRow = {'i', '<M-CR>'},
+            MkdnTableNewRowBelow = {'n', '<leader>ir'},
+            MkdnTableNewRowAbove = {'n', '<leader>iR'},
+            MkdnTableNewColAfter = {'n', '<leader>ic'},
+            MkdnTableNewColBefore = {'n', '<leader>iC'},
+            MkdnFoldSection = {'n', '<leader>mf'},
+            MkdnUnfoldSection = {'n', '<leader>mF'}
+        },
         -- Automatically enable spell checking and wrapping for markdown files.
         ft_plugin = {
             ['markdown'] = {

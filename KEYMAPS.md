@@ -47,10 +47,6 @@ The configuration uses `auto-session` for seamless project switching.
 | `<leader>sd` | Delete | Open picker to delete a session |
 | `<leader>Q` | Dashboard | Save session and return to dashboard |
 
-**Workflow:**
-- Start `nvim` in any directory; it will auto-restore or create a session.
-- Use `<leader>ss` to switch between projects instantly. Your layout and terminals are preserved.
-
 ### 2. Terminal & TUI (Pop-up Bin)
 All TUIs and terminals open in centered floating windows.
 
@@ -65,10 +61,6 @@ All TUIs and terminals open in centered floating windows.
 | `<leader>jt` | Btop | Toggle System Monitor |
 | `<leader>jc` | Copilot | Toggle AI Chat (Right aligned) |
 
-**Workflow:**
-- Press `<leader>jj` to commit, then `<C-t>` or `q` to hide and return to code.
-- Pop-ups are persistent; if you hide a shell, its state is kept.
-
 ### 3. Markdown Integration
 Enhanced markdown editing with `mkdnflow.nvim` and `glow`.
 
@@ -76,17 +68,20 @@ Enhanced markdown editing with `mkdnflow.nvim` and `glow`.
 |-----|--------|-------------|
 | `<leader>mp` | Preview | Preview current file with `glow` |
 | `<leader>mP` | Browse | Browse all Markdown files in CWD with `glow` |
-
-**Workflow:**
-- Use standard Markdown syntax. `mkdnflow` handles list toggling and link following.
-- Press `<leader>mp` for a rich TUI preview.
+| `<Tab>` | Next Link | Jump to the next link |
+| `<S-Tab>` | Prev Link | Jump to the previous link |
+| `]] / [[` | Headings | Jump between headings |
+| `<BS>` | Go Back | Navigate back in link history |
+| `<leader>mt` | Toggle Todo | Toggle checkbox state |
+| `<leader>o` | New Item | Create new list item below |
 
 ### 4. RSS Feed (FeedMe)
 Stay updated within Neovim.
 
 | Key | Action | Description |
 |-----|--------|-------------|
-| `<leader>fm` | Open FeedMe | Launch the RSS reader |
+| `<leader>fm` | Open FeedMe | Launch the RSS reader (Dashboard view) |
+| `<leader>fs` | Search Feeds | Search RSS items via Telescope |
 | `<CR>` | Open Link | Open selected article in browser |
 | `r` | Toggle Read | Mark article as read/unread |
 | `R` | Refresh | Fetch latest updates from feeds |

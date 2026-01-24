@@ -154,6 +154,7 @@ map('n', '<leader>nt', '<cmd>enew | terminal<CR>', { desc = 'New buffer with ter
 
 -- RSS Reader
 map('n', '<leader>fm', '<cmd>FeedMe<CR>', { desc = 'Open FeedMe RSS' })
+map('n', '<leader>fs', function() require('mlamkadm.core.rss').telescope_search() end, { desc = 'Search RSS Feeds' })
 
 -- Smart ctrl-tab behavior, that remembers last used buffer
 local last_buffer = nil
