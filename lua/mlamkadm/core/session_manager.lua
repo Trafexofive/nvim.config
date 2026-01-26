@@ -23,8 +23,10 @@ end
 local function decode_session_path(filename)
   -- Remove .vim extension
   local path = filename:gsub("%.vim$", "")
-  -- Replace escaped characters
-  path = path:gsub("%%2F", "/"):gsub("%%2E", "."):gsub("%%3A", ":"):gsub("%%5C", "\\")
+  -- Replace all %XX hex sequences with their actual characters
+  path = path:gsub("%%(%x%x)", function(h)
+    return string.char(tonumber(h, 16))
+  end)
   return path
 end
 
