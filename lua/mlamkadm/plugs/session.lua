@@ -8,15 +8,15 @@ return {
             log_level = "error",
             auto_save_enabled = true,
             auto_restore_enabled = true, -- Auto restore enabled
-            auto_session_suppress_dirs = { "~/", "/", "~/Downloads", "~/repos", "~/services", "~/Desktop", "~/tmp", "~/temp" },
+            auto_session_suppress_dirs = { "~/", "~/Downloads", "~/Desktop", "~/Documents", "~/Videos", "~/Music", "/", "/tmp", "/etc" },
             auto_session_use_git_branch = false,
             
             -- Better flow for directory changes
             cwd_change_handling = {
                 restore_upcoming_session = true, -- Restore session for upcoming CWD
                 pre_cwd_changed_hook = nil, -- Function to run before CWD changes
-                post_cwd_changed_hook = function() -- Refresh dashboard or lualine if needed
-                     require("lualine").refresh() 
+                post_cwd_changed_hook = function() -- Refresh UI components
+                     vim.cmd("redrawstatus")
                 end,
             },
 
