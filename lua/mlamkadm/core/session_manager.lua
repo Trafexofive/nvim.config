@@ -103,12 +103,15 @@ function M.sessions_with_readme(opts)
     for _, session_file in ipairs(session_files) do
       local filename = vim.fn.fnamemodify(session_file, ":t")
       local project_path = decode_session_path(filename)
+      local stats = vim.loop.fs_stat(session_file)
+      local mtime = stats and stats.mtime.sec or 0
       
-      -- Avoid duplicates
-      if not session_data[project_path] then
+      -- Avoid duplicates, keep the newest mtime if same path found in different dirs
+      if not session_data[project_path] or mtime > session_data[project_path].mtime then
         session_data[project_path] = {
           path = project_path,
           display = vim.fn.fnamemodify(project_path, ":t"),
+          mtime = mtime,
         }
       end
     end
@@ -121,8 +124,14 @@ function M.sessions_with_readme(opts)
       value = path,
       ordinal = path .. " " .. data.display,
       display = data.display .. " (" .. path .. ")",
+      mtime = data.mtime,
     })
   end
+
+  -- Sort entries by modification time (newest first)
+  table.sort(entries, function(a, b)
+    return a.mtime > b.mtime
+  end)
 
   -- Create the picker with README preview
   pickers.new(opts, {
