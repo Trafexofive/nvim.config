@@ -178,6 +178,18 @@ map('n', '<C-Tab>', function()
     end
 end, { desc = 'Switch to last used buffer' })
 
--- Reliable alternate buffer switching (Leader-Tab)
-map('n', '<leader><Tab>', '<C-^>', { desc = 'Switch to alternate buffer' })
+-- Reliable alternate buffer switching (Leader-Tab) with Zen UX
+map('n', '<leader><Tab>', function()
+    local alternate_buf = vim.fn.bufnr('#')
+    if alternate_buf ~= -1 and vim.api.nvim_buf_is_valid(alternate_buf) then
+        vim.cmd('buffer #')
+        -- Visual feedback
+        local buf_name = vim.api.nvim_buf_get_name(0)
+        if buf_name == "" then buf_name = "[No Name]" end
+        buf_name = vim.fn.fnamemodify(buf_name, ":t")
+        vim.notify("Switched to: " .. buf_name, vim.log.levels.INFO, { title = "⚡ Flash Switch", icon = "󰈹", timeout = 1000 })
+    else
+        vim.notify("No alternate buffer", vim.log.levels.WARN, { title = "⚡ Flash Switch", icon = "󰈹" })
+    end
+end, { desc = 'Switch to alternate buffer with feedback' })
 
