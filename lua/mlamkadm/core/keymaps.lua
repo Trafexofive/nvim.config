@@ -183,14 +183,30 @@ local switch_notify_id = nil
 map('n', '<leader><Tab>', function()
     local alternate_buf = vim.fn.bufnr('#')
     if alternate_buf ~= -1 and vim.api.nvim_buf_is_valid(alternate_buf) then
+        -- Save view of current buffer before switching
+        local current_view = vim.fn.winsaveview()
+        local current_buf = vim.api.nvim_get_current_buf()
+        
         vim.cmd('buffer #')
         
+        -- Flash highlight on the new line to draw the eye (Zen UX)
+        local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
+        local ns = vim.api.nvim_create_namespace("flash_switch")
+        vim.api.nvim_buf_set_extmark(0, ns, row - 1, 0, {
+            line_hl_group = "CursorLine",
+            hl_eol = true,
+        })
+        vim.defer_fn(function()
+            if vim.api.nvim_buf_is_valid(0) then
+                vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
+            end
+        end, 200)
+
         -- Gather buffer info for rich feedback
         local buf_name = vim.api.nvim_buf_get_name(0)
         local filename = buf_name ~= "" and vim.fn.fnamemodify(buf_name, ":t") or "[No Name]"
         local filepath = buf_name ~= "" and vim.fn.fnamemodify(buf_name, ":~:.:h") or ""
         local line_count = vim.api.nvim_buf_line_count(0)
-        local ft = vim.bo.filetype
         
         -- Get icon
         local icon = "󰈹"
@@ -220,7 +236,7 @@ map('n', '<leader><Tab>', function()
     else
         vim.notify("No alternate buffer", vim.log.levels.WARN, { title = "Flash Switch", icon = "" })
     end
-end, { desc = 'Switch to alternate buffer with Zen feedback' })
+end, { desc = 'Switch to alternate buffer with Zen feedback and line pulse' })
 
 
 -- Polymorphic "Smart Find" (<leader><leader>)
