@@ -177,3 +177,7 @@ map('n', '<C-Tab>', function()
         vim.cmd('bnext')
     end
 end, { desc = 'Switch to last used buffer' })
+
+-- Reliable alternate buffer switching (Leader-Tab)
+map('n', '<leader><Tab>', '<C-^>', { desc = 'Switch to alternate buffer' })
+
