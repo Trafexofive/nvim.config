@@ -179,17 +179,46 @@ map('n', '<C-Tab>', function()
 end, { desc = 'Switch to last used buffer' })
 
 -- Reliable alternate buffer switching (Leader-Tab) with Zen UX
+local switch_notify_id = nil
 map('n', '<leader><Tab>', function()
     local alternate_buf = vim.fn.bufnr('#')
     if alternate_buf ~= -1 and vim.api.nvim_buf_is_valid(alternate_buf) then
         vim.cmd('buffer #')
-        -- Visual feedback
+        
+        -- Gather buffer info for rich feedback
         local buf_name = vim.api.nvim_buf_get_name(0)
-        if buf_name == "" then buf_name = "[No Name]" end
-        buf_name = vim.fn.fnamemodify(buf_name, ":t")
-        vim.notify("Switched to: " .. buf_name, vim.log.levels.INFO, { title = "⚡ Flash Switch", icon = "󰈹", timeout = 1000 })
+        local filename = buf_name ~= "" and vim.fn.fnamemodify(buf_name, ":t") or "[No Name]"
+        local filepath = buf_name ~= "" and vim.fn.fnamemodify(buf_name, ":~:.:h") or ""
+        local line_count = vim.api.nvim_buf_line_count(0)
+        local ft = vim.bo.filetype
+        
+        -- Get icon
+        local icon = "󰈹"
+        local devicons_ok, devicons = pcall(require, "nvim-web-devicons")
+        if devicons_ok then
+            local f_icon, _ = devicons.get_icon(filename, vim.fn.expand('%:e'), { default = true })
+            if f_icon then icon = f_icon end
+        end
+
+        -- Construct Zen message
+        local msg = string.format(" %s %s\n 󰉖 %s\n  %d lines", icon, filename, filepath, line_count)
+        
+        -- Notify with replace to avoid spam
+        local notify_ok, notify = pcall(require, "notify")
+        if notify_ok then
+            switch_notify_id = notify(msg, "info", {
+                title = "Flash Switch",
+                icon = "⚡",
+                timeout = 1000,
+                replace = switch_notify_id,
+                hide_from_history = true,
+                animate = false, -- Snappy
+            })
+        else
+            vim.notify(msg, vim.log.levels.INFO, { title = "Flash Switch" })
+        end
     else
-        vim.notify("No alternate buffer", vim.log.levels.WARN, { title = "⚡ Flash Switch", icon = "󰈹" })
+        vim.notify("No alternate buffer", vim.log.levels.WARN, { title = "Flash Switch", icon = "" })
     end
-end, { desc = 'Switch to alternate buffer with feedback' })
+end, { desc = 'Switch to alternate buffer with Zen feedback' })
 
