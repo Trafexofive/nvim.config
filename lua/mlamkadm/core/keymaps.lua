@@ -236,9 +236,11 @@ map('n', '<leader><leader>', function()
     local is_git = vim.fn.system("git rev-parse --is-inside-work-tree"):match("true")
     
     if is_git then
+        vim.notify("Searching Git Files...", vim.log.levels.INFO, { title = "Smart Find", icon = "", timeout = 500 })
         telescope_builtin.git_files({ show_untracked = true })
     else
-        telescope_builtin.find_files({ hidden = true })
+        vim.notify("Searching All Files...", vim.log.levels.INFO, { title = "Smart Find", icon = "", timeout = 500 })
+        telescope_builtin.find_files({ hidden = true, no_ignore = false })
     end
 end, { desc = 'Smart Find Files (Git/All)' })
 
