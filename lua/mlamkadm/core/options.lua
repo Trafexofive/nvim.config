@@ -50,11 +50,26 @@ vim.opt.wrap = true
 vim.opt.linebreak = true
 vim.opt.spell = false -- Enable per buffer in filetype autocommand
 
--- Auto-save buffers on focus lost or leaving insert mode
-vim.api.nvim_create_autocmd({ "InsertLeave", "FocusLost", "BufLeave", "WinLeave", "TabLeave" }, {
+-- Intelligent Auto-save: Saves valid, writeable buffers when focus is lost or mode changes
+local function smart_autosave()
+    local bufs = vim.api.nvim_list_bufs()
+    for _, buf in ipairs(bufs) do
+        if vim.api.nvim_buf_is_valid(buf) 
+           and vim.api.nvim_buf_get_option(buf, "modified") 
+           and vim.api.nvim_buf_get_option(buf, "buftype") == "" 
+           and vim.api.nvim_buf_get_name(buf) ~= "" 
+        then
+            vim.api.nvim_buf_call(buf, function()
+                vim.cmd("silent! write")
+            end)
+        end
+    end
+end
+
+vim.api.nvim_create_autocmd({ "InsertLeave", "FocusLost", "BufLeave", "TermClose" }, {
     pattern = "*",
-    command = "silent! wall",
-    desc = "Auto save all files on leaving insert mode or losing focus"
+    callback = smart_autosave,
+    desc = "Intelligent auto-save for valid file buffers"
 })
 
 -- Jump to last known cursor position when opening a buffer
