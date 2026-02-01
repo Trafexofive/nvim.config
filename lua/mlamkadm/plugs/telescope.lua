@@ -21,7 +21,6 @@ return {
     },
     keys = {
         -- Essential operations
-        { '<leader><leader>', '<cmd>Telescope find_files hidden=true<cr>', desc = 'Find Files' },
         { '<leader>b',        '<cmd>Telescope buffers sort_mru=true<cr>',  desc = 'Buffers' },
         { '<leader>i',        '<cmd>Telescope git_files<cr>',              desc = 'Git Files' },
         { '<leader>r',        '<cmd>Telescope resume<cr>',                 desc = 'Resume Last Picker' },

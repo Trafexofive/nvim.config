@@ -9,6 +9,7 @@ The leader key is set to `(Space)`.
 ### General
 | Key | Action | Description |
 |-----|--------|-------------|
+| `<leader><leader>` | Smart Find | `git_files` (if in repo) or `find_files` (otherwise) |
 | `<leader>c` | `:nohl` | Clear search highlighting |
 | `<leader>s` | `:w` | Fast save current buffer |
 | `<leader>q` | `:wa...:qa` | Save all and quit Neovim |

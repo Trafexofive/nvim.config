@@ -222,3 +222,24 @@ map('n', '<leader><Tab>', function()
     end
 end, { desc = 'Switch to alternate buffer with Zen feedback' })
 
+
+-- Polymorphic "Smart Find" (<leader><leader>)
+-- Automatically chooses between git_files (if in repo) or find_files (if not)
+map('n', '<leader><leader>', function()
+    local has_telescope, telescope_builtin = pcall(require, 'telescope.builtin')
+    if not has_telescope then
+        vim.notify("Telescope not installed", vim.log.levels.ERROR)
+        return
+    end
+
+    -- Check if inside git repo
+    local is_git = vim.fn.system("git rev-parse --is-inside-work-tree"):match("true")
+    
+    if is_git then
+        telescope_builtin.git_files({ show_untracked = true })
+    else
+        telescope_builtin.find_files({ hidden = true })
+    end
+end, { desc = 'Smart Find Files (Git/All)' })
+
+
