@@ -260,4 +260,77 @@ map('n', '<leader><leader>', function()
     end
 end, { desc = 'Smart Find Files (Git/All)' })
 
+-- Yank full path of highlighted file in netrw/neo-tree
+vim.api.nvim_create_autocmd('FileType', {
+    pattern = { 'netrw', 'neo-tree', 'neo-tree-popup' },
+    callback = function(args)
+        local function yank_full_path()
+            local filetype = vim.bo[args.buf].filetype
+            local path = nil
+
+            if filetype == 'netrw' then
+                -- Netrw: get path under cursor
+                local cfile = vim.fn.expand('<cfile>')
+                if cfile ~= '' and cfile ~= '-' then
+                    path = vim.fn.fnamemodify(cfile, ':p')
+                end
+            elseif filetype == 'neo-tree' or filetype == 'neo-tree-popup' then
+                -- Neo-tree: use treesitter or api to get selected path
+                local ok, tree = pcall(require, 'neo-tree.sources.manager')
+                if ok then
+                    local state = tree.get_state()
+                    if state and state.selected_node then
+                        path = state.selected_node.path
+                    end
+                end
+            end
+
+            -- Fallback: use current buffer path
+            if not path or path == '' then
+                path = vim.fn.expand('%:p')
+            end
+
+            -- Clean up and yank
+            path = path:gsub('/$', '') -- remove trailing slash
+            if path and path ~= '' then
+                vim.fn.setreg('+', path)
+                vim.fn.setreg('"', path)
+                vim.notify('Yanked: ' .. path, vim.log.levels.INFO, { title = 'Path Copied', timeout = 1500 })
+            end
+        end
+
+        vim.keymap.set('n', 'yy', yank_full_path, { buffer = args.buf, silent = true, desc = 'Yank full path' })
+    end,
+})
+
+-- Simple yank current file path (works everywhere)
+map('n', '<leader>yp', function()
+    local path = vim.fn.expand('%:p')
+    if path and path ~= '' then
+        vim.fn.setreg('+', path)
+        vim.fn.setreg('"', path)
+        vim.notify('Yanked: ' .. path, vim.log.levels.INFO, { title = 'Path Copied', timeout = 1500 })
+    end
+end, { desc = 'Yank full path of current file' })
+
+-- Yank relative path
+map('n', '<leader>yr', function()
+    local path = vim.fn.expand('%')
+    if path and path ~= '' then
+        vim.fn.setreg('+', path)
+        vim.fn.setreg('"', path)
+        vim.notify('Yanked: ' .. path, vim.log.levels.INFO, { title = 'Relative Path Copied', timeout = 1500 })
+    end
+end, { desc = 'Yank relative path of current file' })
+
+-- Yank filename only
+map('n', '<leader>yn', function()
+    local path = vim.fn.expand('%:t')
+    if path and path ~= '' then
+        vim.fn.setreg('+', path)
+        vim.fn.setreg('"', path)
+        vim.notify('Yanked: ' .. path, vim.log.levels.INFO, { title = 'Filename Copied', timeout = 1500 })
+    end
+end, { desc = 'Yank filename of current file' })
+
 
