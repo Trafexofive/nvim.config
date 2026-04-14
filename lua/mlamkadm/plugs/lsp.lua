@@ -19,7 +19,7 @@ return {
 
             -- Default capabilities with nvim-cmp
             local capabilities = cmp_nvim_lsp.default_capabilities()
-            
+
             -- Enable folding capabilities for nvim-ufo if used later
             capabilities.textDocument.foldingRange = {
                 dynamicRegistration = false,
@@ -34,37 +34,20 @@ return {
                     -- Enable completion triggered by <c-x><c-o>
                     vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
 
-                    -- Buffer local mappings.
-                    -- See `:help vim.lsp.*` for documentation on any of the below functions
-                    local opts = { buffer = ev.buf }
-                    
                     -- Navigation
-                    vim.keymap.set("n", "gd", function()
-                        local params = vim.lsp.util.make_position_params()
-                        vim.lsp.buf_request(ev.buf, "textDocument/definition", params, function(err, result, ctx, _)
-                            if err then
-                                vim.notify("LSP definition error: " .. err.message, vim.log.levels.WARN)
-                                return
-                            end
-                            if not result or vim.tbl_isempty(result) then
-                                vim.notify("No definition found (clangd may be missing compile_commands.json/project root)", vim.log.levels.INFO)
-                                return
-                            end
-                            vim.lsp.handlers["textDocument/definition"](err, result, ctx, nil)
-                        end)
-                    end, { desc = "Go to Definition", buffer = ev.buf })
+                    vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition", buffer = ev.buf })
                     vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to Declaration", buffer = ev.buf })
                     vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "Go to References", buffer = ev.buf })
                     vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to Implementation", buffer = ev.buf })
-                    
+
                     -- Information
                     vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Hover Documentation", buffer = ev.buf })
                     vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature Help", buffer = ev.buf })
-                    
+
                     -- Actions
                     vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename Symbol", buffer = ev.buf })
                     vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action", buffer = ev.buf })
-                    
+
                     -- Diagnostics
                     vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show Diagnostics", buffer = ev.buf })
                     vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic", buffer = ev.buf })
@@ -140,7 +123,7 @@ return {
                             },
                         })
                     end,
-                    
+
                     ["gopls"] = function()
                         lspconfig.gopls.setup({
                             capabilities = capabilities,
@@ -168,7 +151,7 @@ return {
                             },
                         })
                     end,
-                    
+
                     ["clangd"] = function()
                         local util = require("lspconfig.util")
 
@@ -189,22 +172,42 @@ return {
                                     "compile_flags.txt",
                                     ".clangd",
                                     ".clang-tidy",
+                                    "CMakeLists.txt",
+                                    "Makefile",
+                                    "configure.ac",
+                                    "configure",
                                     ".git"
                                 )(fname) or util.path.dirname(fname)
                             end,
+                            single_file_support = true,
+                            on_new_config = function(new_config, new_root_dir)
+                                local has_db = util.path.exists(util.path.join(new_root_dir, "compile_commands.json"))
+                                local build_db = util.path.exists(util.path.join(new_root_dir, "build", "compile_commands.json"))
+                                local cmd = vim.deepcopy(new_config.cmd or { "clangd" })
+
+                                cmd = vim.tbl_filter(function(arg)
+                                    return not vim.startswith(arg, "--compile-commands-dir=")
+                                end, cmd)
+
+                                if not has_db and build_db then
+                                    table.insert(cmd, "--compile-commands-dir=build")
+                                end
+
+                                new_config.cmd = cmd
+                            end,
                         })
                     end,
-                    
+
                     ["jdtls"] = function()
                         -- DEBUG: Notify that JDTLS handler is running
                         vim.notify("Setting up JDTLS with wrapper...", vim.log.levels.INFO)
-                        
+
                         -- Explicitly configuring root directory pattern for better project detection
                         local root_pattern = require("lspconfig.util").root_pattern
-                        
+
                         -- Use our custom wrapper script that enforces Java 21 environment
                         local wrapper_script = vim.fn.stdpath("config") .. "/jdtls_wrapper.sh"
-                        
+
                         lspconfig.jdtls.setup({
                             capabilities = capabilities,
                             cmd = { wrapper_script },
@@ -260,7 +263,7 @@ return {
                     capabilities = capabilities,
                 })
             end
-            
+
             -- Diagnostic configuration
             vim.diagnostic.config({
                 virtual_text = {
@@ -284,7 +287,7 @@ return {
             })
         end,
     },
-    
+
     -- SchemaStore for JSON/YAML
     {
         "b0o/schemastore.nvim",

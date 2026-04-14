@@ -7,8 +7,10 @@ return {
         "MunifTanjim/nui.nvim",
     },
     keys = {
-        { "<leader><tab>", "<cmd>Neotree float<cr>",       desc = "Toggle Floating NeoTree" },
-        { "<C-n>",         "<cmd>Neotree toggle left<cr>", desc = "Toggle NeoTree" },
+        -- Toggle floating NeoTree and reveal current file
+        { "<leader><tab>", "<cmd>Neotree float reveal<cr>", desc = "Toggle Floating NeoTree (Reveal)" },
+        -- Standard toggle on the left
+        { "<C-n>",         "<cmd>Neotree toggle left<cr>",  desc = "Toggle NeoTree" },
     },
     config = function()
         -- If you want icons for diagnostic errors, you'll need to define them somewhere:

@@ -50,6 +50,10 @@ return {
             padding = 1,
             ttl = 0,
             indent = 0,
+            opts = {
+              interactive = false,
+              bo = { scrollback = 1 },
+            },
           },
           { section = "keys", gap = 1, padding = 1 },
           { section = "startup" },

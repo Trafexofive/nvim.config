@@ -17,9 +17,9 @@ return {
             sh = { "shfmt" },
             c = { "clang_format" },
             cpp = { "clang_format" },
+            java = { "google-java-format" },
             rust = { "rustfmt" },
-            go = { "goimports", "gofmt" },
-            -- Add more formatters as needed
+            go = { "goimports", "gofumpt" },
         },
         -- Configure format on save with fallback
         format_on_save = function(bufnr)
@@ -35,7 +35,19 @@ return {
         -- Configure formatters with more options
         formatters = {
             shfmt = {
-                prepend_args = { "-i", "2", "-ci" },
+                prepend_args = { "-i", "4", "-ci" },
+            },
+            clang_format = {
+                prepend_args = { "-style={IndentWidth: 4, TabWidth: 4, UseTab: Never, AccessModifierOffset: -4, AllowShortIfStatementsOnASingleLine: false, AllowShortFunctionsOnASingleLine: false}" },
+            },
+            prettierd = {
+                prepend_args = { "--tab-width", "4", "--no-use-tabs" },
+            },
+            stylua = {
+                prepend_args = { "--indent-type", "Spaces", "--indent-width", "4" },
+            },
+            ["google-java-format"] = {
+                prepend_args = { "--aosp" },
             },
         },
     },

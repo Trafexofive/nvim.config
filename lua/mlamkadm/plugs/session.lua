@@ -8,7 +8,7 @@ return {
             log_level = "error",
             auto_save_enabled = true,
             auto_restore_enabled = true, -- Auto restore enabled
-            auto_session_suppress_dirs = { "~/", "~/Downloads", "~/Desktop", "~/Documents", "~/Videos", "~/Music", "/", "/tmp", "/etc" },
+            auto_session_suppress_dirs = { "~/", "/home/mlamkadm", "~/Downloads", "~/Desktop", "~/Documents", "~/Videos", "~/Music", "/", "/tmp", "/etc" },
             auto_session_use_git_branch = false,
             
             -- Better flow for directory changes
@@ -17,6 +17,7 @@ return {
                 pre_cwd_changed_hook = nil, -- Function to run before CWD changes
                 post_cwd_changed_hook = function() -- Refresh UI components
                      vim.cmd("redrawstatus")
+                     require("mlamkadm.core.terminal").restore_session()
                 end,
             },
 
@@ -29,6 +30,10 @@ return {
             preserve_state = true,
             -- Don't close buffers when restoring sessions
             silence_on_save = true,
+            
+            -- Hooks
+            pre_save_cmds = { "lua require('mlamkadm.core.terminal').save_session()" },
+            post_restore_cmds = { "lua require('mlamkadm.core.terminal').restore_session()" },
         })
 
         -- Load telescope extension
@@ -36,8 +41,8 @@ return {
 
         -- Keymaps for session management
         vim.keymap.set("n", "<leader>ss", function() require("mlamkadm.core.session_manager").sessions_with_readme() end, { desc = "Search sessions" })
-        vim.keymap.set("n", "<leader>sr", "<cmd>SessionRestore<CR>", { desc = "Restore session for cwd" })
-        vim.keymap.set("n", "<leader>sS", "<cmd>SessionSave<CR>", { desc = "Save session" })
-        vim.keymap.set("n", "<leader>sd", "<cmd>AutoSession deletePicker<CR>", { desc = "Delete session" })
+        vim.keymap.set("n", "<leader>sr", "<cmd>AutoSession restore<CR>", { desc = "Restore session for cwd" })
+        vim.keymap.set("n", "<leader>sS", "<cmd>AutoSession save<CR>", { desc = "Save session" })
+        vim.keymap.set("n", "<leader>sd", "<cmd>AutoSession delete<CR>", { desc = "Delete session" })
     end,
 }
