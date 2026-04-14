@@ -67,12 +67,12 @@ local function session_readme_previewer(opts)
       end
 
       -- Set the content to the preview buffer
-      vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", "markdown")
+      vim.api.nvim_set_option_value("filetype", "markdown", { buf = self.state.bufnr })
       
       -- Make buffer modifiable to set content
-      vim.api.nvim_buf_set_option(self.state.bufnr, "modifiable", true)
+      vim.api.nvim_set_option_value("modifiable", true, { buf = self.state.bufnr })
       vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, readme_content)
-      vim.api.nvim_buf_set_option(self.state.bufnr, "modifiable", false)
+      vim.api.nvim_set_option_value("modifiable", false, { buf = self.state.bufnr })
     end,
   })
 end
@@ -156,7 +156,7 @@ function M.sessions_with_readme(opts)
 
         if selection then
           -- Save current session before switching
-          vim.cmd("silent! SessionSave")
+          vim.cmd("silent! AutoSession save")
           
           local project_dir = selection.value
           if vim.fn.isdirectory(project_dir) == 1 then
@@ -164,7 +164,7 @@ function M.sessions_with_readme(opts)
             -- Clear all buffers before restoring to ensure a clean switch
             -- This helps with terminals and other state
             vim.cmd("silent! %bd!")
-            vim.cmd("silent! SessionRestore")
+            vim.cmd("silent! AutoSession restore")
           else
             vim.notify("Directory not found: " .. project_dir, vim.log.levels.ERROR)
           end
@@ -177,8 +177,8 @@ end
 
 -- Function to delete a session using telescope session-lens
 function M.delete_session()
-	-- Use the AutoSession deletePicker command which should open a picker to select a session to delete
-	vim.cmd("AutoSession deletePicker")
+	-- Use the AutoSession delete command
+	vim.cmd("AutoSession delete")
 end
 
 -- Create a new session by prompting for directory
@@ -232,7 +232,7 @@ function M.create_new_session()
 
 			-- Save the session
 			local success_save, err_save = pcall(function()
-				vim.cmd("SessionSave")
+				vim.cmd("AutoSession save")
 			end)
 
 			if not success_save then

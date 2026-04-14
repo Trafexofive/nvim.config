@@ -1,71 +1,83 @@
 -- /lua/mlamkadm/core/terminal.lua
--- This file combines the pop-up terminal library and its configuration
--- to ensure it is loaded synchronously at startup, avoiding lazy-loading issues.
+-- Advanced Terminal Management System
+-- Handles multiple terminal instances, persistence, and session integration.
 
--- ----------------------------------------------------------------------------
--- Pop-up Terminal Library (from libs/pop-up-bin/init.lua)
--- ----------------------------------------------------------------------------
 local M = {}
 
--- Default configuration
+-- ----------------------------------------------------------------------------
+-- Configuration
+-- ----------------------------------------------------------------------------
 local config = {
     border = "rounded",
     width = 0.8,
     height = 0.8,
-    title = "Pop-Up Bin",
+    title = "Terminal",
     title_pos = "center", -- center | left | right
     close_key = "<C-t>",
-    winblend = 10,
+    winblend = 0,
     zindex = 50,
     scrollback = 100000,
+    persistence = {
+        enabled = true,
+        save_file = vim.fn.stdpath("data") .. "/terminal_session.json",
+    }
 }
 
--- This will hold the state of the popup for a given command
-local popups = {}
+-- ----------------------------------------------------------------------------
+-- State
+-- ----------------------------------------------------------------------------
+-- Store terminal instances
+-- structure: { id = number, cmd = string, buf = number, win = number, opts = table, history = table }
+local terminals = {}
+local next_id = 1
+local last_active_id = nil
 
 -- Registry of TUI commands for quick access
 local tui_registry = {}
 
----
--- Creates and manages a terminal in a floating window with custom positioning.
--- @param cmd string: The command to execute in the terminal.
--- @param position string: Optional positioning ('right', 'left', 'center'). Defaults to 'center'.
--- @param opts table: Optional overrides (title, width, height, use_theme, etc).
---
-function M.toggle_popup(cmd, position, opts)
-    position = position or 'center'
-    opts = opts or {}
-    local use_theme = opts.use_theme ~= false  -- Default to true unless explicitly false
-    local existing_popup = popups[cmd]
+-- ----------------------------------------------------------------------------
+-- Helper Functions
+-- ----------------------------------------------------------------------------
 
-    -- If a popup for this command is currently open, close its window.
-    if existing_popup and vim.api.nvim_win_is_valid(existing_popup.win) then
-        vim.api.nvim_win_close(existing_popup.win, false) -- false so bufhidden applies
-        return
+local function get_term_by_buf(buf)
+    for _, term in pairs(terminals) do
+        if term.buf == buf then return term end
     end
+    return nil
+end
 
-    -- Get window dimensions
+local function get_term_by_cmd(cmd)
+    for _, term in pairs(terminals) do
+        if term.cmd == cmd then return term end
+    end
+    return nil
+end
+
+local function create_float(term)
     local screen_width = vim.o.columns
     local screen_height = vim.o.lines
-    local width = opts.width or config.width
-    if width > 0 and width <= 1 then width = math.floor(screen_width * width) end
-    local height = opts.height or config.height
-    if height > 0 and height <= 1 then height = math.floor(screen_height * height) end
+    
+    local width_ratio = term.opts.width or config.width
+    local height_ratio = term.opts.height or config.height
+    
+    local width = math.floor(screen_width * width_ratio)
+    local height = math.floor(screen_height * height_ratio)
+    
     local row = math.floor((screen_height - height) / 2)
-    local col
+    local col = math.floor((screen_width - width) / 2)
+    
+    local position = term.opts.position or 'center'
     if position == 'right' then
         col = screen_width - width - 2
     elseif position == 'left' then
         col = 2
-    else
-        col = math.floor((screen_width - width) / 2)
     end
-
-    -- Extract command name for title
-    local title = opts.title or config.title
-    if title == config.title then
-        local cmd_name = cmd:match("^(%S+)") or cmd
-        title = cmd_name:gsub("^%l", string.upper)
+    
+    local title = term.opts.title or config.title
+    -- If title is default, try to derive from command
+    if title == config.title and term.cmd then
+         local cmd_name = term.cmd:match("^(%S+)") or term.cmd
+         title = cmd_name:gsub("^%l", string.upper) .. " (" .. term.id .. ")"
     end
 
     local win_opts = {
@@ -80,96 +92,192 @@ function M.toggle_popup(cmd, position, opts)
         title = " " .. title .. " ",
         title_pos = config.title_pos,
     }
+    
+    return win_opts
+end
 
-    -- If a popup buffer exists but its window is closed, create a new window for it.
-    if existing_popup and existing_popup.buf and vim.api.nvim_buf_is_loaded(existing_popup.buf) then
-        local new_win = vim.api.nvim_open_win(existing_popup.buf, true, win_opts)
-        vim.api.nvim_win_set_option(new_win, 'winblend', config.winblend)
-        popups[cmd].win = new_win -- Update the win id
-        vim.cmd("startinsert")    -- Re-enter terminal mode
+-- ----------------------------------------------------------------------------
+-- Core Terminal Management
+-- ----------------------------------------------------------------------------
+
+--- Create a new terminal instance
+-- @param cmd string: Command to run
+-- @param opts table: Options
+function M.create_term(cmd, opts)
+    opts = opts or {}
+    local id = next_id
+    next_id = next_id + 1
+    
+    local term = {
+        id = id,
+        cmd = cmd or vim.o.shell,
+        opts = opts,
+        buf = nil,
+        win = nil,
+        open = false
+    }
+    
+    terminals[id] = term
+    return term
+end
+
+--- Toggle a terminal window
+-- @param id_or_cmd: Terminal ID or command string
+-- @param opts: Options if creating a new one
+function M.toggle(id_or_cmd, opts)
+    local term
+    opts = opts or {}
+
+    -- Find terminal
+    if type(id_or_cmd) == "number" then
+        term = terminals[id_or_cmd]
+    else
+        -- Try to find by command (singleton behavior for named commands)
+        term = get_term_by_cmd(id_or_cmd)
+        if not term then
+            term = M.create_term(id_or_cmd, opts)
+        end
+    end
+
+    if not term then return end
+
+    -- Determine position from args or stored opts
+    if opts.position then term.opts.position = opts.position end
+
+    -- If open, hide it
+    if term.win and vim.api.nvim_win_is_valid(term.win) then
+        vim.api.nvim_win_close(term.win, false) -- Hide
+        term.win = nil
+        term.open = false
+        last_active_id = term.id
         return
     end
 
-    -- Otherwise, create a new terminal from scratch.
-    local buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_option(buf, 'bufhidden', 'hide') -- Use 'hide' to persist across sessions
+    -- Create buffer if needed
+    if not term.buf or not vim.api.nvim_buf_is_valid(term.buf) then
+        term.buf = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_buf_set_option(term.buf, 'bufhidden', 'hide')
+        
+        -- Setup keymaps for this buffer
+        local close_key = term.opts.close_key or config.close_key
+        local opts_map = { noremap = true, silent = true }
+        
+        vim.api.nvim_buf_set_keymap(term.buf, 't', close_key, [[<C-\><C-n><cmd>lua require("mlamkadm.core.terminal").toggle(]] .. term.id .. [[)<CR>]], opts_map)
+        vim.api.nvim_buf_set_keymap(term.buf, 't', '<C-Esc>', [[<C-\><C-n>]], opts_map)
+        -- We don't map <C-d> to close automatically, let the shell handle it, or exit
+    end
 
-    local win = vim.api.nvim_open_win(buf, true, win_opts)
-    vim.api.nvim_win_set_option(win, 'winblend', config.winblend)
+    -- Create window
+    local win_opts = create_float(term)
+    term.win = vim.api.nvim_open_win(term.buf, true, win_opts)
+    vim.api.nvim_win_set_option(term.win, 'winblend', config.winblend)
+    term.open = true
+    last_active_id = term.id
 
-    -- Store window and buffer info
-    popups[cmd] = { win = win, buf = buf, cmd = cmd, win_opts = vim.deepcopy(win_opts) }
-
-    -- Start terminal with scrollback
-    local term_opts = { 
-        scrollback = config.scrollback,
-        on_exit = function(job, code, event)
-            -- Clean up when terminal exits
-            if popups[cmd] and popups[cmd].buf == buf then
-                popups[cmd] = nil
-            end
-            -- Check if the window still exists and close it to prevent the exit status from showing
-            if vim.api.nvim_win_is_valid(win) then
-                -- Schedule the window closing to happen after the exit message is processed
-                vim.schedule(function()
-                    if vim.api.nvim_win_is_valid(win) then
-                        vim.api.nvim_win_close(win, true)
-                        -- Also try to delete the buffer to ensure cleanup
-                        if vim.api.nvim_buf_is_valid(buf) then
-                            pcall(vim.api.nvim_buf_delete, buf, { force = true })
-                        end
+    -- Start terminal if not running
+    if vim.bo[term.buf].buftype ~= "terminal" then
+        local cmd = term.cmd
+        local use_theme = term.opts.use_theme ~= false
+        
+        local term_opts = {
+            on_exit = function(job_id, code, event)
+                -- If process exits, we might want to close the window or keep it open?
+                -- Usually close it.
+                if code == 0 then
+                    -- If clean exit, close window and delete buffer
+                    if term.win and vim.api.nvim_win_is_valid(term.win) then
+                        vim.api.nvim_win_close(term.win, true)
+                        term.win = nil
+                        term.open = false
                     end
-                end)
+                    if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
+                        vim.api.nvim_buf_delete(term.buf, { force = true })
+                        term.buf = nil
+                    end
+                    terminals[term.id] = nil -- Remove from registry
+                end
             end
+        }
+        
+        if not use_theme then
+            term_opts.env = { TERM = "xterm-256color" }
         end
-    }
-    
-    -- Disable gruvbox colors if use_theme is false
-    if not use_theme then
-        term_opts.env = { TERM = "xterm-256color" }
+        
+        vim.fn.termopen(cmd, term_opts)
     end
     
-    vim.fn.termopen(cmd, term_opts)
     vim.cmd("startinsert")
-
-    -- Keymap to close from within the terminal
-    vim.api.nvim_buf_set_keymap(buf, 't', config.close_key, [[<C-\><C-n><cmd>close<CR>]],
-        { noremap = true, silent = true, desc = "Hide Terminal" })
-
-    -- Keymap to close terminal with ctrl-d (common exit key for many programs)
-    vim.api.nvim_buf_set_keymap(buf, 't', '<C-d>', [[<C-\><C-n>:close<CR>]],
-        { noremap = true, silent = true, desc = "Close Terminal" })
-
-    -- Keymap to drop to normal mode with ctrl-escape
-    vim.api.nvim_buf_set_keymap(buf, 't', '<C-Esc>', [[<C-\><C-n>]],
-        { noremap = true, silent = true, desc = "Exit to Normal Mode" })
 end
 
----
--- List all open terminal popups.
--- @return table: A table of terminal commands with their buffer info.
---
+-- Wrapper for _G.Poptui compatibility
+function M.toggle_popup(cmd, position, opts)
+    opts = opts or {}
+    if position then opts.position = position end
+    M.toggle(cmd, opts)
+end
+
+-- ----------------------------------------------------------------------------
+-- Navigation & Management
+-- ----------------------------------------------------------------------------
+
 function M.list_terminals()
-    local terminals = {}
-    for cmd, popup in pairs(popups) do
-        if popup.buf and vim.api.nvim_buf_is_loaded(popup.buf) then
-            table.insert(terminals, {
-                cmd = cmd,
-                buf = popup.buf,
-                is_open = popup.win and vim.api.nvim_win_is_valid(popup.win)
-            })
-        end
+    local list = {}
+    for id, term in pairs(terminals) do
+        table.insert(list, {
+            id = id,
+            cmd = term.cmd,
+            buf = term.buf,
+            open = term.open,
+            name = "Term " .. id .. ": " .. term.cmd
+        })
     end
-    return terminals
+    return list
 end
 
----
--- Register a TUI command for quick access.
--- @param name string: Display name for the TUI.
--- @param cmd string: Command to execute.
--- @param position string: Optional positioning ('right', 'left', 'center').
--- @param opts table: Optional overrides (title, width, height, etc).
---
+function M.switch_terminal()
+    local terms = M.list_terminals()
+    if #terms == 0 then
+        vim.notify("No active terminals", vim.log.levels.INFO)
+        return
+    end
+
+    -- Use Telescope
+    local pickers = require('telescope.pickers')
+    local finders = require('telescope.finders')
+    local conf = require('telescope.config').values
+    local actions = require('telescope.actions')
+    local action_state = require('telescope.actions.state')
+
+    pickers.new({}, {
+        prompt_title = 'Switch Terminal',
+        finder = finders.new_table {
+            results = terms,
+            entry_maker = function(entry)
+                return {
+                    value = entry,
+                    display = (entry.open and "[*] " or "[ ] ") .. entry.name,
+                    ordinal = entry.name,
+                }
+            end,
+        },
+        sorter = conf.generic_sorter({}),
+        attach_mappings = function(prompt_bufnr, map)
+            actions.select_default:replace(function()
+                actions.close(prompt_bufnr)
+                local selection = action_state.get_selected_entry()
+                if selection then
+                    M.toggle(selection.value.id)
+                end
+            end)
+            return true
+        end,
+    }):find()
+end
+
+-- ----------------------------------------------------------------------------
+-- TUI Registry
+-- ----------------------------------------------------------------------------
+
 function M.register_tui(name, cmd, position, opts)
     table.insert(tui_registry, {
         name = name,
@@ -179,22 +287,7 @@ function M.register_tui(name, cmd, position, opts)
     })
 end
 
----
--- Telescope picker to launch registered TUI commands.
---
 function M.show_tui_registry()
-    if #tui_registry == 0 then
-        vim.notify("No TUI commands registered", vim.log.levels.INFO)
-        return
-    end
-
-    -- Check if telescope is available
-    local has_telescope, telescope = pcall(require, 'telescope')
-    if not has_telescope then
-        vim.notify("Telescope not available", vim.log.levels.WARN)
-        return
-    end
-
     local pickers = require('telescope.pickers')
     local finders = require('telescope.finders')
     local conf = require('telescope.config').values
@@ -219,7 +312,13 @@ function M.show_tui_registry()
                 actions.close(prompt_bufnr)
                 local selection = action_state.get_selected_entry()
                 if selection then
-                    M.toggle_popup(selection.value.cmd, selection.value.position, selection.value.opts)
+                    -- Create a new instance for this TUI, or toggle if it's a singleton (based on cmd)
+                    -- For TUIs, we generally want singletons per command
+                    M.toggle(selection.value.cmd, { 
+                        position = selection.value.position,
+                        title = selection.value.name,
+                        use_theme = selection.value.opts.use_theme
+                    })
                 end
             end)
             return true
@@ -227,130 +326,133 @@ function M.show_tui_registry()
     }):find()
 end
 
----
--- Telescope picker to switch between terminal popups.
---
-function M.switch_terminal()
-    local terminals = M.list_terminals()
-    if #terminals == 0 then
-        vim.notify("No terminal popups available", vim.log.levels.INFO)
-        return
+-- Persistence
+local function get_session_path()
+    local data_dir = vim.fn.stdpath("data") .. "/term_sessions"
+    if vim.fn.isdirectory(data_dir) == 0 then
+        vim.fn.mkdir(data_dir, "p")
     end
-
-    -- Check if telescope is available
-    local has_telescope, telescope = pcall(require, 'telescope')
-    if not has_telescope then
-        vim.notify("Telescope not available", vim.log.levels.WARN)
-        return
-    end
-
-    local pickers = require('telescope.pickers')
-    local finders = require('telescope.finders')
-    local conf = require('telescope.config').values
-    local actions = require('telescope.actions')
-    local action_state = require('telescope.actions.state')
-
-    pickers.new({}, {
-        prompt_title = 'Terminal Popups',
-        finder = finders.new_table {
-            results = terminals,
-            entry_maker = function(entry)
-                local status = entry.is_open and "[Open]" or "[Hidden]"
-                return {
-                    value = entry,
-                    display = string.format("%-10s %s", status, entry.cmd),
-                    ordinal = entry.cmd,
-                }
-            end,
-        },
-        sorter = conf.generic_sorter({}),
-        attach_mappings = function(prompt_bufnr, map)
-            actions.select_default:replace(function()
-                actions.close(prompt_bufnr)
-                local selection = action_state.get_selected_entry()
-                if selection then
-                    M.toggle_popup(selection.value.cmd)
-                end
-            end)
-            return true
-        end,
-    }):find()
+    local cwd = vim.fn.getcwd()
+    -- Encode path: replace / with %
+    local filename = cwd:gsub("/", "%%") .. ".json"
+    return data_dir .. "/" .. filename
 end
 
----
--- The main setup function.
--- @param opts table: User-provided configuration overrides.
---
+function M.save_session()
+    if not config.persistence.enabled then return end
+    
+    local session_data = {}
+    for id, term in pairs(terminals) do
+        if term.cmd then
+            table.insert(session_data, {
+                cmd = term.cmd,
+                opts = term.opts,
+                is_open = term.open
+            })
+        end
+    end
+    
+    local path = get_session_path()
+    local file = io.open(path, "w")
+    if file then
+        file:write(vim.json.encode(session_data))
+        file:close()
+    end
+end
+
+function M.restore_session()
+    if not config.persistence.enabled then return end
+    
+    -- Clear existing terminals from memory to avoid mixing sessions
+    -- But keep the TUI registry or any global config?
+    -- Terminals are instances. Yes, clear them.
+    for id, term in pairs(terminals) do
+        if term.win and vim.api.nvim_win_is_valid(term.win) then
+            vim.api.nvim_win_close(term.win, true)
+        end
+        if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
+            vim.api.nvim_buf_delete(term.buf, { force = true })
+        end
+    end
+    terminals = {}
+    next_id = 1
+    
+    local path = get_session_path()
+    local file = io.open(path, "r")
+    if not file then return end
+    
+    local content = file:read("*a")
+    file:close()
+    
+    local ok, session_data = pcall(vim.json.decode, content)
+    if not ok or type(session_data) ~= "table" then return end
+    
+    for _, data in ipairs(session_data) do
+        M.create_term(data.cmd, data.opts)
+    end
+    
+    -- Silent restore, no notification to avoid clutter
+end
+
+-- ----------------------------------------------------------------------------
+-- Setup
+-- ----------------------------------------------------------------------------
+
 function M.setup(opts)
     config = vim.tbl_deep_extend("force", config, opts or {})
 
-    -- Define the global function to be used across your config
     _G.Poptui = M.toggle_popup
 
-    -- Add an autocommand to close all pop-up terminals when Neovim is about to exit.
+    -- Register Default TUIs
+    M.register_tui("Terminal", vim.o.shell)
+    M.register_tui("Lazygit", "lazygit")
+    M.register_tui("Glow", "glow")
+    M.register_tui("Noter", "noter")
+    M.register_tui("Aart", "aart")
+    M.register_tui("Lazydocker", "lazydocker")
+    M.register_tui("Docker Logs", "docker-compose logs -f")
+    M.register_tui("Btop", "btop", nil, { use_theme = false })
+    M.register_tui("File Manager", "yazi")
+    M.register_tui("Copilot", "copilot --allow-tool write", "right")
+    M.register_tui("Make Run", "make run")
+    M.register_tui("Make Clean", "make clean")
+    M.register_tui("Qwen Full", "qwen -a -y")
+
+    -- Autocmds
+    local group = vim.api.nvim_create_augroup("TerminalManager", { clear = true })
+    
     vim.api.nvim_create_autocmd("VimLeavePre", {
+        group = group,
         callback = function()
-            for _, popup in pairs(popups) do
-                if popup and vim.api.nvim_win_is_valid(popup.win) then
-                    -- Force-close the window, which should terminate the job
-                    vim.api.nvim_win_close(popup.win, true)
+            M.save_session()
+            for _, term in pairs(terminals) do
+                if term.win and vim.api.nvim_win_is_valid(term.win) then
+                    vim.api.nvim_win_close(term.win, true)
                 end
             end
         end,
-        desc = "Close all pop-up bins before exiting Neovim"
+        desc = "Close terminal windows and save session on exit"
     })
     
-
+    -- Restore on startup?
+    -- Maybe explicitly call it or hook into session load.
 end
 
--- ----------------------------------------------------------------------------
--- Configuration and Keymaps
--- ----------------------------------------------------------------------------
-
--- Setup the terminal with desired options
-M.setup({
-    border = "rounded",
-    width = 0.8,
-    height = 0.8,
-    title = "Terminal",
-    title_pos = "center",
-    -- ratio = 0.8, -- implement later
-    winblend = 5,
-    zindex = 50,
-    scrollback = 100000,
-})
-
-
--- Register TUI commands
-M.register_tui("Terminal", vim.o.shell)
-M.register_tui("Lazygit", "lazygit")
-M.register_tui("Glow", "glow")
-M.register_tui("Noter", "noter")
-M.register_tui("Aart", "aart")
-M.register_tui("Lazydocker", "lazydocker")
-M.register_tui("Docker Logs", "docker-compose logs -f")
-M.register_tui("Btop", "btop", nil, { use_theme = false })  -- Btop has its own theme
-M.register_tui("File Manager", "yazi")
-M.register_tui("Copilot", "copilot --allow-tool write", "right")
-M.register_tui("Make Run", "make run")
-M.register_tui("Make Clean", "make clean")
-
-M.register_tui("Qwen Full", "qwen -a -y") -- we will feed in custom sys prompts from core.LLM.prompts later
-
--- Define keymaps now that _G.Poptui is guaranteed to exist
-vim.keymap.set('n', '<c-t>', function() _G.Poptui(vim.o.shell) end, { desc = 'Toggle floating terminal' })
-vim.keymap.set('n', '<leader>jj', function() _G.Poptui('lazygit') end, { desc = 'Toggle Lazygit' })
-vim.keymap.set('n', '<leader>jd', function() _G.Poptui('lazydocker') end, { desc = 'Toggle Lazydocker' })
-vim.keymap.set('n', '<leader>dl', function() _G.Poptui('docker-compose logs -f') end, { desc = 'Docker Compose Logs' })
-vim.keymap.set('n', '<leader>jt', function() _G.Poptui('btop', nil, { use_theme = false }) end, { desc = 'Toggle Btop' })
-vim.keymap.set('n', '<leader>jf', function() _G.Poptui('yazi') end, { desc = 'Toggle File Manager (Yazi)' })
-vim.keymap.set('n', '<leader>jc', function() _G.Poptui('copilot --allow-tool write', 'right') end,
-    { desc = 'Toggle Copilot' })
-vim.keymap.set('n', '<leader>mg', function() _G.Poptui('glow') end, { desc = 'Make: Glow' })
-vim.keymap.set('n', '<leader>mr', function() _G.Poptui('make run') end, { desc = 'Make: Run' })
-vim.keymap.set('n', '<leader>mc', function() _G.Poptui('make clean') end, { desc = 'Make: Clean' })
+-- Keymaps
+vim.keymap.set('n', '<c-t>', function() M.toggle(vim.o.shell) end, { desc = 'Toggle shell' })
 vim.keymap.set('n', '<leader>ts', M.switch_terminal, { desc = 'Switch Terminal' })
-vim.keymap.set('n', '<leader>tt', M.show_tui_registry, { desc = 'Show TUI Registry' })
+vim.keymap.set('n', '<leader>tt', M.show_tui_registry, { desc = 'TUI Registry' })
+vim.keymap.set('n', '<leader>tn', function() M.create_term(vim.o.shell); M.toggle(next_id - 1) end, { desc = 'New Terminal' })
 
-M.popups = popups  -- Make popups accessible to other modules
+-- Re-bind the specific TUI keys
+vim.keymap.set('n', '<leader>jj', function() M.toggle('lazygit') end, { desc = 'Toggle Lazygit' })
+vim.keymap.set('n', '<leader>jd', function() M.toggle('lazydocker') end, { desc = 'Toggle Lazydocker' })
+vim.keymap.set('n', '<leader>dl', function() M.toggle('docker-compose logs -f') end, { desc = 'Docker Compose Logs' })
+vim.keymap.set('n', '<leader>jt', function() M.toggle('btop', { use_theme = false }) end, { desc = 'Toggle Btop' })
+vim.keymap.set('n', '<leader>jf', function() M.toggle('yazi') end, { desc = 'Toggle File Manager (Yazi)' })
+vim.keymap.set('n', '<leader>jc', function() M.toggle('copilot --allow-tool write', { position = 'right' }) end, { desc = 'Toggle Copilot' })
+vim.keymap.set('n', '<leader>mg', function() M.toggle('glow') end, { desc = 'Make: Glow' })
+vim.keymap.set('n', '<leader>mr', function() M.toggle('make run') end, { desc = 'Make: Run' })
+vim.keymap.set('n', '<leader>mc', function() M.toggle('make clean') end, { desc = 'Make: Clean' })
+
 return M
