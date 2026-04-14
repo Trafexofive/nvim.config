@@ -80,7 +80,7 @@ return {
                     "debugpy",
                 },
                 auto_update = true,
-                run_on_start = true,
+                run_on_start = false,  -- Defer installs, manual trigger only
             })
             
             -- Add Mason bin to PATH

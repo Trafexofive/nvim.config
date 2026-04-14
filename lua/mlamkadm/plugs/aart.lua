@@ -2,7 +2,7 @@
 return {
     dir = vim.fn.expand("~/repos/aart"),
     name = "aart",
-    lazy = false,
+    cmd = { "AartOpen" },  -- Lazy load, only when command is called
     config = function()
         -- Add lua directory to package path
         local aart_path = vim.fn.expand("~/repos/aart/lua")

@@ -38,6 +38,17 @@ return {
             highlight = { enable = true },
             indent = { enable = true },
             
+            -- Incremental selection for better editing
+            incremental_selection = {
+                enable = true,
+                keymaps = {
+                    init_selection = "<CR>",  -- Start selection
+                    node_incremental = "<CR>",  -- Expand to node
+                    scope_incremental = "<S-CR>", -- Expand to scope
+                    node_decremental = "<Tab>",  -- Shrink selection
+                },
+            },
+            
             -- Autotag (HTML/JSX)
             autotag = {
                 enable = true,
