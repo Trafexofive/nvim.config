@@ -1,3 +1,6 @@
+-- Add Mason bin to PATH globally (fixes linter/formatter issues)
+vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
+
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
@@ -53,15 +56,34 @@ vim.opt.spell = false -- Enable per buffer in filetype autocommand
 -- Intelligent Auto-save: Saves valid, writeable buffers when focus is lost or mode changes
 local function smart_autosave()
     local bufs = vim.api.nvim_list_bufs()
+    local now = os.time()
     for _, buf in ipairs(bufs) do
         if vim.api.nvim_buf_is_valid(buf) 
            and vim.api.nvim_buf_get_option(buf, "modified") 
            and vim.api.nvim_buf_get_option(buf, "buftype") == "" 
            and vim.api.nvim_buf_get_name(buf) ~= "" 
         then
+            -- Skip buffers opened less than 2 seconds ago (likely not edited)
+            local buf_age = now - math.floor(vim.fn.getbufvar(buf, "\:b_mtime"))
+            if buf_age < 2 then
+                goto continue
+            end
+            
+            -- Skip buffers with no real edits (tracked via change tick)
+            local changedtick = vim.api.nvim_buf_get_changedtick(buf)
+            local last_save = vim.b[buf].last_auto_save_tick or 0
+            if changedtick == last_save then
+                goto continue
+            end
+            
             vim.api.nvim_buf_call(buf, function()
                 vim.cmd("silent! write")
             end)
+            
+            -- Track saved state to avoid re-saving unchanged buffers
+            vim.b[buf].last_auto_save_tick = vim.api.nvim_buf_get_changedtick(buf)
+            
+            ::continue::
         end
     end
 end
