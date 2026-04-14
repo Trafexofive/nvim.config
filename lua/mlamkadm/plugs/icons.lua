@@ -1,5 +1,6 @@
 return {
     'nvim-tree/nvim-web-devicons',
+    event = 'VeryLazy', -- Only load when needed
     config = function()
         require 'nvim-web-devicons'.setup {
             override = {

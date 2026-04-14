@@ -1,8 +1,11 @@
 return {
     {
-        -- NOTE: Ensure mason and mason-lspconfig are set up before lspconfig
         "williamboman/mason.nvim",
-        build = ":MasonUpdate", -- Automatically update Mason registry
+        build = ":MasonUpdate",
+        cmd = { "Mason", "MasonInstall", "MasonUpdate", "MasonInstallAll" }, -- Lazy load
+        dependencies = {
+            "WhoIsSethDaniel/mason-tool-installer.nvim",
+        },
         config = function()
             require("mason").setup({
                 ui = {
@@ -12,6 +15,41 @@ return {
                         package_uninstalled = "✗"
                     }
                 },
+                -- Automatically install these tools
+                ensure_installed = {
+                    -- LSPs are handled by mason-lspconfig in lsp.lua
+                    -- This list is for formatters, linters, debuggers
+                    
+                    -- Formatters
+                    "prettierd",
+                    "stylua",
+                    "black",
+                    "isort",
+                    "shfmt",
+                    "clang-format",
+                    "gofumpt",
+                    "goimports",
+                    "yamlfmt",
+                    
+                    -- Linters
+                    "eslint_d",
+                    "shellcheck",
+                    "markdownlint",
+                    "yamllint",
+                    "golangci-lint",
+                    "hadolint",
+                    "pylint",
+                    "selene",
+                    
+                    -- Debuggers (DAP)
+                    "delve", -- Go
+                    "codelldb", -- C/C++/Rust
+                    "debugpy", -- Python
+                },
+            })
+
+            -- Tool Installer configuration
+            require("mason-tool-installer").setup({
                 ensure_installed = {
                     -- Formatters
                     "prettierd",
@@ -19,116 +57,34 @@ return {
                     "black",
                     "isort",
                     "shfmt",
-                    "clang_format",
+                    "clang-format",
+                    "gofumpt",
+                    "goimports",
+                    "yamlfmt",
+                    "google-java-format",
+                    
                     -- Linters
                     "eslint_d",
                     "shellcheck",
-                }
-            })
-        end,
-    },
-    {
-        "williamboman/mason-lspconfig.nvim",
-        dependencies = { "mason.nvim", "nvim-cmp" },
-        config = function()
-            local lspconfig = require("lspconfig")
-            local capabilities = require('cmp_nvim_lsp').default_capabilities()
-
-            local function on_attach(client, bufnr)
-                vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
-                local opts = { buffer = bufnr }
-                vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
-                vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-                vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-                vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
-                vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-                vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
-                vim.keymap.set({ 'n', 'v' }, '<leader>ca', vim.lsp.buf.code_action, opts)
-                vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, opts)
-                vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
-                vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
-            end
-
-            require("mason-lspconfig").setup({
-                ensure_installed = {
-                    "lua_ls", "clangd", "typos_lsp", "rust_analyzer", "jsonls", "html", "cssls", "dockerls", "bashls",
-                    "vimls", "pyright", "gopls", "diagnosticls", "marksman"
+                    "markdownlint",
+                    "yamllint",
+                    "golangci-lint",
+                    "hadolint",
+                    "pylint",
+                    "selene",
+                    "checkmake",
+                    
+                    -- Debuggers
+                    "delve",
+                    "codelldb",
+                    "debugpy",
                 },
-                handlers = {
-                    function(server_name)
-                        lspconfig[server_name].setup({
-                            capabilities = capabilities,
-                            on_attach = on_attach,
-                        })
-                    end,
-                    ["lua_ls"] = function()
-                        lspconfig.lua_ls.setup({
-                            capabilities = capabilities,
-                            on_attach = on_attach,
-                            settings = {
-                                Lua = {
-                                    runtime = { version = "LuaJIT" },
-                                    diagnostics = { globals = { "vim" } },
-                                    workspace = { library = vim.api.nvim_get_runtime_file("", true) },
-                                    telemetry = { enable = false },
-                                },
-                            },
-                        })
-                    end,
-                    ["clangd"] = function()
-                        lspconfig.clangd.setup({
-                            capabilities = capabilities,
-                            on_attach = on_attach,
-                            cmd = { "clangd", "--background-index", "--cross-file-rename" },
-                        })
-                    end,
-                }
+                auto_update = true,
+                run_on_start = true,
             })
-        end,
-    },
-    {
-        -- Core LSP configuration
-        "neovim/nvim-lspconfig",
-        dependencies = {
-            "mason-lspconfig.nvim",
-        },
-        config = function()
-            -- All setup is now handled by mason-lspconfig, so this can be empty
-        end,
-    },
-
-    {
-        "mfussenegger/nvim-lint",
-        event = { "BufWritePost", "BufReadPost", "InsertLeave" },
-        config = function()
-            local lint = require("lint")
-            lint.linters_by_ft = {
-                javascript = { "eslint_d" },
-                typescript = { "eslint_d" },
-                sh = { "shellcheck" },
-            }
-            vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
-                callback = function()
-                    lint.try_lint()
-                end,
-            })
-        end,
-    },
-    {
-        "ray-x/go.nvim", -- Go tools
-        ft = "go",   -- Load only for Go files
-        dependencies = {
-            "ray-x/guihua.lua",
-            "neovim/nvim-lspconfig", -- Ensure LSP is available
-        },
-        config = function()
-            require("go").setup()
-            -- Keymaps are often set up within go.nvim itself or can be added here
-            -- Example (ensure gopls is set up via lspconfig first for these to work fully):
-            local opts = { noremap = true, silent = true }
-            vim.keymap.set("n", "<leader>gt", "<cmd>GoTest<CR>", opts)
-            vim.keymap.set("n", "<leader>gb", "<cmd>GoBuild<CR>", opts)
-            vim.keymap.set("n", "<leader>gr", "<cmd>GoRun<CR>", opts)
+            
+            -- Add Mason bin to PATH
+            vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
         end,
     },
 }
