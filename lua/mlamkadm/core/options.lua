@@ -64,7 +64,7 @@ local function smart_autosave()
            and vim.api.nvim_buf_get_name(buf) ~= "" 
         then
             -- Skip buffers opened less than 2 seconds ago (likely not edited)
-            local buf_age = now - math.floor(vim.fn.getbufvar(buf, 'b_mtime') or 0)
+            local buf_age = now - math.floor(tonumber(vim.fn.getbufvar(buf, 'b_mtime')) or 0)
             if buf_age < 2 then
                 goto continue
             end
