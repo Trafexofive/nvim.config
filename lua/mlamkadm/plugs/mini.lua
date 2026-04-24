@@ -24,7 +24,7 @@ return {
             -- 5. Files: Minimal file explorer
             require("mini.files").setup({
                 windows = {
-                    preview = { border = "rounded" },
+                    preview = true, -- Enable preview
                     width_focus = 30,
                     width_nofocus = 15,
                 }
