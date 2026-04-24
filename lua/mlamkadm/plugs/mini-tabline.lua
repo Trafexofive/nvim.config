@@ -24,32 +24,26 @@ return {
             max_tabs = 10,        -- Max tabs to show
             
             -- Format (minimal, clean)
-            format = {
-                name = function(buf_id)
-                    -- Get filename (zen: short, no path)
-                    local name = vim.api.nvim_buf_get_name(buf_id)
-                    if name == '' then return '[No Name]' end
-                    name = vim.fn.fnamemodify(name, ':t') -- Just filename
-                    
-                    -- Add icon if devicons available
-                    local icon = ''
-                    local ok, web_devicons = pcall(require, 'nvim-web-devicons')
-                    if ok then
-                        local ft = vim.bo[buf_id].filetype
-                        icon = web_devicons.get_icon(name, ft, { default = true })
-                    end
-                    
-                    return icon .. ' ' .. name
-                end,
-                
-                bufflag = function(buf_id)
-                    local flags = ''
-                    if vim.bo[buf_id].modified then flags = flags .. '[+]' end
-                    if not vim.bo[buf_id].modifiable then flags = flags .. '[=]' end
-                    if vim.bo[buf_id].readonly then flags = flags .. '[RO]' end
-                    return flags
-                end,
-            },
+            format = function(buf_id, label)
+                local name = vim.api.nvim_buf_get_name(buf_id)
+                if name == '' then name = '[No Name]' end
+                name = vim.fn.fnamemodify(name, ':t') -- Just filename
+
+                -- Add icon if devicons available
+                local icon = ''
+                local ok, web_devicons = pcall(require, 'nvim-web-devicons')
+                if ok then
+                    local ft = vim.bo[buf_id].filetype
+                    icon = web_devicons.get_icon(name, ft, { default = true })
+                end
+
+                local flags = ''
+                if vim.bo[buf_id].modified then flags = flags .. '[+]' end
+                if not vim.bo[buf_id].modifiable then flags = flags .. '[=]' end
+                if vim.bo[buf_id].readonly then flags = flags .. '[RO]' end
+
+                return (icon or '') .. ' ' .. name .. ' ' .. flags
+            end,
             
             -- Styling (gruvbox-themed, subtle)
             style = {

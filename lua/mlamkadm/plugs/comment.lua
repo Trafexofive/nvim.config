@@ -17,9 +17,14 @@ return {
             ignore = "^$",
             
             -- Toggler (standard behavior)
-            toggler = "gcc",
-            line = "gc",
-            block = "gb",
+            toggler = {
+                line = "gcc",
+                block = "gbc",
+            },
+            opleader = {
+                line = "gc",
+                block = "gb",
+            },
             
             -- Extra mappings (minimal, standard)
             extra = {
