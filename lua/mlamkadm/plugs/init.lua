@@ -56,14 +56,12 @@ add_plugin("flash")      -- Flash.nvim (fast navigation)
 add_plugin("surround")    -- Surround text
 add_plugin("trouble")     -- Trouble (diagnostics list)
 add_plugin("oil")         -- Oil (directory editing)
-add_plugin("mini-tabline") -- Mini tabline
+add_plugin("lualine")     -- The standard statusline
+add_plugin("bufferline")  -- The standard top bar
 add_plugin("comment")     -- Comment.nvim (better commenting)
 add_plugin("alpha")        -- Alpha (dashboard)
 add_plugin("snacks")       -- Snacks (picker/dashboard/git)
-add_plugin("mini-files")   -- Mini files (explorer)
-
--- Mini plugins (statusline + indentscope)
-add_plugin("mini")         -- Mini.nvim (statusline, indentscope, etc.)
+add_plugin("mini")         -- Mini.nvim (all modules)
 
 -- Disable old statusline (using mini.statusline now)
 -- add_plugin("line")     -- DISABLED: Replaced by mini.statusline
