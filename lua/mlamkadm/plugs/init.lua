@@ -52,6 +52,7 @@ add_plugin("explorer")   -- File explorer
 add_plugin("session")     -- Session management
 add_plugin("mc-modder")  -- Maven/Gradle
 add_plugin("cheatsheet") -- Cheatsheet
+add_plugin("suround")    -- Surround text (new)
 
 -- Mini plugins (statusline + indentscope)
 add_plugin("mini")         -- Mini.nvim (statusline, indentscope, etc.)
