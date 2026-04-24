@@ -10,8 +10,6 @@ local function map(mode, lhs, rhs, opts)
     vim.keymap.set(mode, lhs, rhs, options)
 end
 
-vim.g.mapleader = ' '
-
 -----------------------------------------------------------
 -- Neovim shortcuts
 -----------------------------------------------------------
