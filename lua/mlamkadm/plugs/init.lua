@@ -37,8 +37,8 @@ add_plugin("outline")     -- Outline/symbols
 add_plugin("telescope")  -- Fuzzy finder
 add_plugin("dap")         -- Debugging
 add_plugin("copilot")     -- Copilot
-add_plugin("gemsini")     -- Gemini AI
-add_plugin("gemini-explain") -- Gemini explain
+-- add_plugin("gemsini")     -- Gemini AI
+-- add_plugin("gemini-explain") -- Gemini explain
 add_plugin("smooth-scroll") -- Smooth scrolling
 add_plugin("zen")          -- Zen mode
 add_plugin("comments")    -- Comments
@@ -54,6 +54,13 @@ add_plugin("mc-modder")  -- Maven/Gradle
 add_plugin("cheatsheet") -- Cheatsheet
 add_plugin("flash")      -- Flash.nvim (fast navigation)
 add_plugin("surround")    -- Surround text
+add_plugin("trouble")     -- Trouble (diagnostics list)
+add_plugin("oil")         -- Oil (directory editing)
+add_plugin("mini-tabline") -- Mini tabline
+add_plugin("comment")     -- Comment.nvim (better commenting)
+add_plugin("alpha")        -- Alpha (dashboard)
+add_plugin("snacks")       -- Snacks (picker/dashboard/git)
+add_plugin("mini-files")   -- Mini files (explorer)
 
 -- Mini plugins (statusline + indentscope)
 add_plugin("mini")         -- Mini.nvim (statusline, indentscope, etc.)

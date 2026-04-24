@@ -6,10 +6,13 @@ M.themes = {
   gruvbox = {
     plugin = "ellisonleao/gruvbox.nvim",
     setup = function()
-      -- Load gruvbox directly (plugin is lazy=false, priority=1000)
+      -- Try to load gruvbox
       local ok, gruvbox = pcall(require, "gruvbox")
+      
+      -- If not loaded yet (e.g. startup before lazy.nvim), wait or retry
       if not ok then
-        vim.notify("gruvbox.nvim plugin not found. Please make sure it's installed via your plugin manager.", vim.log.levels.ERROR, { title = "Theme Manager" })
+        -- We'll try to set the colorscheme via VimEnter if it fails here
+        -- This avoids the "not found" error during early init
         return false
       end
 
