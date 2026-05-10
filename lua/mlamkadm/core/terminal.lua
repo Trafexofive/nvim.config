@@ -35,6 +35,18 @@ local last_active_id = nil
 -- Registry of TUI commands for quick access
 local tui_registry = {}
 
+local function project_session_name()
+    local cwd = vim.fn.getcwd()
+    local name = vim.fn.fnamemodify(cwd, ":t")
+    if name == "" then name = "home" end
+    name = name:gsub("[^%w_.-]", "-")
+    return "nvim-" .. name .. "-" .. vim.fn.sha256(cwd):sub(1, 8)
+end
+
+function M.zellij_cmd()
+    return "zellij attach --create " .. vim.fn.shellescape(project_session_name())
+end
+
 -- ----------------------------------------------------------------------------
 -- Helper Functions
 -- ----------------------------------------------------------------------------
@@ -214,6 +226,41 @@ function M.toggle_popup(cmd, position, opts)
     opts = opts or {}
     if position then opts.position = position end
     M.toggle(cmd, opts)
+end
+
+function M.open_zellij(opts)
+    opts = opts or {}
+    if vim.fn.executable("zellij") ~= 1 then
+        vim.notify("zellij is not installed or not in PATH", vim.log.levels.ERROR)
+        return
+    end
+
+    local session = project_session_name()
+    M.toggle(M.zellij_cmd(), vim.tbl_deep_extend("force", {
+        title = "Zellij: " .. session,
+        width = 0.92,
+        height = 0.88,
+        use_theme = false,
+    }, opts))
+end
+
+function M.cleanup(opts)
+    opts = opts or {}
+    if opts.save then
+        M.save_session()
+    end
+
+    for id, term in pairs(terminals) do
+        if term.win and vim.api.nvim_win_is_valid(term.win) then
+            pcall(vim.api.nvim_win_close, term.win, true)
+        end
+        if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
+            pcall(vim.api.nvim_buf_delete, term.buf, { force = true })
+        end
+        terminals[id] = nil
+    end
+
+    last_active_id = nil
 end
 
 -- ----------------------------------------------------------------------------
@@ -405,6 +452,7 @@ function M.setup(opts)
 
     -- Register Default TUIs
     M.register_tui("Terminal", vim.o.shell)
+    M.register_tui("Zellij", M.zellij_cmd())
     M.register_tui("Lazygit", "lazygit")
     M.register_tui("Glow", "glow")
     M.register_tui("Noter", "noter")
@@ -440,6 +488,7 @@ end
 
 -- Keymaps
 vim.keymap.set('n', '<c-t>', function() M.toggle(vim.o.shell) end, { desc = 'Toggle shell' })
+vim.keymap.set('n', '<leader>tz', M.open_zellij, { desc = 'Open Zellij terminal' })
 vim.keymap.set('n', '<leader>ts', M.switch_terminal, { desc = 'Switch Terminal' })
 vim.keymap.set('n', '<leader>tt', M.show_tui_registry, { desc = 'TUI Registry' })
 vim.keymap.set('n', '<leader>tn', function() M.create_term(vim.o.shell); M.toggle(next_id - 1) end, { desc = 'New Terminal' })

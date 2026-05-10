@@ -55,6 +55,17 @@ return {
               bo = { scrollback = 1 },
             },
           },
+          {
+            title = "Terminal",
+            icon = "",
+            padding = 1,
+            {
+              icon = "",
+              key = "T",
+              desc = "Open persistent Zellij",
+              action = function() require("mlamkadm.core.terminal").open_zellij() end,
+            },
+          },
           { section = "keys", gap = 1, padding = 1 },
           { section = "startup" },
         },

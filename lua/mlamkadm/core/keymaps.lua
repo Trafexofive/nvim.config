@@ -75,6 +75,12 @@ map('n', '<leader>Q', function()
     
     -- Ensure we're still in the same directory after saving
     vim.fn.chdir(current_dir)
+
+    -- Clean up managed terminal windows/buffers before returning to the dashboard.
+    -- Terminal state was already saved by SessionSave; zellij sessions remain attachable.
+    pcall(function()
+        require("mlamkadm.core.terminal").cleanup()
+    end)
     
     -- Close all windows except the current one (we'll replace it with dashboard)
     local current_win = vim.api.nvim_get_current_win()
