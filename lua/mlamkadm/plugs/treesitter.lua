@@ -33,7 +33,7 @@ return {
 
         configs.setup({
             ensure_installed = {
-                "c", "cpp", "markdown", "markdown_inline", "lua", "vim", "vimdoc", "query",
+                "c", "cpp", "lua", "vim", "vimdoc", "query",
                 "javascript", "html", "css", "python", "go", "rust", "bash", "yaml", "json",
                 "toml", "tsx", "typescript", "regex", "sql", "http", "dockerfile", "make", "java"
             },

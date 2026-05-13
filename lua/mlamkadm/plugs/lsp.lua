@@ -70,7 +70,7 @@ return {
                     "gopls",
                     "rust_analyzer",
                     "clangd",
-                    "marksman",
+                    -- "marksman", -- DISABLED: triggers treesitter node:range() crash via diagnostics redraw on Neovim 0.12
                     -- "jdtls", -- Removed from here, handled by nvim-jdtls in ftplugin/java.lua
                 },
                 automatic_installation = true,
@@ -81,6 +81,11 @@ return {
                             capabilities = capabilities,
                         })
                     end,
+
+                    -- Marksman disabled — triggers treesitter node:range() crash on Neovim 0.12
+                    -- The diagnostic redraw chain (LSP→diagnostics→redraw→treesitter→crash) is unfixable
+                    -- without Neovim-side parser query fixes. Re-enable when parsers are updated.
+                    ["marksman"] = function() end,
 
                     -- Specialized handlers
                     ["lua_ls"] = function()
