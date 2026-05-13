@@ -17,7 +17,9 @@ return {
         })
 
         -- Reuse cpp parser for smelt until a native tree-sitter-smelt grammar exists.
-        pcall(vim.treesitter.language.register, "cpp", "smelt")
+        -- DISABLED: Missing injection queries cause `node:range()` nil crash on Neovim 0.12.
+        -- Re-enable when after/queries/smelt/ has full query coverage (injections, indents, folds).
+        -- pcall(vim.treesitter.language.register, "cpp", "smelt")
 
         -- Skip backwards compatibility routines and speed up loading
         vim.g.skip_ts_context_commentstring_module = true
@@ -38,14 +40,14 @@ return {
             sync_install = false,
             highlight = {
                 enable = true,
-                -- Neovim 0.12 + current markdown injection queries can throw
+                -- Neovim 0.12 + current injection queries can throw
                 -- `node:range()` errors in the decoration provider. Use regex
-                -- markdown highlighting until the parser/query stack is updated.
-                disable = { "markdown", "markdown_inline" },
+                -- highlighting for these filetypes until parser/query stack is updated.
+                disable = { "markdown", "markdown_inline", "smelt" },
             },
             indent = {
                 enable = true,
-                disable = { "markdown", "markdown_inline" },
+                disable = { "markdown", "markdown_inline", "smelt" },
             },
             
             -- Incremental selection for better editing
