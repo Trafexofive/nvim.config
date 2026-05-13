@@ -55,8 +55,8 @@ map('n', '<C-Up>', '<cmd>resize +5<cr>')
 map('n', '<C-Down>', '<cmd>resize -5<cr>')
 
 
--- Reload configuration
-map('n', '<leader>r', ':so %<CR>')
+-- Reload configuration (Shift-R to avoid conflict with snacks recent files)
+map('n', '<leader>R', ':so %<CR>', { desc = 'Reload config' })
 
 -- Fast saving
 map('n', '<leader>s', ':w<CR>')
@@ -120,8 +120,8 @@ end, { desc = 'Save session and return to dashboard' })
 -- Note: Plugin-specific mappings are now primarily defined
 -- within their respective plugin configuration files.
 
--- Formatting (LSP)
-map('n', '<leader>f', '<cmd>lua vim.lsp.buf.format({ async = true })<CR>', { desc = 'Format buffer' })
+-- Formatting (LSP) — moved to <leader>lf to avoid conflict with snacks find file
+map('n', '<leader>lf', '<cmd>lua vim.lsp.buf.format({ async = true })<CR>', { desc = 'LSP: Format buffer' })
 
 -- Tab Management
 map('n', '<leader>t', ':tabnew<CR>')     -- open new tab
