@@ -36,9 +36,10 @@ add_plugin("aart")         -- ?
 add_plugin("outline")     -- Outline/symbols
 add_plugin("telescope")  -- Fuzzy finder
 add_plugin("dap")         -- Debugging
-add_plugin("copilot")     -- Copilot
--- add_plugin("gemsini")     -- Gemini AI
--- add_plugin("gemini-explain") -- Gemini explain
+add_plugin("copilot")     -- GitHub Copilot
+add_plugin("completion")  -- Ollama/minuet-ai inline completion (was gemini.lua)
+-- add_plugin("gemsini")     -- Gemini AI (disabled)
+-- add_plugin("gemini-explain") -- Gemini explain (disabled)
 add_plugin("smooth-scroll") -- Smooth scrolling
 add_plugin("zen")          -- Zen mode
 add_plugin("auto-pairs")  -- Auto pairs
