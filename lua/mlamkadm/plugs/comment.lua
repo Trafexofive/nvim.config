@@ -5,18 +5,14 @@ return {
     version = "*",
     event = "VeryLazy",
     config = function()
+        local ok_hook, hook = pcall(require, "ts_context_commentstring.integrations.comment_nvim")
+
         require("Comment").setup({
-            -- ════════════════════════════════
-            -- Zen Mode: Invisible until you comment
-            -- ════════════════════════════════
-            -- Padding (subtle, not distracting)
-            padding_left = " ",
-            padding_right = " ",
-            
-            -- Ignore certain filetypes (zen: no interference)
-            ignore = "^$",
-            
-            -- Toggler (standard behavior)
+            -- Zen Mode: invisible until used; keep Comment.nvim defaults where possible.
+            padding = true,
+            sticky = true,
+            ignore = nil,
+
             toggler = {
                 line = "gcc",
                 block = "gbc",
@@ -25,29 +21,19 @@ return {
                 line = "gc",
                 block = "gb",
             },
-            
-            -- Extra mappings (minimal, standard)
             extra = {
-                above = "gco",
-                below = "gcb",
+                above = "gcO",
+                below = "gco",
                 eol = "gcA",
             },
-            
-            -- Treesitter integration (enhanced commenting)
-            pre_hook = function(ctx)
-                local ok, ts_context_commentstring = pcall(require, "ts_context_commentstring")
-                if not ok then return end
-                
-                local uopts = ts_context_commentstring.calculate_commentstring({
-                    bufnr = ctx.bufnr,
-                    lnum = ctx.range.srow,
-                })
-                
-                if uopts then
-                    ctx.ctype = uopts.ctype
-                    ctx.cmtstring = uopts.cmtstring
-                end
-            end,
+            mappings = {
+                basic = true,
+                extra = true,
+            },
+
+            -- Correct Comment.nvim integration: return a commentstring instead of
+            -- mutating ctx fields. This keeps JSX/TSX/etc. context-aware comments.
+            pre_hook = ok_hook and hook.create_pre_hook() or nil,
         })
         
         -- ════════════════════════════════

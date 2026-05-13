@@ -41,7 +41,6 @@ add_plugin("copilot")     -- Copilot
 -- add_plugin("gemini-explain") -- Gemini explain
 add_plugin("smooth-scroll") -- Smooth scrolling
 add_plugin("zen")          -- Zen mode
-add_plugin("comments")    -- Comments
 add_plugin("auto-pairs")  -- Auto pairs
 add_plugin("lsp_signature") -- LSP signature
 add_plugin("indent")      -- Indentation
@@ -58,7 +57,7 @@ add_plugin("trouble")     -- Trouble (diagnostics list)
 add_plugin("oil")         -- Oil (directory editing)
 add_plugin("lualine")     -- The standard statusline
 add_plugin("bufferline")  -- The standard top bar
-add_plugin("comment")     -- Comment.nvim (better commenting)
+add_plugin("comment")     -- Comment.nvim
 add_plugin("alpha")        -- Alpha (dashboard)
 add_plugin("snacks")       -- Snacks (picker/dashboard/git)
 add_plugin("mini")         -- Mini.nvim (all modules)

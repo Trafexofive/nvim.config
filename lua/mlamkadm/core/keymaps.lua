@@ -93,7 +93,13 @@ map('n', '<leader>Q', function()
     -- Close all buffers except dashboard
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         local ft = vim.bo[buf].filetype
-        if vim.api.nvim_buf_is_loaded(buf) and ft ~= 'snacks_dashboard' and ft ~= 'alpha' and vim.api.nvim_buf_get_name(buf) ~= '' then
+        local bt = vim.bo[buf].buftype
+        if vim.api.nvim_buf_is_loaded(buf)
+            and bt ~= 'terminal'
+            and ft ~= 'snacks_dashboard'
+            and ft ~= 'alpha'
+            and vim.api.nvim_buf_get_name(buf) ~= ''
+        then
             pcall(vim.api.nvim_buf_delete, buf, { force = true })
         end
     end

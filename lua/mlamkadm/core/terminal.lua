@@ -246,6 +246,8 @@ end
 
 function M.cleanup(opts)
     opts = opts or {}
+    local delete_buffers = opts.delete_buffers == true
+
     if opts.save then
         M.save_session()
     end
@@ -254,13 +256,18 @@ function M.cleanup(opts)
         if term.win and vim.api.nvim_win_is_valid(term.win) then
             pcall(vim.api.nvim_win_close, term.win, true)
         end
-        if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
+        term.win = nil
+        term.open = false
+
+        if delete_buffers and term.buf and vim.api.nvim_buf_is_valid(term.buf) then
             pcall(vim.api.nvim_buf_delete, term.buf, { force = true })
+            terminals[id] = nil
         end
-        terminals[id] = nil
     end
 
-    last_active_id = nil
+    if delete_buffers then
+        last_active_id = nil
+    end
 end
 
 -- ----------------------------------------------------------------------------
@@ -410,17 +417,8 @@ end
 function M.restore_session()
     if not config.persistence.enabled then return end
     
-    -- Clear existing terminals from memory to avoid mixing sessions
-    -- But keep the TUI registry or any global config?
-    -- Terminals are instances. Yes, clear them.
-    for id, term in pairs(terminals) do
-        if term.win and vim.api.nvim_win_is_valid(term.win) then
-            vim.api.nvim_win_close(term.win, true)
-        end
-        if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
-            vim.api.nvim_buf_delete(term.buf, { force = true })
-        end
-    end
+    -- Clear existing terminals from memory to avoid mixing sessions.
+    M.cleanup({ delete_buffers = true })
     terminals = {}
     next_id = 1
     
@@ -435,7 +433,14 @@ function M.restore_session()
     if not ok or type(session_data) ~= "table" then return end
     
     for _, data in ipairs(session_data) do
-        M.create_term(data.cmd, data.opts)
+        local term = M.create_term(data.cmd, data.opts)
+        if data.is_open then
+            vim.schedule(function()
+                if terminals[term.id] then
+                    M.toggle(term.id)
+                end
+            end)
+        end
     end
     
     -- Silent restore, no notification to avoid clutter

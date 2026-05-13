@@ -1,6 +1,7 @@
 return {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
+    lazy = false,
     dependencies = {
         "nvim-lua/plenary.nvim",
         "nvim-treesitter/nvim-treesitter-textobjects",
@@ -35,8 +36,17 @@ return {
                 "toml", "tsx", "typescript", "regex", "sql", "http", "dockerfile", "make", "java"
             },
             sync_install = false,
-            highlight = { enable = true },
-            indent = { enable = true },
+            highlight = {
+                enable = true,
+                -- Neovim 0.12 + current markdown injection queries can throw
+                -- `node:range()` errors in the decoration provider. Use regex
+                -- markdown highlighting until the parser/query stack is updated.
+                disable = { "markdown", "markdown_inline" },
+            },
+            indent = {
+                enable = true,
+                disable = { "markdown", "markdown_inline" },
+            },
             
             -- Incremental selection for better editing
             incremental_selection = {
@@ -102,6 +112,10 @@ return {
             mode = 'cursor',
             separator = nil,
             zindex = 20,
+            on_attach = function(bufnr)
+                local ft = vim.bo[bufnr].filetype
+                return ft ~= "markdown" and ft ~= "snacks_dashboard"
+            end,
         })
     end,
 }
