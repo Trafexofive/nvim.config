@@ -22,14 +22,14 @@ return {
             MkdnDestroyLink = {'n', '<leader>md'},
             MkdnTagSpan = {'v', '<leader>mt'},
             MkdnMoveSource = {'n', '<leader>mv'},
-            MkdnYankAnchor = {'n', '<leader>my'},
-            MkdnYankFileAnchor = {'n', '<leader>mY'},
+            MkdnYankAnchorLink = {'n', '<leader>my'},
+            MkdnYankFileAnchorLink = {'n', '<leader>mY'},
             MkdnIncreaseHeading = {'n', '<leader>m+'},
             MkdnDecreaseHeading = {'n', '<leader>m-'},
-            MkdnToggleTodo = {{'n', 'v'}, '<leader>mt'},
+            MkdnToggleToDo = {{'n', 'v'}, '<leader>mt'},
             MkdnNewListItem = false,
-            MkdnNewListItemBelow = {'n', '<leader>o'},
-            MkdnNewListItemAbove = {'n', '<leader>O'},
+            MkdnNewListItemBelowInsert = {'n', '<leader>o'},
+            MkdnNewListItemAboveInsert = {'n', '<leader>O'},
             MkdnUpdateNumbering = {'n', '<leader>mn'},
             MkdnTableNextCell = {'i', '<Tab>'},
             MkdnTablePrevCell = {'i', '<S-Tab>'},
@@ -40,14 +40,7 @@ return {
             MkdnTableNewColAfter = {'n', '<leader>ic'},
             MkdnTableNewColBefore = {'n', '<leader>iC'},
             MkdnFoldSection = {'n', '<leader>mf'},
-            MkdnUnfoldSection = {'n', '<leader>mF'}
-        },
-        -- Automatically enable spell checking and wrapping for markdown files.
-        ft_plugin = {
-            ['markdown'] = {
-                spell = true,
-                wrap = true,
-            },
+            MkdnUnfoldSection = {'n', '<leader>mF'},
         },
       })
 

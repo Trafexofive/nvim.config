@@ -42,10 +42,9 @@ map('v', '>', '>gv')
 map('n', '<leader>-', '<cmd>split<cr>')
 map('n', '<leader>=', '<cmd>vsplit<cr>')
 
--- Move between splits
+-- Move between splits. <C-j>/<C-k> are reserved for terminal cycling
+-- (see core/terminal.lua); use <C-w>j / <C-w>k for down/up split nav.
 map('n', '<C-h>', '<C-w>h')
-map('n', '<C-j>', '<C-w>j')
-map('n', '<C-k>', '<C-w>k')
 map('n', '<C-l>', '<C-w>l')
 
 -- Resize splits

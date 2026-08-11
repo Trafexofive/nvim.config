@@ -12,7 +12,6 @@ return {
             "hrsh7th/cmp-cmdline",       -- Cmdline Source
             "saadparwaiz1/cmp_luasnip",  -- Snippet Source
             "hrsh7th/cmp-nvim-lua",      -- Lua Source
-            "zbirenbaum/copilot-cmp",    -- Copilot Source
             "tamago324/cmp-zsh",         -- Zsh Source
             "hrsh7th/cmp-emoji",         -- Emoji Source
             "lukas-reineke/cmp-rg",      -- Ripgrep Source
@@ -50,7 +49,6 @@ return {
                 
                 -- Sources Configuration
                 sources = cmp.config.sources({
-                    { name = "copilot",  group_index = 2, priority = 100 }, 
                     { name = "nvim_lsp", priority = 90 },
                     { name = "luasnip",  priority = 80 },
                     { name = "path", priority = 70 },
@@ -100,7 +98,6 @@ return {
                         maxwidth = 50,
                         ellipsis_char = "...",
                         symbol_map = {
-                            Copilot = "",
                             nvim_lsp = "λ",
                             luasnip = "⎋",
                             buffer = "Ω",
@@ -225,14 +222,5 @@ return {
                 filetypes = { "deoledit", "zsh" },
             }
         end
-    },
-
-    -- Copilot CMP Source
-    {
-        "zbirenbaum/copilot-cmp",
-        dependencies = { "copilot.lua" },
-        config = function()
-            require("copilot_cmp").setup()
-        end,
     },
 }

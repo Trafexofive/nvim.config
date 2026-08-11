@@ -23,7 +23,7 @@ The leader key is set to `(Space)`.
 |-----|--------|-------------|
 | `<leader>-` | Split Horizontal | Create a horizontal split |
 | `<leader>=` | Split Vertical | Create a vertical split |
-| `<C-h/j/k/l>` | Navigate | Move between splits (Left/Down/Up/Right) |
+| `<C-h>` / `<C-l>` | Navigate | Move between splits (Left/Right). Down/Up via `<C-w>j` / `<C-w>k`. |
 | `<C-Arrows>` | Resize | Resize active split |
 
 ### Tab Management
@@ -53,14 +53,18 @@ All TUIs and terminals open in centered floating windows.
 
 | Key | Action | Description |
 |-----|--------|-------------|
-| `<C-t>` | Terminal | Toggle a floating shell |
+| `<C-t>` | Toggle shell | Close/open the default-shell float. Same key closes whether you're in normal mode or inside the terminal. |
+| `<C-j>` | Next terminal | Cycle to the next tracked terminal (wraps). No-op when 0 or 1 terminals exist. |
+| `<C-k>` | Prev terminal | Cycle to the previous tracked terminal (wraps). No-op when 0 or 1 terminals exist. |
+| `<C-n>` | New terminal | Spawn a fresh shell instance and open it. |
+| `<C-d>` | Kill terminal | Jobstop + delete the currently visible terminal (falls back to last-active). Overrides the default half-page-down in normal mode. |
 | `<leader>tt` | TUI Registry | Browse all available TUI tools |
 | `<leader>ts` | Switch | Switch between currently running pop-ups |
+| `<leader>tn` | New Terminal | Same as `<C-n>` — explicit alternative. |
 | `<leader>jj` | Lazygit | Toggle Lazygit |
 | `<leader>jd` | Lazydocker | Toggle Lazydocker |
 | `<leader>jf` | Yazi | Toggle File Manager |
 | `<leader>jt` | Btop | Toggle System Monitor |
-| `<leader>jc` | Copilot | Toggle AI Chat (Right aligned) |
 
 ### 3. Markdown Integration
 Enhanced markdown editing with `mkdnflow.nvim` and `glow`.
