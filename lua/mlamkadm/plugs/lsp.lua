@@ -42,7 +42,7 @@ return {
 
                     -- Information
                     vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Hover Documentation", buffer = ev.buf })
-                    vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature Help", buffer = ev.buf })
+                    vim.keymap.set("i", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature Help (insert)", buffer = ev.buf })
 
                     -- Actions
                     vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename Symbol", buffer = ev.buf })
