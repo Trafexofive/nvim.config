@@ -9,8 +9,8 @@ return {
     keys = {
         -- Toggle floating NeoTree and reveal current file
         { "<leader><tab>", "<cmd>Neotree float reveal<cr>", desc = "Toggle Floating NeoTree (Reveal)" },
-        -- Standard toggle on the left
-        { "<C-n>",         "<cmd>Neotree toggle left<cr>",  desc = "Toggle NeoTree" },
+        -- NOTE: <C-n> is owned by the terminal manager (new zellij session);
+        -- use <leader>n / <leader><tab> for NeoTree instead.
     },
     config = function()
         -- If you want icons for diagnostic errors, you'll need to define them somewhere:
