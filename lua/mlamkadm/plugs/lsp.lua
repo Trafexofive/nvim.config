@@ -29,7 +29,7 @@ return {
             -- GLOBAL LSP KEYMAPS (LspAttach)
             -- This ensures keymaps work for ANY active LSP, regardless of how it was setup
             vim.api.nvim_create_autocmd('LspAttach', {
-                group = vim.api.nvim_create_augroup('UserLspConfig', {}),
+                group = vim.api.nvim_create_augroup('UserLspConfig', { clear = true }),
                 callback = function(ev)
                     -- Enable completion triggered by <c-x><c-o>
                     vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
@@ -52,6 +52,21 @@ return {
                     vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show Diagnostics", buffer = ev.buf })
                     vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic", buffer = ev.buf })
                     vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next Diagnostic", buffer = ev.buf })
+
+                    -- Error-only navigation
+                    vim.keymap.set("n", "[e", function() vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR }) end, { desc = "Prev Error", buffer = ev.buf })
+                    vim.keymap.set("n", "]e", function() vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR }) end, { desc = "Next Error", buffer = ev.buf })
+
+                    -- Trouble diagnostic list
+                    vim.keymap.set("n", "<leader>dd", function() require("trouble").toggle("diagnostics") end, { desc = "Trouble: Diagnostics", buffer = ev.buf })
+
+                    -- Inlay hints toggle
+                    vim.keymap.set("n", "<leader>lh", function()
+                        if vim.lsp.inlay_hint and vim.lsp.inlay_hint.toggle then
+                            vim.lsp.inlay_hint.toggle(0)
+                        end
+                    end, { desc = "Toggle Inlay Hints", buffer = ev.buf })
+                    pcall(vim.lsp.inlay_hint.enable, 0, true)
                 end,
             })
 
@@ -200,6 +215,63 @@ return {
 
                                 new_config.cmd = cmd
                             end,
+                        })
+                    end,
+
+                    ["pyright"] = function()
+                        lspconfig.pyright.setup({
+                            capabilities = capabilities,
+                            settings = {
+                                python = {
+                                    analysis = {
+                                        typeCheckingMode = "basic",
+                                        autoImportCompletions = true,
+                                        useLibraryCodeForTypes = true,
+                                        diagnosticMode = "openFilesOnly",
+                                    },
+                                },
+                            },
+                        })
+                    end,
+
+                    ["ts_ls"] = function()
+                        lspconfig.ts_ls.setup({
+                            capabilities = capabilities,
+                            settings = {
+                                typescript = {
+                                    inlayHints = {
+                                        parameterNames = { enabled = "all" },
+                                        parameterTypes = { enabled = true },
+                                        variableTypes = { enabled = true },
+                                        propertyDeclarationTypes = { enabled = true },
+                                    },
+                                },
+                            },
+                        })
+                    end,
+
+                    ["bashls"] = function()
+                        lspconfig.bashls.setup({
+                            capabilities = capabilities,
+                            settings = {
+                                bashIde = {
+                                    globPattern = "**/*@(.sh|.inc|.bash|.command)",
+                                    highlightParsingErrors = true,
+                                },
+                            },
+                        })
+                    end,
+
+                    ["dockerls"] = function()
+                        lspconfig.dockerls.setup({
+                            capabilities = capabilities,
+                            settings = {
+                                docker = {
+                                    languageserver = {
+                                        formatter = { ignoreMultilineInstructions = true },
+                                    },
+                                },
+                            },
                         })
                     end,
 

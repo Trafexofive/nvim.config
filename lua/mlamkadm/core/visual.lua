@@ -9,13 +9,13 @@ function M.setup()
   vim.o.pumheight = 10
 
   -- Set up consistent border style for floating windows
-  vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-    border = "rounded",
-  })
-
-  vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-    border = "rounded",
-  })
+  -- Consistent rounded border for LSP floats (non-deprecated handler override)
+  vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
+    return vim.lsp.handlers.hover(err, result, ctx, vim.tbl_extend("force", config or {}, { border = "rounded" }))
+  end
+  vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
+    return vim.lsp.handlers.signature_help(err, result, ctx, vim.tbl_extend("force", config or {}, { border = "rounded" }))
+  end
 
   -- Set up default border for all floating windows
   local set_floating_window_border = function()
