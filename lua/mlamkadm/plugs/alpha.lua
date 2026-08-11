@@ -24,6 +24,8 @@ return {
             { type = "button", val = "  > Start Coding  ", on_press = function() vim.cmd("enew") end, opts = { hl = "AlphaButton", hl_shortcut = "AlphaShortcut" } },
             { type = "padding", val = 1 },
             { type = "button", val = "  > Restore Session  ", on_press = function() vim.cmd("SessionRestore") end, opts = { hl = "AlphaButton", hl_shortcut = "AlphaShortcut" } },
+            { type = "padding", val = 1 },
+            { type = "button", val = "  > Kill Zellij Sessions  ", on_press = function() require("mlamkadm.core.terminal").kill_all_zellij_sessions() end, opts = { hl = "AlphaButton", hl_shortcut = "AlphaShortcut" } },
             { type = "padding", val = 2 },
             { type = "text", val = "◆", opts = { position = "center", hl = "AlphaIcon" } },
         },

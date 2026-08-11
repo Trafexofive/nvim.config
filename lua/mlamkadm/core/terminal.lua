@@ -9,16 +9,20 @@ local M = {}
 -- ----------------------------------------------------------------------------
 local config = {
     border = "rounded",
-    width = 0.8,
-    height = 0.8,
+    width = 0.9,   -- unified terminal float width (regular + zellij)
+    height = 0.85, -- unified terminal float height (regular + zellij)
     title = "Terminal",
     title_pos = "center", -- center | left | right
     close_key = "<C-t>",
     winblend = 0,
     zindex = 50,
     scrollback = 100000,
+    -- Session persistence is DISABLED: zellij owns CLI session persistence
+    -- (on_force_close detach) and auto-session owns nvim buffers/windows.
+    -- Recreating terminal floats (which run `zellij attach --create`) on restore
+    -- would attach duplicate clients to already-live sessions.
     persistence = {
-        enabled = true,
+        enabled = false,
         save_file = vim.fn.stdpath("data") .. "/terminal_session.json",
     }
 }
@@ -34,6 +38,7 @@ local last_active_id = nil
 
 -- Registry of TUI commands for quick access
 local tui_registry = {}
+local new_zellij_counter = 0
 
 local function project_session_name()
     local cwd = vim.fn.getcwd()
@@ -43,8 +48,9 @@ local function project_session_name()
     return "nvim-" .. name .. "-" .. vim.fn.sha256(cwd):sub(1, 8)
 end
 
-function M.zellij_cmd()
-    return "zellij attach --create " .. vim.fn.shellescape(project_session_name())
+function M.zellij_cmd(session)
+    session = session or project_session_name()
+    return "zellij attach --create " .. vim.fn.shellescape(session)
 end
 
 -- ----------------------------------------------------------------------------
@@ -136,7 +142,7 @@ end
 --- Toggle a terminal window
 -- @param id_or_cmd: Terminal ID or command string
 -- @param opts: Options if creating a new one
-function M.toggle(id_or_cmd, opts)
+function M.toggle(id_or_cmd, opts, stay_normal)
     local term
     opts = opts or {}
 
@@ -218,7 +224,9 @@ function M.toggle(id_or_cmd, opts)
         vim.fn.termopen(cmd, term_opts)
     end
     
-    vim.cmd("startinsert")
+    if not stay_normal then
+        vim.cmd("startinsert")
+    end
 end
 
 -- Wrapper for _G.Poptui compatibility
@@ -236,12 +244,75 @@ function M.open_zellij(opts)
     end
 
     local session = project_session_name()
-    M.toggle(M.zellij_cmd(), vim.tbl_deep_extend("force", {
+    local cmd = M.zellij_cmd()
+
+    -- Strict toggle of the primary zellij terminal: if it's already visible,
+    -- close it. Otherwise hide any other visible terminal floats and open it, so
+    -- Ctrl+T always shows exactly the zellij terminal (never "cycles").
+    local term = get_term_by_cmd(cmd)
+    if term and term.win and vim.api.nvim_win_is_valid(term.win) then
+        pcall(vim.api.nvim_win_close, term.win, false)
+        term.win = nil
+        term.open = false
+        last_active_id = term.id
+        return
+    end
+
+    for _, t in pairs(terminals) do
+        if t ~= term and t.win and vim.api.nvim_win_is_valid(t.win) then
+            pcall(vim.api.nvim_win_close, t.win, false)
+            t.win = nil
+            t.open = false
+        end
+    end
+
+    M.toggle(cmd, vim.tbl_deep_extend("force", {
         title = "Zellij: " .. session,
-        width = 0.92,
-        height = 0.88,
         use_theme = false,
     }, opts))
+end
+
+-- Open a NEW zellij session (a fresh zellij terminal), unlike Ctrl+T which
+-- toggles the project's primary session. Each new terminal gets its own
+-- zellij session so CLI state persists independently.
+function M.open_new_zellij(opts)
+    opts = opts or {}
+    if vim.fn.executable("zellij") ~= 1 then
+        vim.notify("zellij is not installed or not in PATH", vim.log.levels.ERROR)
+        return
+    end
+    new_zellij_counter = new_zellij_counter + 1
+    local session = project_session_name() .. "-" .. new_zellij_counter
+    M.toggle(M.zellij_cmd(session), vim.tbl_deep_extend("force", {
+        title = "Zellij: " .. session,
+        use_theme = false,
+    }, opts))
+end
+
+-- Kill all running (headless/detached) zellij sessions.
+-- Running sessions show no status suffix in `zellij list-sessions`; EXITED
+-- snapshots ("attach to resurrect") are left alone. Safe to run from the alpha
+-- dashboard at nvim startup when nothing is attached to a zellij client.
+function M.kill_all_zellij_sessions()
+    if vim.fn.executable("zellij") ~= 1 then
+        vim.notify("zellij is not installed or not in PATH", vim.log.levels.ERROR)
+        return
+    end
+
+    local out = vim.fn.system("zellij list-sessions")
+    -- Strip ANSI color escape sequences.
+    local plain = out:gsub("\27%[[0-9;]*m", "")
+    local killed = 0
+    for line in plain:gmatch("[^\n]+") do
+        if not line:find("EXITED", 1, true) then
+            local name = line:match("^%s*(%S+)")
+            if name and name ~= "" then
+                vim.fn.system("zellij kill-session " .. vim.fn.shellescape(name))
+                killed = killed + 1
+            end
+        end
+    end
+    vim.notify((killed == 0 and "No headless zellij sessions to kill" or (killed .. " headless zellij session(s) killed")), vim.log.levels.INFO)
 end
 
 function M.cleanup(opts)
@@ -286,6 +357,197 @@ function M.list_terminals()
         })
     end
     return list
+end
+
+--- Create a fresh terminal instance (no singleton) and open it
+-- @param cmd string: command to run (defaults to $SHELL)
+-- @param opts table: options
+-- @return term: the newly created terminal entry
+function M.new_term(cmd, opts)
+    local term = M.create_term(cmd or vim.o.shell, opts)
+    -- Avoid stacking popups: hide any currently visible terminal first, so only
+    -- one float is shown at a time (cycle with <C-j>/<C-k> to move between them).
+    for _, t in pairs(terminals) do
+        if t.win and vim.api.nvim_win_is_valid(t.win) then
+            pcall(vim.api.nvim_win_close, t.win, false)
+            t.win = nil
+            t.open = false
+        end
+    end
+    M.toggle(term.id)
+    return term
+end
+
+--- Find the currently visible terminal id, or nil if none is open.
+local function visible_id()
+    for id, term in pairs(terminals) do
+        if term.win and vim.api.nvim_win_is_valid(term.win) then
+            return id
+        end
+    end
+    return nil
+end
+
+--- Find the index of `id` in the sorted ids list, or nil.
+local function index_of(ids, id)
+    for i, v in ipairs(ids) do
+        if v == id then return i end
+    end
+    return nil
+end
+
+--- Is the tracked terminal's process actually live?
+-- Returns false if the buf was never a terminal, was deleted, or the job died
+-- (channel closed). Used to filter dead entries out of the cycle.
+local function is_alive(term)
+    if not term then return false end
+    if not term.buf or not vim.api.nvim_buf_is_valid(term.buf) then
+        return false
+    end
+    if vim.bo[term.buf].buftype ~= "terminal" then
+        return false
+    end
+    local chan = vim.b[term.buf].terminal_job_id
+    if not chan or chan <= 0 then
+        return false
+    end
+    local ok, info = pcall(vim.api.nvim_get_chan_info, chan)
+    if not ok or not info then
+        return false
+    end
+    -- Alive terminals have a real pty path. Dead/jobstop-ed channels
+    -- keep the channel handle but pty becomes an empty string.
+    return info.pty ~= nil and info.pty ~= ""
+end
+
+--- Remove dead tracked terminals from the registry.
+-- A terminal is dead if its buf is invalid, no longer a terminal buffer, or
+-- its job channel is closed. We close the float and stop the job before
+-- dropping the entry so we don't leave orphan windows/jobs behind.
+local function reap_dead()
+    for id, term in pairs(terminals) do
+        if not is_alive(term) then
+            if term.win and vim.api.nvim_win_is_valid(term.win) then
+                pcall(vim.api.nvim_win_close, term.win, true)
+                term.win = nil
+                term.open = false
+            end
+            if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
+                pcall(vim.api.nvim_buf_delete, term.buf, { force = true })
+                term.buf = nil
+            end
+            terminals[id] = nil
+            if last_active_id == id then
+                last_active_id = nil
+            end
+        end
+    end
+end
+
+--- Cycle to the next tracked terminal; wrap at end.
+-- Reaps dead terminals first, so the cycle only visits live ones. Never
+-- spawns a new terminal — use <C-n> for that. No-op when 0 or 1 live
+-- terminals remain after reaping.
+function M.cycle_next()
+    reap_dead()
+
+    local ids = {}
+    for id in pairs(terminals) do
+        table.insert(ids, id)
+    end
+    table.sort(ids)
+    local n = #ids
+
+    if n == 0 then return end
+
+    local cur = visible_id()
+    -- Only cycle between already-visible terminals; never pull one up from a
+    -- plain buffer (Ctrl+J/K should not intrude when no terminal is showing).
+    if not cur then return end
+    if n == 1 then return end
+
+    local cur_idx = index_of(ids, cur) or 0
+    local target = ids[(cur_idx % n) + 1]
+
+    if target ~= cur then
+        local cur_term = terminals[cur]
+        if cur_term and cur_term.win and vim.api.nvim_win_is_valid(cur_term.win) then
+            pcall(vim.api.nvim_win_close, cur_term.win, false)
+            cur_term.win = nil
+            cur_term.open = false
+        end
+        M.toggle(target, nil, true)
+    end
+end
+
+--- Cycle to the previous tracked terminal; wrap at start.
+-- Reaps dead terminals first. Never spawns a new terminal.
+function M.cycle_prev()
+    reap_dead()
+
+    local ids = {}
+    for id in pairs(terminals) do
+        table.insert(ids, id)
+    end
+    table.sort(ids)
+    local n = #ids
+
+    if n == 0 then return end
+
+    local cur = visible_id()
+    -- Only cycle between already-visible terminals; never pull one up from a
+    -- plain buffer (Ctrl+J/K should not intrude when no terminal is showing).
+    if not cur then return end
+    if n == 1 then return end
+
+    local cur_idx = index_of(ids, cur) or 0
+    local target = ids[((cur_idx - 2) % n) + 1]
+
+    if target ~= cur then
+        local cur_term = terminals[cur]
+        if cur_term and cur_term.win and vim.api.nvim_win_is_valid(cur_term.win) then
+            pcall(vim.api.nvim_win_close, cur_term.win, false)
+            cur_term.win = nil
+            cur_term.open = false
+        end
+        M.toggle(target, nil, true)
+    end
+end
+
+--- Kill a terminal by id: stop the job, close the window, delete the buffer,
+-- and remove it from the registry.
+function M.kill_term(id)
+    local term = terminals[id]
+    if not term then return end
+
+    if term.win and vim.api.nvim_win_is_valid(term.win) then
+        pcall(vim.api.nvim_win_close, term.win, true)
+        term.win = nil
+        term.open = false
+    end
+
+    if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
+        local chan = vim.b[term.buf].terminal_job_id
+        if chan and chan > 0 then
+            pcall(vim.fn.jobstop, chan)
+        end
+        pcall(vim.api.nvim_buf_delete, term.buf, { force = true })
+    end
+
+    terminals[id] = nil
+    if last_active_id == id then
+        last_active_id = nil
+    end
+end
+
+--- Kill the currently visible terminal; falls back to the last-active one.
+function M.kill_current()
+    local target = visible_id() or last_active_id
+    if not target or not terminals[target] then
+        vim.notify("No terminal to kill", vim.log.levels.INFO)
+        return
+    end
+    M.kill_term(target)
 end
 
 function M.switch_terminal()
@@ -466,7 +728,6 @@ function M.setup(opts)
     M.register_tui("Docker Logs", "docker-compose logs -f")
     M.register_tui("Btop", "btop", nil, { use_theme = false })
     M.register_tui("File Manager", "yazi")
-    M.register_tui("Copilot", "copilot --allow-tool write", "right")
     M.register_tui("Make Run", "make run")
     M.register_tui("Make Clean", "make clean")
     M.register_tui("Qwen Full", "qwen -a -y")
@@ -492,11 +753,27 @@ function M.setup(opts)
 end
 
 -- Keymaps
-vim.keymap.set('n', '<c-t>', function() M.toggle(vim.o.shell) end, { desc = 'Toggle shell' })
+-- <C-t>  : toggle Zellij for this project (attach --create restores the live
+--          CLI session's panes/tabs). In terminal mode the buffer-local <C-t>
+--          mapping set in M.toggle() still closes the float, so the same key
+--          opens/closes whether you're inside the terminal or not.
+-- <C-j>  : cycle to the next tracked terminal (only when a terminal is visible;
+--          stays in normal mode).
+-- <C-k>  : cycle to the previous tracked terminal (only when a terminal is
+--          visible; stays in normal mode).
+-- <C-n>  : open a new Zellij session (each new terminal gets its own session).
+-- <C-d>  : kill the currently visible terminal (jobstop + delete buffer).
+--          NOTE: `<C-d>` is also mapped by smooth-scroll (neoscroll); terminal
+--          owns it here, so smooth-scroll's <C-d> is intentionally disabled.
+vim.keymap.set('n', '<c-t>', M.open_zellij, { desc = 'Terminal: Toggle Zellij (restores CLI session)' })
+vim.keymap.set('n', '<C-j>', M.cycle_next, { desc = 'Terminal: Next' })
+vim.keymap.set('n', '<C-k>', M.cycle_prev, { desc = 'Terminal: Prev' })
+vim.keymap.set('n', '<C-n>', M.open_new_zellij, { desc = 'Terminal: New Zellij session' })
+vim.keymap.set('n', '<C-d>', M.kill_current, { desc = 'Terminal: Kill current' })
 vim.keymap.set('n', '<leader>tz', M.open_zellij, { desc = 'Open Zellij terminal' })
 vim.keymap.set('n', '<leader>ts', M.switch_terminal, { desc = 'Switch Terminal' })
 vim.keymap.set('n', '<leader>tt', M.show_tui_registry, { desc = 'TUI Registry' })
-vim.keymap.set('n', '<leader>tn', function() M.create_term(vim.o.shell); M.toggle(next_id - 1) end, { desc = 'New Terminal' })
+vim.keymap.set('n', '<leader>tn', M.open_new_zellij, { desc = 'New Zellij session' })
 
 -- Re-bind the specific TUI keys
 vim.keymap.set('n', '<leader>jj', function() M.toggle('lazygit') end, { desc = 'Toggle Lazygit' })
@@ -504,7 +781,6 @@ vim.keymap.set('n', '<leader>jd', function() M.toggle('lazydocker') end, { desc 
 vim.keymap.set('n', '<leader>dl', function() M.toggle('docker-compose logs -f') end, { desc = 'Docker Compose Logs' })
 vim.keymap.set('n', '<leader>jt', function() M.toggle('btop', { use_theme = false }) end, { desc = 'Toggle Btop' })
 vim.keymap.set('n', '<leader>jf', function() M.toggle('yazi') end, { desc = 'Toggle File Manager (Yazi)' })
-vim.keymap.set('n', '<leader>jc', function() M.toggle('copilot --allow-tool write', { position = 'right' }) end, { desc = 'Toggle Copilot' })
 vim.keymap.set('n', '<leader>mg', function() M.toggle('glow') end, { desc = 'Make: Glow' })
 vim.keymap.set('n', '<leader>mr', function() M.toggle('make run') end, { desc = 'Make: Run' })
 vim.keymap.set('n', '<leader>mc', function() M.toggle('make clean') end, { desc = 'Make: Clean' })

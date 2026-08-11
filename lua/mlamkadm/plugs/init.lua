@@ -33,10 +33,10 @@ add_plugin("icons")
 add_plugin("theme")       -- Theme (gruvbox, etc.)
 add_plugin("notify")      -- Notifications
 add_plugin("aart")         -- ?
-add_plugin("outline")     -- Outline/symbols
+add_plugin("aerial")      -- Outline (replaces symbols-outline)
+add_plugin("dressing")    -- Unified vim.ui.select/input
 add_plugin("telescope")  -- Fuzzy finder
 add_plugin("dap")         -- Debugging
-add_plugin("copilot")     -- GitHub Copilot
 add_plugin("completion")  -- Ollama/minuet-ai inline completion (was gemini.lua)
 -- add_plugin("gemsini")     -- Gemini AI (disabled)
 -- add_plugin("gemini-explain") -- Gemini explain (disabled)
@@ -48,7 +48,9 @@ add_plugin("indent")      -- Indentation
 add_plugin("lint")        -- Linting
 add_plugin("formatter")   -- Formatting
 add_plugin("markdown")    -- Markdown
+add_plugin("render-markdown") -- Inline markdown rendering
 add_plugin("explorer")   -- File explorer
+add_plugin("lazygit")    -- LazyGit floating
 add_plugin("session")     -- Session management
 add_plugin("mc-modder")  -- Maven/Gradle
 add_plugin("cheatsheet") -- Cheatsheet
@@ -59,11 +61,12 @@ add_plugin("oil")         -- Oil (directory editing)
 add_plugin("lualine")     -- The standard statusline
 add_plugin("bufferline")  -- The standard top bar
 add_plugin("comment")     -- Comment.nvim
+add_plugin("todo-comments") -- TODO/FIXME highlighting
 add_plugin("alpha")        -- Alpha (dashboard)
 add_plugin("snacks")       -- Snacks (picker/dashboard/git)
 add_plugin("mini")         -- Mini.nvim (all modules)
 
--- Disable old statusline (using mini.statusline now)
--- add_plugin("line")     -- DISABLED: Replaced by mini.statusline
+-- Disable old statusline (lualine is the active statusline now)
+-- add_plugin("line")     -- DISABLED: Replaced by lualine
 
 return plugins

@@ -14,10 +14,11 @@ return {
         require('neoscroll').setup(opts)
         
         -- Custom mappings with neoscroll helper functions
+        -- NOTE: `<C-d>` is intentionally omitted — the terminal manager owns it
+        -- for kill_current. Scroll with <C-u>/<C-e>/<C-y>/<C-f>/<C-b> instead.
         local neoscroll = require('neoscroll')
         local keymap = {
             ["<C-u>"] = function() neoscroll.ctrl_u({ duration = 250 }) end,
-            ["<C-d>"] = function() neoscroll.ctrl_d({ duration = 250 }) end,
             ["<C-b>"] = function() neoscroll.ctrl_b({ duration = 450 }) end,
             ["<C-f>"] = function() neoscroll.ctrl_f({ duration = 450 }) end,
             ["<C-y>"] = function() neoscroll.scroll(-0.1, { move_cursor = false, duration = 100 }) end,
