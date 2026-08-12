@@ -1,5 +1,6 @@
--- Add Mason bin to PATH globally (fixes linter/formatter issues)
-vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
+-- Add Mason bin + ~/.cargo/bin to PATH (fixes linter/formatter issues and
+-- finds zellij/other cargo tools, e.g. for <C-t>)
+vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.HOME .. "/.cargo/bin:" .. vim.env.PATH
 
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
