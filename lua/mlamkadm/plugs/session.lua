@@ -41,6 +41,7 @@ return {
 
         -- Keymaps for session management
         vim.keymap.set("n", "<leader>ss", function() require("mlamkadm.core.session_manager").sessions_with_readme() end, { desc = "Search sessions" })
+        vim.keymap.set("n", "<leader>sl", "<cmd>Telescope session-lens search_session<CR>", { desc = "Switch nvim session (session-lens)" })
         vim.keymap.set("n", "<leader>sr", "<cmd>AutoSession restore<CR>", { desc = "Restore session for cwd" })
         vim.keymap.set("n", "<leader>sS", "<cmd>AutoSession save<CR>", { desc = "Save session" })
         vim.keymap.set("n", "<leader>sd", "<cmd>AutoSession delete<CR>", { desc = "Delete session" })
