@@ -177,6 +177,18 @@ return {
         }
     },
     config = function(_, opts)
+        -- Telescope 0.1.5 previewers still call `nvim-treesitter.parsers.ft_to_lang`,
+        -- which the new nvim-treesitter dropped. Shim it onto the module so the
+        -- ts previewer doesn't throw "attempt to call field 'ft_to_lang' (nil)".
+        -- Must run before any Telescope previewer is loaded.
+        local ok_parsers, ts_parsers = pcall(require, "nvim-treesitter.parsers")
+        if ok_parsers and type(ts_parsers) == "table" and not ts_parsers.ft_to_lang then
+            ts_parsers.ft_to_lang = function(ft)
+                local ok_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
+                return ok_lang and lang or ft
+            end
+        end
+
         local telescope = require("telescope")
         local actions = require("telescope.actions")
         local action_state = require("telescope.actions.state")
@@ -184,6 +196,14 @@ return {
         -- Setup telescope with custom actions
         telescope.setup(vim.tbl_deep_extend("force", opts, {
             defaults = {
+                -- Telescope 0.1.5's treesitter previewer calls the OLD
+                -- nvim-treesitter API (ft_to_lang / configs.is_enabled /
+                -- parsers.get_parser), which the new nvim-treesitter dropped.
+                -- Rather than shim the whole old API, disable ts preview
+                -- highlighting and fall back to regex preview highlighting.
+                preview = {
+                    treesitter = { enable = false },
+                },
                 mappings = {
                     i = {
                         ["<C-s>"] = actions.select_horizontal,

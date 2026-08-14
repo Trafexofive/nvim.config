@@ -1,0 +1,36 @@
+{
+  "id": "art-mrc05nfc-4ovzpx",
+  "slug": "pi-nvim-integration-plan",
+  "name": "pi-nvim-integration-plan",
+  "type": "document",
+  "sessionId": "project",
+  "tags": [
+    "nvim",
+    "pi",
+    "integration",
+    "plan"
+  ],
+  "createdAt": 1783510590936,
+  "updatedAt": 1783524590117,
+  "version": 3,
+  "ext": "md",
+  "props": {},
+  "links": [],
+  "history": [
+    {
+      "version": 1,
+      "ts": 1783510590936,
+      "summary": "Created"
+    },
+    {
+      "version": 2,
+      "ts": 1783510897733,
+      "summary": "Content appended"
+    },
+    {
+      "version": 3,
+      "ts": 1783524590117,
+      "summary": "Content appended"
+    }
+  ]
+}

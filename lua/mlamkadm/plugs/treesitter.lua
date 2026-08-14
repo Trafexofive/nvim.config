@@ -29,6 +29,29 @@ return {
             enable_autocmd = false,
         }
 
+        -- nvim-treesitter ships highlights queries newer than the parser
+        -- revisions it pins, so opening certain files crashes at query parse
+        -- (e.g. lua's `operator:` field, vim's `tab` token — "Invalid node
+        -- type/field"). nvim MERGES runtime query files, so a bare after/
+        -- queries override is not enough; we must replace the whole query via
+        -- query.set(). Compatible versions live in after/queries/{lang}/.
+        local function override_query(lang, query_name)
+            local p = vim.fn.findfile(
+                "queries/" .. lang .. "/" .. query_name .. ".scm",
+                "/home/mlamkadm/.config/nvim/after"
+            )
+            if p == "" then return end
+            local qf = io.open(p, "r")
+            if not qf then return end
+            local qtext = qf:read("*a")
+            qf:close()
+            if qtext and #qtext > 0 then
+                vim.treesitter.query.set(lang, query_name, qtext)
+            end
+        end
+        override_query("lua", "highlights")
+        override_query("vim", "highlights")
+
         local configs = require("nvim-treesitter.config")
 
         configs.setup({
@@ -40,14 +63,13 @@ return {
             sync_install = false,
             highlight = {
                 enable = true,
-                -- Neovim 0.12 + current injection queries can throw
-                -- `node:range()` errors in the decoration provider. Use regex
-                -- highlighting for these filetypes until parser/query stack is updated.
-                disable = { "markdown", "markdown_inline", "smelt" },
+                -- `smelt` has no native grammar yet (queries would need full
+                -- injection/indent/fold coverage).
+                disable = { "smelt" },
             },
             indent = {
                 enable = true,
-                disable = { "markdown", "markdown_inline", "smelt" },
+                disable = { "smelt" },
             },
             
             -- Incremental selection for better editing

@@ -19,12 +19,12 @@ Leader key: `Space`. `Mod` below = Super (niri). Terminal cycling uses `<C-j>/<C
 ## 🖥️ Terminal / Zellij
 | Key | Action |
 |-----|--------|
-| `<C-t>` | Toggle project zellij terminal |
+| `<C-t>` | Toggle the last-active terminal (remembers which was last used before hiding, so reopening restores it — never cycles to the first) |
 | `<C-n>` | New zellij session |
 | `<C-j>` / `<C-k>` | Cycle terminals (only when visible; stays in normal mode) |
 | `<C-d>` | Kill current terminal |
 | `<C-Esc>` (term mode) | Exit terminal mode |
-| `<leader>tz` | Open zellij (same as `<C-t>`) |
+| `<leader>tz` | Open the project's primary zellij session (explicit, non-toggle) |
 | `<leader>ts` | Switch terminal (telescope) |
 | `<leader>tt` | TUI registry |
 | `<leader>tn` | New zellij session |

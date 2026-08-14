@@ -6,6 +6,7 @@
 return {
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
+    lazy = false, -- statusline must load eagerly at startup (no trigger otherwise)
     config = function()
         -- Codepoint helper (LuaJIT has no \u{} escapes)
         local function u(c)
@@ -76,22 +77,82 @@ return {
             end
         end
 
-        -- ── Terminal widget: ●/○ + count, click toggles the shell ────────
-        local function terminal_status()
-            local ok, term = pcall(require, "mlamkadm.core.terminal")
-            if not ok then return "" end
-            local list = term.list_terminals()
-            if #list == 0 then return "" end
-            local open = 0
-            for _, t in ipairs(list) do
-                if t.open then open = open + 1 end
-            end
-            return (open > 0 and u(0x25cf) or u(0x25cb)) .. " " .. #list
+        -- ── Terminal widget: live Zellij session count (async) ────────────
+        -- The user's real terminals live as Zellij CLI sessions (persist across
+        -- nvim), so the widget reflects those, not just nvim's in-memory floats.
+        -- `zellij list-sessions` runs async to avoid blocking statusline render.
+        local zellij_live = 0
+        local zellij_any = false
+        local zellij_busy = false
+
+        local function refresh_zellij()
+            if zellij_busy or vim.fn.executable("zellij") ~= 1 then return end
+            zellij_busy = true
+            vim.system({ "zellij", "list-sessions" }, { text = true }, function(out)
+                zellij_busy = false
+                local live, any = 0, false
+                for line in (out.stdout or ""):gmatch("[^\n]+") do
+                    if not line:find("EXITED", 1, true) then live = live + 1 end
+                    any = true
+                end
+                if live ~= zellij_live or any ~= zellij_any then
+                    zellij_live, zellij_any = live, any
+                    pcall(vim.cmd, "redrawstatus")
+                end
+            end)
         end
 
+        local function terminal_status()
+            refresh_zellij()
+            if zellij_live > 0 then
+                return u(0x25cf) .. " " .. zellij_live -- ● n live sessions
+            end
+            -- fallback: nvim-tracked float terminals
+            local ok, term = pcall(require, "mlamkadm.core.terminal")
+            local n = ok and #term.list_terminals() or 0
+            if n > 0 then return u(0x25cb) .. " " .. n end
+            if zellij_any then return u(0x25cb) .. " 0" end -- sessions, all EXITED
+            return ""
+        end
+
+        -- Click toggles the last-active terminal (matches <C-t>, which is
+        -- `toggle_last_active`, not the old no-arg `toggle()`).
         local function terminal_toggle()
             local ok, term = pcall(require, "mlamkadm.core.terminal")
-            if ok then term.toggle() end
+            if ok and term.toggle_last_active then
+                term.toggle_last_active()
+            end
+        end
+
+        -- ── Insert-mode context widget (only shows while typing) ──────────
+        -- While a completion menu is open: show the active source + item count.
+        -- While inside a Luasnip snippet: show the jump position.
+        local function insert_context()
+            local m = vim.fn.mode()
+            if m ~= "i" and m ~= "ic" then return "" end
+
+            local ok_cmp, cmp = pcall(require, "cmp")
+            if ok_cmp and cmp.visible and pcall(cmp.visible) and cmp.visible() then
+                local name = ""
+                local entry = cmp.get_selected_entry and cmp.get_selected_entry()
+                if entry and entry.source and entry.source.name then
+                    name = entry.source.name
+                end
+                local n = 0
+                if cmp.get_entries then n = #(cmp.get_entries() or {}) end
+                return (name ~= "" and name or "cmp") .. " " .. n
+            end
+
+            local ok_ls, ls = pcall(require, "luasnip")
+            if ok_ls and ls.get_current_snippet then
+                local s = ls.get_current_snippet()
+                if s then
+                    local idx = s.index or 0
+                    local total = (s.nodes and #s.nodes) or 0
+                    return "⎘ " .. idx .. "/" .. total
+                end
+            end
+            return ""
         end
 
         -- ── Active LSP clients for the current buffer ─────────────────────
@@ -165,6 +226,7 @@ return {
                     },
                 },
                 lualine_c = {
+                    { insert_context, update_in_insert = true, color = { fg = yellow } },
                     {
                         "diagnostics",
                         symbols = {
@@ -209,6 +271,7 @@ return {
             {
                 group = group,
                 callback = function()
+                    refresh_zellij()
                     vim.cmd("redrawstatus")
                 end,
                 desc = "Refresh statusline on session/terminal/window changes",

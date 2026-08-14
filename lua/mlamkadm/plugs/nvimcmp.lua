@@ -17,6 +17,9 @@ return {
             "lukas-reineke/cmp-rg",      -- Ripgrep Source
             "petertriho/cmp-git",        -- Git Source
             "david-kunz/cmp-npm",        -- NPM Source
+            "hrsh7th/cmp-calc",          -- Inline math (2+2 → 4)
+            "rcarriga/cmp-dap",          -- DAP variable completion
+            "uga-rosa/cmp-dictionary",   -- English word completion (prose)
 
             -- Snippet Engine
             "L3MON4D3/LuaSnip",
@@ -31,7 +34,11 @@ return {
 
             -- Load VSCode-like snippets
             require("luasnip.loaders.from_vscode").lazy_load()
-            luasnip.config.setup({}) 
+            luasnip.config.setup({})
+
+            -- menuone+noselect: always show the menu, don't pre-select, so Tab
+            -- explicitly accepts (IDE-like) instead of cycling silently.
+            vim.opt.completeopt = "menu,menuone,noselect"
 
             -- Helper function for Tab/S-Tab navigation with Luasnip
             local has_words_before = function()
@@ -40,24 +47,31 @@ return {
                 return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
             end
 
+            -- Dictionary source: only available where a real wordlist exists.
+            -- (pacman -S words → /usr/share/dict/words)
+            local dict_words = "/usr/share/dict/words"
+            local has_dict = vim.fn.filereadable(dict_words) == 1
+
             cmp.setup({
                 snippet = {
                     expand = function(args)
                         luasnip.lsp_expand(args.body)
                     end,
                 },
-                
+
                 -- Sources Configuration
                 sources = cmp.config.sources({
                     { name = "nvim_lsp", priority = 90 },
                     { name = "luasnip",  priority = 80 },
-                    { name = "path", priority = 70 },
+                    { name = "path",     priority = 70 },
                 }, {
-                    { name = "buffer", keyword_length = 3 },
+                    { name = "nvim_lua",    keyword_length = 2 },
+                    { name = "buffer",      keyword_length = 3 },
+                    { name = "calc" },
                     { name = "emoji" },
                     { name = "npm" },
                     { name = "zsh" },
-                    { name = "rg", keyword_length = 3 },
+                    { name = "rg",          keyword_length = 3 },
                 }),
 
                 -- Key Mappings
@@ -66,11 +80,17 @@ return {
                     ['<C-f>'] = cmp.mapping.scroll_docs(4),
                     ['<C-Space>'] = cmp.mapping.complete(),
                     ['<C-e>'] = cmp.mapping.abort(),
-                    ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item
-                    
+                    -- j/k-style navigation via C-n/C-p (preset.insert already
+                    -- has these; explicit here so it's visible).
+                    ['<C-n>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+                    ['<C-p>'] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+                    ['<Down>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
+                    ['<Up>'] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Select }),
+                    -- IDE-like: Tab accepts the highlighted item (or first).
+                    ['<CR>'] = cmp.mapping.confirm({ select = true }),
                     ['<Tab>'] = cmp.mapping(function(fallback)
                         if cmp.visible() then
-                            cmp.select_next_item()
+                            cmp.confirm({ select = true })
                         elseif luasnip.expand_or_locally_jumpable() then
                             luasnip.expand_or_jump()
                         elseif has_words_before() then
@@ -79,7 +99,6 @@ return {
                             fallback()
                         end
                     end, { "i", "s" }),
-                    
                     ['<S-Tab>'] = cmp.mapping(function(fallback)
                         if cmp.visible() then
                             cmp.select_prev_item()
@@ -90,6 +109,34 @@ return {
                         end
                     end, { "i", "s" }),
                 }),
+
+                -- Performance & ordering
+                performance = {
+                    debounce = 60,
+                    fetching_timeout = 200,
+                    max_view_entries = 200,
+                },
+                sorting = {
+                    priority_weight = 2.0,
+                    comparators = {
+                        cmp.config.compare.offset,
+                        cmp.config.compare.exact,
+                        cmp.config.compare.score,
+                        cmp.config.compare.recently_used,
+                        cmp.config.compare.locality,
+                        cmp.config.compare.kind,
+                        cmp.config.compare.sort_text,
+                        cmp.config.compare.length,
+                        cmp.config.compare.order,
+                    },
+                },
+                matching = {
+                    disallow_fuzzy_matching = false,
+                    disallow_full_fuzzy_matching = false,
+                    disallow_partial_fuzzy_matching = false,
+                    disallow_partial_matching = false,
+                    disallow_prefix_unmatching = false,
+                },
 
                 -- Formatting
                 formatting = {
@@ -135,18 +182,27 @@ return {
                 sources = cmp.config.sources({
                     { name = "git" },
                 }, {
+                    { name = "dictionary", keyword_length = 3 },
                     { name = "buffer" },
                 })
             })
-            
-            cmp.setup.filetype({ "markdown", "help" }, {
-                 sources = cmp.config.sources({
-                    { name = "luasnip" },
-                    { name = "path" },
-                 }, {
+
+            -- Prose filetypes: English dictionary + inline math word completion
+            -- for writing/commits/docs. Dictionary is only wired when a wordlist
+            -- is present (pacman -S words → /usr/share/dict/words).
+            local prose_sources = {
+                { name = "luasnip" },
+                { name = "path" },
+                { name = "calc" },
+            }
+            if has_dict then
+                table.insert(prose_sources, { name = "dictionary", keyword_length = 2 })
+            end
+            cmp.setup.filetype({ "markdown", "help", "text", "txt", "gitcommit" }, {
+                sources = cmp.config.sources(prose_sources, {
                     { name = "buffer" },
                     { name = "emoji" },
-                 })
+                })
             })
 
             cmp.setup.filetype("smelt", {
@@ -222,5 +278,21 @@ return {
                 filetypes = { "deoledit", "zsh" },
             }
         end
+    },
+
+    -- Dictionary Completion Source
+    {
+        "uga-rosa/cmp-dictionary",
+        event = { "InsertEnter" },
+        config = function()
+            local words = "/usr/share/dict/words"
+            if vim.fn.filereadable(words) ~= 1 then
+                return
+            end
+            require("cmp_dictionary").setup({
+                paths = { words },
+                exact_length = 2,
+            })
+        end,
     },
 }

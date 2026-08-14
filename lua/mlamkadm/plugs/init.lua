@@ -8,11 +8,14 @@ local function add_plugin(module_name)
   local ok, plugin = pcall(require, "mlamkadm.plugs." .. module_name)
   if ok and plugin then
     if type(plugin) == "table" then
-      -- Handle array of plugins or single plugin
-      if plugin[1] then
-        vim.list_extend(plugins, plugin)
+      -- Distinguish an array of plugin specs (first element is a table) from a
+      -- single plugin spec (first element is the repo string). The old check
+      -- `plugin[1]` matched BOTH, so single specs like lualine were split into
+      -- a bare repo string + orphaned opts/config → the config never ran.
+      if type(plugin[1]) == "table" then
+        vim.list_extend(plugins, plugin) -- array of plugin specs
       else
-        table.insert(plugins, plugin)
+        table.insert(plugins, plugin)    -- single plugin spec
       end
     end
   else

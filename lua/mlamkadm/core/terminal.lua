@@ -8,11 +8,15 @@ local M = {}
 -- Configuration
 -- ----------------------------------------------------------------------------
 local config = {
-    border = "rounded",
+    -- No border: the popup is a clean rectangle with a winbar (top status bar)
+    -- instead of a titled outline. This removes all "|" / "-" border glyphs.
+    border = "none",
     width = 0.9,   -- unified terminal float width (regular + zellij)
     height = 0.85, -- unified terminal float height (regular + zellij)
     title = "Terminal",
     title_pos = "center", -- center | left | right
+    -- Highlight group for the winbar (top dynamic status bar).
+    bar_hl = "TerminalBar",
     close_key = "<C-t>",
     winblend = 0,
     zindex = 50,
@@ -97,6 +101,8 @@ local function create_float(term)
          local cmd_name = term.cmd:match("^(%S+)") or term.cmd
          title = cmd_name:gsub("^%l", string.upper) .. " (" .. term.id .. ")"
     end
+    -- Store the bar title on the term so M.toggle can render the winbar.
+    term._bar_title = title
 
     local win_opts = {
         relative = 'editor',
@@ -104,14 +110,49 @@ local function create_float(term)
         height = height,
         row = row,
         col = col,
-        border = config.border,
+        border = config.border, -- "none": no outline, no "|" / "-"
         style = 'minimal',
         zindex = config.zindex,
-        title = " " .. title .. " ",
-        title_pos = config.title_pos,
     }
     
     return win_opts
+end
+
+--- Render the top status bar for one terminal: pagination dots, one per
+-- tracked terminal (in id order), with the ACTIVE one highlighted and the
+-- rest dimmed. No name — the zellij HUD shows the session.
+local function render_bar(term)
+    local ids = {}
+    for id in pairs(terminals) do table.insert(ids, id) end
+    table.sort(ids)
+
+    local bar = ""
+    for i, id in ipairs(ids) do
+        local active = (id == term.id)
+        local hl = active and "TerminalBarActive" or "TerminalBarInactive"
+        local dot = active and "●" or "○"
+        bar = bar .. string.format("%%#%s#%s", hl, dot)
+        if i < #ids then bar = bar .. " " end
+    end
+    if bar == "" then
+        bar = term._bar_title or config.title -- fallback (no tracked terminals)
+    end
+    return string.format("%%#%s#  %s  %%*", config.bar_hl, bar)
+end
+
+--- Re-render the winbar on every open terminal window so the dots stay in
+-- sync as terminals are created/closed/cycled.
+local function refresh_bars()
+    for _, t in pairs(terminals) do
+        if t.win and vim.api.nvim_win_is_valid(t.win) then
+            vim.wo[t.win].winbar = render_bar(t)
+        end
+    end
+end
+
+--- Set the winbar on a newly-opened terminal window and sync all others.
+local function set_terminal_bar(term)
+    refresh_bars()
 end
 
 -- ----------------------------------------------------------------------------
@@ -168,6 +209,7 @@ function M.toggle(id_or_cmd, opts, stay_normal)
         term.win = nil
         term.open = false
         last_active_id = term.id
+        refresh_bars()
         return
     end
 
@@ -189,6 +231,7 @@ function M.toggle(id_or_cmd, opts, stay_normal)
     local win_opts = create_float(term)
     term.win = vim.api.nvim_open_win(term.buf, true, win_opts)
     vim.api.nvim_win_set_option(term.win, 'winblend', config.winblend)
+    set_terminal_bar(term) -- top dynamic status bar (no outline)
     term.open = true
     last_active_id = term.id
 
@@ -280,6 +323,17 @@ function M.open_new_zellij(opts)
     if vim.fn.executable("zellij") ~= 1 then
         vim.notify("zellij is not installed or not in PATH", vim.log.levels.ERROR)
         return
+    end
+    -- Avoid stacking popups: hide any currently-visible terminal first so only
+    -- the new one shows. Without this, <C-t> then <C-n> leaves two floats
+    -- visible, and the next <C-j> closes both (it sees the other float as
+    -- "open" and toggles it shut) → the popup "drops".
+    for _, t in pairs(terminals) do
+        if t.win and vim.api.nvim_win_is_valid(t.win) then
+            pcall(vim.api.nvim_win_close, t.win, false)
+            t.win = nil
+            t.open = false
+        end
     end
     new_zellij_counter = new_zellij_counter + 1
     local session = project_session_name() .. "-" .. new_zellij_counter
@@ -388,6 +442,18 @@ local function visible_id()
     return nil
 end
 
+--- Toggle the LAST-ACTIVE terminal float, remembering which one before hiding.
+--
+-- Behavior:
+--   * A terminal float is visible  → close it and remember it as the
+--     last-active, so the next <C-t> restores THIS one, not the primary.
+--   * Nothing is visible           → reopen the remembered last-active terminal
+--     (falling back to the first tracked one if none was remembered).
+--   * No tracked terminals at all  → open the primary zellij session.
+--
+-- This is the strict toggle the user wants from <C-t>: it never "cycles" to
+-- the first session — it always comes back to the one you were last using.
+--- Sorted ids of live (running) tracked terminals only.
 --- Find the index of `id` in the sorted ids list, or nil.
 local function index_of(ids, id)
     for i, v in ipairs(ids) do
@@ -444,74 +510,100 @@ local function reap_dead()
     end
 end
 
---- Cycle to the next tracked terminal; wrap at end.
--- Reaps dead terminals first, so the cycle only visits live ones. Never
--- spawns a new terminal — use <C-n> for that. No-op when 0 or 1 live
--- terminals remain after reaping.
-function M.cycle_next()
-    reap_dead()
-
+--- Sorted ids of live (running) tracked terminals only.
+local function alive_ids()
     local ids = {}
-    for id in pairs(terminals) do
-        table.insert(ids, id)
+    for id, term in pairs(terminals) do
+        if is_alive(term) then table.insert(ids, id) end
     end
     table.sort(ids)
-    local n = #ids
-
-    if n == 0 then return end
-
-    local cur = visible_id()
-    -- Only cycle between already-visible terminals; never pull one up from a
-    -- plain buffer (Ctrl+J/K should not intrude when no terminal is showing).
-    if not cur then return end
-    if n == 1 then return end
-
-    local cur_idx = index_of(ids, cur) or 0
-    local target = ids[(cur_idx % n) + 1]
-
-    if target ~= cur then
-        local cur_term = terminals[cur]
-        if cur_term and cur_term.win and vim.api.nvim_win_is_valid(cur_term.win) then
-            pcall(vim.api.nvim_win_close, cur_term.win, false)
-            cur_term.win = nil
-            cur_term.open = false
-        end
-        M.toggle(target, nil, true)
-    end
+    return ids
 end
 
---- Cycle to the previous tracked terminal; wrap at start.
--- Reaps dead terminals first. Never spawns a new terminal.
-function M.cycle_prev()
-    reap_dead()
-
-    local ids = {}
-    for id in pairs(terminals) do
-        table.insert(ids, id)
-    end
-    table.sort(ids)
-    local n = #ids
-
-    if n == 0 then return end
-
-    local cur = visible_id()
-    -- Only cycle between already-visible terminals; never pull one up from a
-    -- plain buffer (Ctrl+J/K should not intrude when no terminal is showing).
-    if not cur then return end
-    if n == 1 then return end
-
-    local cur_idx = index_of(ids, cur) or 0
-    local target = ids[((cur_idx - 2) % n) + 1]
-
-    if target ~= cur then
-        local cur_term = terminals[cur]
-        if cur_term and cur_term.win and vim.api.nvim_win_is_valid(cur_term.win) then
-            pcall(vim.api.nvim_win_close, cur_term.win, false)
-            cur_term.win = nil
-            cur_term.open = false
+--- Strict toggle for <C-t>: pull the terminal popup DOWN if it's showing,
+-- or pull it UP (restore the last-active live terminal, else the primary
+-- zellij session) if nothing is showing. Never cycles, never drops.
+function M.toggle_last_active()
+    local visible = visible_id()
+    if visible then
+        local term = terminals[visible]
+        if term.win and vim.api.nvim_win_is_valid(term.win) then
+            pcall(vim.api.nvim_win_close, term.win, false)
+            term.win = nil
+            term.open = false
         end
-        M.toggle(target, nil, true)
+        last_active_id = visible
+        return
     end
+
+    -- Nothing visible: restore the last-active live terminal if possible.
+    if last_active_id and terminals[last_active_id] and is_alive(terminals[last_active_id]) then
+        M.toggle(last_active_id)
+        return
+    end
+
+    -- Fallback: first live tracked terminal.
+    local ids = alive_ids()
+    if #ids > 0 then
+        M.toggle(ids[1])
+        return
+    end
+
+    -- No tracked live terminals at all → open the primary zellij session.
+    M.open_zellij()
+end
+
+--- Cycle to the next live terminal; wrap at end. Only cycles when a
+-- terminal is actually showing and there are 2+ live ones. Never drops the
+-- popup: it only closes the current AFTER picking a confirmed-live next
+-- target, and only if that target is valid to open. No-op otherwise.
+function M.cycle_next()
+    local cur = visible_id()
+    if not cur then return end -- don't intrude when no terminal is showing
+
+    local ids = alive_ids()
+    local n = #ids
+    if n < 2 then return end
+
+    local cur_idx = index_of(ids, cur)
+    if not cur_idx then return end -- visible one isn't in the live set
+
+    local target = ids[(cur_idx % n) + 1]
+    if not terminals[target] then return end
+
+    local cur_term = terminals[cur]
+    if cur_term.win and vim.api.nvim_win_is_valid(cur_term.win) then
+        pcall(vim.api.nvim_win_close, cur_term.win, false)
+        cur_term.win = nil
+        cur_term.open = false
+    end
+    M.toggle(target, nil, true)
+end
+
+--- Cycle to the previous live terminal; wrap at start. Same guarantees as
+-- cycle_next: only when a terminal is showing and 2+ live ones exist; never
+-- drops the popup.
+function M.cycle_prev()
+    local cur = visible_id()
+    if not cur then return end
+
+    local ids = alive_ids()
+    local n = #ids
+    if n < 2 then return end
+
+    local cur_idx = index_of(ids, cur)
+    if not cur_idx then return end
+
+    local target = ids[((cur_idx - 2) % n) + 1]
+    if not terminals[target] then return end
+
+    local cur_term = terminals[cur]
+    if cur_term.win and vim.api.nvim_win_is_valid(cur_term.win) then
+        pcall(vim.api.nvim_win_close, cur_term.win, false)
+        cur_term.win = nil
+        cur_term.open = false
+    end
+    M.toggle(target, nil, true)
 end
 
 --- Kill a terminal by id: stop the job, close the window, delete the buffer,
@@ -535,19 +627,40 @@ function M.kill_term(id)
     end
 
     terminals[id] = nil
+    refresh_bars()
     if last_active_id == id then
         last_active_id = nil
     end
 end
 
---- Kill the currently visible terminal; falls back to the last-active one.
+--- Kill the currently visible terminal (falls back to the last-active one).
+-- Instead of just dropping the popup, it then pulls up the next live
+-- terminal (wrapping) so the terminal window stays focused.
 function M.kill_current()
     local target = visible_id() or last_active_id
     if not target or not terminals[target] then
         vim.notify("No terminal to kill", vim.log.levels.INFO)
         return
     end
+
+    -- Pick the next live terminal to show AFTER the kill (wrap at end).
+    local ids = alive_ids()
+    local n = #ids
+    local next_id = nil
+    local t_idx = index_of(ids, target)
+    if t_idx and n > 1 then
+        next_id = ids[(t_idx % n) + 1]
+    elseif n > 1 then
+        next_id = ids[1]
+    end
+
     M.kill_term(target)
+
+    -- Keep the popup up with the next terminal (stay in normal mode, like
+    -- cycling). If nothing is left, the popup naturally drops.
+    if next_id and terminals[next_id] then
+        M.toggle(next_id, nil, true)
+    end
 end
 
 function M.switch_terminal()
@@ -715,6 +828,22 @@ end
 function M.setup(opts)
     config = vim.tbl_deep_extend("force", config, opts or {})
 
+    -- Gruvbox-ish top status bar for terminal popups (no border glyphs).
+    -- All three groups share the same bar background so the dots read as one
+    -- continuous bar; only the dot glyph/foreground differ (active=bright,
+    -- inactive=dim). Re-applied on ColorScheme so it stays themed.
+    local function setup_bar_hl()
+        vim.api.nvim_set_hl(0, config.bar_hl,          { fg = "#282828", bg = "#83a598", bold = true })
+        vim.api.nvim_set_hl(0, "TerminalBarActive",   { fg = "#fbf1c7", bg = "#83a598", bold = true })
+        vim.api.nvim_set_hl(0, "TerminalBarInactive", { fg = "#3c3836", bg = "#83a598" })
+    end
+    setup_bar_hl()
+    vim.api.nvim_create_autocmd("ColorScheme", {
+        group = vim.api.nvim_create_augroup("TerminalBarHighlight", { clear = true }),
+        callback = setup_bar_hl,
+        desc = "Re-apply terminal bar highlight on colorscheme change",
+    })
+
     _G.Poptui = M.toggle_popup
 
     -- Register Default TUIs
@@ -753,10 +882,10 @@ function M.setup(opts)
 end
 
 -- Keymaps
--- <C-t>  : toggle Zellij for this project (attach --create restores the live
---          CLI session's panes/tabs). In terminal mode the buffer-local <C-t>
---          mapping set in M.toggle() still closes the float, so the same key
---          opens/closes whether you're inside the terminal or not.
+-- <C-t>  : toggle the LAST-ACTIVE terminal (remembers which one before hiding,
+--          so reopening always restores the one you were last using, never the
+--          first). In terminal mode the buffer-local <C-t> mapping set in
+--          M.toggle() still closes the float.
 -- <C-j>  : cycle to the next tracked terminal (only when a terminal is visible;
 --          stays in normal mode).
 -- <C-k>  : cycle to the previous tracked terminal (only when a terminal is
@@ -765,7 +894,8 @@ end
 -- <C-d>  : kill the currently visible terminal (jobstop + delete buffer).
 --          NOTE: `<C-d>` is also mapped by smooth-scroll (neoscroll); terminal
 --          owns it here, so smooth-scroll's <C-d> is intentionally disabled.
-vim.keymap.set('n', '<c-t>', M.open_zellij, { desc = 'Terminal: Toggle Zellij (restores CLI session)' })
+-- <leader>tz : open the project's primary Zellij session (explicit, non-toggle).
+vim.keymap.set('n', '<c-t>', M.toggle_last_active, { desc = 'Terminal: Toggle last-active' })
 vim.keymap.set('n', '<C-j>', M.cycle_next, { desc = 'Terminal: Next' })
 vim.keymap.set('n', '<C-k>', M.cycle_prev, { desc = 'Terminal: Prev' })
 vim.keymap.set('n', '<C-n>', M.open_new_zellij, { desc = 'Terminal: New Zellij session' })

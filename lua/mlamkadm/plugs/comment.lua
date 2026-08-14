@@ -35,6 +35,32 @@ return {
             -- mutating ctx fields. This keeps JSX/TSX/etc. context-aware comments.
             pre_hook = ok_hook and hook.create_pre_hook() or nil,
         })
+
+        -- ════════════════════════════════
+        -- Commentstring fallbacks
+        -- ════════════════════════════════
+        -- Some filetypes ship without a commentstring (the JSON family is
+        -- handled in after/ftplugin/{json,jsonc,json5}.lua because their runtime
+        -- ftplugin actively clears it). This covers the rest — only applied
+        -- when the buffer has no commentstring, so native ones win.
+        local commentstring_fallback = {
+            graphql = "# %s",
+            prisma  = "// %s",
+            hcl     = "# %s",
+            -- extend here as needed
+        }
+
+        vim.api.nvim_create_autocmd("FileType", {
+            group = vim.api.nvim_create_augroup("CommentStringFallback", { clear = true }),
+            callback = function()
+                local cs = commentstring_fallback[vim.bo.filetype]
+                local cur = vim.bo.commentstring
+                if cs and (cur == nil or cur == "") then
+                    vim.bo.commentstring = cs
+                end
+            end,
+            desc = "Set commentstring for filetypes nvim leaves empty",
+        })
         
         -- ════════════════════════════════
         -- Gruvbox-themed highlights (subtle, zenful)
