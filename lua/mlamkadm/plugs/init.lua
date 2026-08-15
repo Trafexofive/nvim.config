@@ -41,8 +41,6 @@ add_plugin("dressing")    -- Unified vim.ui.select/input
 add_plugin("telescope")  -- Fuzzy finder
 add_plugin("dap")         -- Debugging
 add_plugin("completion")  -- Ollama/minuet-ai inline completion (was gemini.lua)
--- add_plugin("gemsini")     -- Gemini AI (disabled)
--- add_plugin("gemini-explain") -- Gemini explain (disabled)
 add_plugin("smooth-scroll") -- Smooth scrolling
 add_plugin("zen")          -- Zen mode
 add_plugin("auto-pairs")  -- Auto pairs
@@ -68,7 +66,6 @@ add_plugin("alpha")        -- Alpha (dashboard)
 add_plugin("snacks")       -- Snacks (picker/dashboard/git)
 add_plugin("mini")         -- Mini.nvim (all modules)
 
--- Disable old statusline (lualine is the active statusline now)
--- add_plugin("line")     -- DISABLED: Replaced by lualine
+-- (old statusline 'line' removed — lualine is active)
 
 return plugins

@@ -19,10 +19,10 @@ Leader key: `Space`. `Mod` below = Super (niri). Terminal cycling uses `<C-j>/<C
 ## 🖥️ Terminal / Zellij
 | Key | Action |
 |-----|--------|
-| `<C-t>` | Toggle the last-active terminal (remembers which was last used before hiding, so reopening restores it — never cycles to the first) |
-| `<C-n>` | New zellij session |
-| `<C-j>` / `<C-k>` | Cycle terminals (only when visible; stays in normal mode) |
-| `<C-d>` | Kill current terminal |
+| `<C-t>` | Pull up / pull down the terminal popup (strict toggle — restores last-active) |
+| `<C-n>` | New zellij session (hides the current one first) |
+| `<C-j>` / `<C-k>` | Cycle terminals (only when visible; never drops the popup) |
+| `<C-d>` | Kill current terminal + pull up the next one (popup stays focused) |
 | `<C-Esc>` (term mode) | Exit terminal mode |
 | `<leader>tz` | Open the project's primary zellij session (explicit, non-toggle) |
 | `<leader>ts` | Switch terminal (telescope) |
@@ -73,10 +73,18 @@ Leader key: `Space`. `Mod` below = Super (niri). Terminal cycling uses `<C-j>/<C
 ## 📁 Files / Dirs
 | Key | Action |
 |-----|--------|
-| `<leader>n` | Reveal file in NeoTree |
-| `<leader><tab>` | Toggle floating NeoTree |
-| `-` / `_` | Oil parent / current dir |
+| `<leader><tab>` | File Manager — floating NeoTree (primary) |
+| `<leader>n` | NeoTree sidebar reveal |
 | `yy` (in neo-tree/netrw) | Yank full path |
+
+**NeoTree (in-tree) bindings:**
+| Key | Action |
+|-----|--------|
+| `L` | Create symlink → cursor node |
+| `<C-j>` / `<C-k>` | Cycle sources (files → buffers → git_status) |
+| `V` + `x` / `d` / `y` | Multi-select: cut / delete / copy all selected |
+| `<` / `>` | Prev / next source (same as `<C-k>` / `<C-j>`) |
+| click winbar tabs | Flip sources (files / buffers / git_status) |
 
 ## 🧱 Text Objects (treesitter)
 | Key | Action |
