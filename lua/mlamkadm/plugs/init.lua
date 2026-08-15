@@ -60,7 +60,6 @@ add_plugin("cheatsheet") -- Cheatsheet
 add_plugin("flash")      -- Flash.nvim (fast navigation)
 add_plugin("surround")    -- Surround text
 add_plugin("trouble")     -- Trouble (diagnostics list)
-add_plugin("oil")         -- Oil (directory editing)
 add_plugin("lualine")     -- The standard statusline
 add_plugin("bufferline")  -- The standard top bar
 add_plugin("comment")     -- Comment.nvim

@@ -7,10 +7,8 @@ return {
         "MunifTanjim/nui.nvim",
     },
     keys = {
-        -- Toggle floating NeoTree and reveal current file
-        { "<leader><tab>", "<cmd>Neotree float reveal<cr>", desc = "Toggle Floating NeoTree (Reveal)" },
-        -- NOTE: <C-n> is owned by the terminal manager (new zellij session);
-        -- use <leader>n / <leader><tab> for NeoTree instead.
+        -- Primary file manager: floating NeoTree, revealed at the current file.
+        { "<leader><tab>", "<cmd>Neotree float reveal<cr>", desc = "File Manager (NeoTree float)" },
     },
     config = function()
         -- If you want icons for diagnostic errors, you'll need to define them somewhere:
@@ -29,6 +27,12 @@ return {
             enable_git_status = true,
             enable_diagnostics = true,
             enable_normal_mode_for_inputs = false,
+            -- Clickable tabs (filesystem / buffers / git_status) in the float's
+            -- top bar, so you can flip sources without leaving the float.
+            source_selector = {
+                winbar = true,
+                statusline = false,
+            },
             open_files_do_not_replace_types = { "terminal", "trouble", "qf" },
             sort_case_insensitive = false,
             sort_function = nil,
@@ -98,10 +102,41 @@ return {
                     enabled = false,
                 },
             },
-            commands = {},
+            commands = {
+                -- Create a symlink pointing to the node under the cursor.
+                symlink = function(state)
+                    local node = state.tree:get_node()
+                    if not node then return end
+                    local target = node:get_id()
+                    local base = vim.fn.fnamemodify(target, ":t")
+                    local parent = vim.fn.fnamemodify(target, ":h")
+                    local inputs = require("neo-tree.ui.inputs")
+                    inputs.input("Symlink name (points to " .. base .. "):", parent .. "/", function(link_path)
+                        if not link_path or link_path == "" then return end
+                        link_path = vim.fn.fnamemodify(link_path, ":p")
+                        local out = vim.fn.system({ "ln", "-s", target, link_path })
+                        if vim.v.shell_error ~= 0 then
+                            vim.notify("ln -s failed: " .. vim.trim(out), vim.log.levels.ERROR)
+                            return
+                        end
+                        vim.notify("Created symlink: " .. link_path, vim.log.levels.INFO)
+                        require("neo-tree.sources.filesystem.commands").refresh(state)
+                    end)
+                end,
+            },
             window = {
                 position = "left",
                 width = 30,
+                -- The floating window (used by <leader><tab>): big enough for
+                -- multi-file/multi-folder work, centered.
+                popup = {
+                    size = {
+                        height = "88%",
+                        width = "85%",
+                    },
+                    position = "50%",
+                    border = "rounded",
+                },
                 mapping_options = {
                     noremap = true,
                     nowait = true,
@@ -128,6 +163,8 @@ return {
                         }
                     },
                     ["A"] = "add_directory",
+                    -- Multi-file ops: V (visual line) to select many nodes, then
+                    -- d/y/x operate on ALL selected; p pastes the whole batch.
                     ["d"] = "delete",
                     ["r"] = "rename",
                     ["y"] = "copy_to_clipboard",
@@ -140,7 +177,12 @@ return {
                     ["?"] = "show_help",
                     ["<"] = "prev_source",
                     [">"] = "next_source",
+                    -- <C-j>/<C-k> cycle sources (files → buffers → git_status),
+                    -- mirroring the terminal manager's cycle muscle-memory.
+                    ["<C-j>"] = "prev_source",
+                    ["<C-k>"] = "next_source",
                     ["i"] = "show_file_details",
+                    ["L"] = "symlink",
                 }
             },
             nesting_rules = {},
@@ -251,7 +293,7 @@ return {
             }
         })
 
-        -- Reveal current file in Neo-tree
-        vim.keymap.set("n", "<leader>n", "<cmd>Neotree reveal<cr>", { desc = "Reveal current file in NeoTree" })
+        -- Sidebar (persistent, non-float) reveal of the current file.
+        vim.keymap.set("n", "<leader>n", "<cmd>Neotree reveal<cr>", { desc = "Reveal current file in NeoTree (sidebar)" })
     end,
 }
