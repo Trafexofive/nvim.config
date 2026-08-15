@@ -1,0 +1,84 @@
+{
+  "items": [
+    {
+      "task": "Run :TSUpdate in a live session — clears lua/vim query.set overrides + likely restores markdown code-block injection (kills the recurring treesitter crash class)",
+      "done": false
+    },
+    {
+      "task": "Interactive PTY smoke-test of terminal manager (C-t / C-j / C-k / C-n / C-d / kill-advance) — whole flow was headless-only; catch real drop bugs",
+      "done": false
+    },
+    {
+      "task": "Fix markdown code-block highlighting — verify injection post-TSUpdate; if still dead, pin nvim-treesitter and drop query.set hacks",
+      "done": false
+    },
+    {
+      "task": "Cortex-MK3 harness nvim plugin — scaffold: lazy spec + keymaps, launch harness C++ TUI in a managed terminal float (ties into core/terminal.lua)",
+      "done": false
+    },
+    {
+      "task": "Cortex-MK3 integration — session/endeavor bridge: send prompt from nvim, pipe XML protocol response into a buffer/quickfix",
+      "done": false
+    },
+    {
+      "task": "Refresh KEYMAPS.md — bindings moved a lot (C-t/C-j/k semantics, leader-tab, L symlink, C-j/k source cycle)",
+      "done": false
+    },
+    {
+      "task": "Neo-tree git_status workflow — stage/unstage/commit from the git source (git state is the #1 reason neo-tree stays)",
+      "done": false
+    },
+    {
+      "task": "Terminal bar 'sexy' upgrade — session-state dots (live/detached/resurrect colors) via zellij list-sessions (deferred ask)",
+      "done": false
+    },
+    {
+      "task": "Terminal kill-current edge cases — kill last terminal, kill non-visible, kill while zellij attached; confirm no drop/stray window",
+      "done": false
+    },
+    {
+      "task": "Zellij session hygiene — auto-reap dead sessions, resurrect EXITED on demand",
+      "done": false
+    },
+    {
+      "task": "Neo-tree multi-select polish — make V + x/d/y discoverable (hint or gA select-all-siblings); this is the oil-replacement use case",
+      "done": false
+    },
+    {
+      "task": "Neo-tree symlink round-trip — resolve relative targets + enable symlink_target column in the float",
+      "done": false
+    },
+    {
+      "task": "Plugin aggregator cleanup — remove dead specs (gemsini, gemini-explain, line, aart) + audit disabled block",
+      "done": false
+    },
+    {
+      "task": "vim.tbl_islist deprecation — pin/patch affected plugins (aerial, bufferline, dressing, lazy, mason) to quiet startup noise",
+      "done": false
+    },
+    {
+      "task": "Lualine terminal widget — session-state colors (live/detached/resurrect) matching the bar upgrade",
+      "done": false
+    },
+    {
+      "task": "Markdown preview eval — glow dracula vs markdown-preview.nvim for real code highlighting; pick the keeper",
+      "done": false
+    },
+    {
+      "task": "Cortex-MK3 XML helpers — treesitter queries + ftplugin for the MK3 XML protocol so harness logs are readable in nvim",
+      "done": false
+    },
+    {
+      "task": "Terminal persistence verify — confirm session JSON restore actually reattaches zellij sessions after restart",
+      "done": false
+    },
+    {
+      "task": "Neo-tree float reveal behavior — confirm reveal lands on the right dir for manifest files deep in the tree (follow_current_file edge cases)",
+      "done": false
+    },
+    {
+      "task": "Write today's changelog artifact — bindings, oil removal, neo-tree upgrades — so it survives compaction",
+      "done": false
+    }
+  ]
+}
