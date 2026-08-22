@@ -21,12 +21,12 @@ local config = {
     winblend = 0,
     zindex = 50,
     scrollback = 100000,
-    -- Session persistence is DISABLED: zellij owns CLI session persistence
-    -- (on_force_close detach) and auto-session owns nvim buffers/windows.
-    -- Recreating terminal floats (which run `zellij attach --create`) on restore
-    -- would attach duplicate clients to already-live sessions.
+    -- Session persistence: save/restore the tracked terminal registry (cmd per
+    -- terminal + open flag) so ALL terminals come back on restart, not just the
+    -- last one. zellij re-attach is safe: `zellij attach --create` reattaches to
+    -- the existing session rather than spawning a duplicate client.
     persistence = {
-        enabled = false,
+        enabled = true,
         save_file = vim.fn.stdpath("data") .. "/terminal_session.json",
     }
 }
@@ -39,6 +39,21 @@ local config = {
 local terminals = {}
 local next_id = 1
 local last_active_id = nil
+
+-- Is this tracked terminal not a zombie? A terminal is a zombie when it has
+-- no buffer AND no window (killed/detached but never removed from the
+-- registry). Such entries must not render a bar dot.
+local function is_live(term)
+    if not term then return false end
+    if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
+        return true
+    end
+    if term.win and vim.api.nvim_win_is_valid(term.win) then
+        return true
+    end
+    -- Just created (open flag true, buffer not yet materialized).
+    return term.open == true
+end
 
 -- Registry of TUI commands for quick access
 local tui_registry = {}
@@ -123,7 +138,11 @@ end
 -- rest dimmed. No name — the zellij HUD shows the session.
 local function render_bar(term)
     local ids = {}
-    for id in pairs(terminals) do table.insert(ids, id) end
+    for id in pairs(terminals) do
+        if is_live(terminals[id]) then
+            table.insert(ids, id)
+        end
+    end
     table.sort(ids)
 
     local bar = ""
@@ -242,21 +261,24 @@ function M.toggle(id_or_cmd, opts, stay_normal)
         
         local term_opts = {
             on_exit = function(job_id, code, event)
-                -- If process exits, we might want to close the window or keep it open?
-                -- Usually close it.
-                if code == 0 then
-                    -- If clean exit, close window and delete buffer
-                    if term.win and vim.api.nvim_win_is_valid(term.win) then
-                        vim.api.nvim_win_close(term.win, true)
-                        term.win = nil
-                        term.open = false
-                    end
-                    if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
-                        vim.api.nvim_buf_delete(term.buf, { force = true })
-                        term.buf = nil
-                    end
+                -- Always clear the registry entry on exit (clean or not), so
+                -- detached/killed zellij sessions don't linger as zombie dots.
+                if term.win and vim.api.nvim_win_is_valid(term.win) then
+                    pcall(vim.api.nvim_win_close, term.win, true)
+                    term.win = nil
+                    term.open = false
+                end
+                if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
+                    pcall(vim.api.nvim_buf_delete, term.buf, { force = true })
+                    term.buf = nil
+                end
+                if terminals[term.id] then
                     terminals[term.id] = nil -- Remove from registry
                 end
+                if last_active_id == term.id then
+                    last_active_id = nil
+                end
+                refresh_bars()
             end
         }
         
@@ -792,11 +814,6 @@ end
 function M.restore_session()
     if not config.persistence.enabled then return end
     
-    -- Clear existing terminals from memory to avoid mixing sessions.
-    M.cleanup({ delete_buffers = true })
-    terminals = {}
-    next_id = 1
-    
     local path = get_session_path()
     local file = io.open(path, "r")
     if not file then return end
@@ -806,18 +823,57 @@ function M.restore_session()
     
     local ok, session_data = pcall(vim.json.decode, content)
     if not ok or type(session_data) ~= "table" then return end
-    
+
+    -- Rebuild the registry from the saved snapshot WITHOUT clobbering any
+    -- terminals already tracked (guards against double-restore from both
+    -- auto-session hooks firing).
+    local seen = {}
+    for _, t in pairs(terminals) do
+        if t.cmd then seen[t.cmd] = true end
+    end
+
+    local restored = 0
+    local first_id = nil
     for _, data in ipairs(session_data) do
+        if not data.cmd or data.cmd == "" then
+            goto continue
+        end
+        -- Dedupe by cmd so a re-run doesn't stack duplicate entries.
+        if seen[data.cmd] then
+            goto continue
+        end
         local term = M.create_term(data.cmd, data.opts)
-        if data.is_open then
-            vim.schedule(function()
-                if terminals[term.id] then
-                    M.toggle(term.id)
-                end
-            end)
+        seen[data.cmd] = true
+        restored = restored + 1
+        if not first_id then first_id = term.id end
+        ::continue::
+    end
+
+    -- Re-open every terminal that was open at save time. This is the fix for
+    -- "only the first/last session comes back" — previously only the last
+    -- `is_open` entry was being scheduled to an already-reused id.
+    for _, data in ipairs(session_data) do
+        if data.is_open and data.cmd and data.cmd ~= "" then
+            local term = nil
+            for id, t in pairs(terminals) do
+                if t.cmd == data.cmd and not t.win then term = t; break end
+            end
+            if term then
+                vim.schedule(function()
+                    if terminals[term.id] and not terminals[term.id].win then
+                        M.toggle(term.id, nil, true) -- stay in normal mode
+                    end
+                end)
+            end
         end
     end
-    
+
+    -- If nothing was flagged open but we restored terminals, set last-active
+    -- to the first one so <C-t> brings up the right terminal.
+    if first_id then
+        last_active_id = first_id
+    end
+
     -- Silent restore, no notification to avoid clutter
 end
 

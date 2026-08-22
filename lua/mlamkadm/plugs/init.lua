@@ -30,6 +30,7 @@ add_plugin("nvimcmp")
 add_plugin("treesitter")
 add_plugin("whichkey")
 add_plugin("gitsigns")
+add_plugin("git-blame")  -- blame window toggle (git-blame.nvim)
 add_plugin("icons")
 
 -- UI plugins

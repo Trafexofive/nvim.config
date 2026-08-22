@@ -1,0 +1,72 @@
+{
+  "items": [
+    {
+      "task": "LIVE: run :TSUpdate — gate for treesitter cleanup + markdown injection fix",
+      "done": false
+    },
+    {
+      "task": "LIVE: PTY smoke-test terminal manager (C-t/C-j/C-k/C-n/C-d, restore-all, winbar dots)",
+      "done": false
+    },
+    {
+      "task": "Drop lua/vim query.set overrides once parsers are current (kill the crash class)",
+      "done": false
+    },
+    {
+      "task": "Fix markdown code-block injection (verify bash tree post-TSUpdate; else pin nvim-treesitter)",
+      "done": false
+    },
+    {
+      "task": "Cortex-MK3 harness nvim plugin — lazy spec + keymaps, launch C++ TUI in terminal float",
+      "done": false
+    },
+    {
+      "task": "Cortex-MK3 session/endeavor bridge — prompt from nvim → XML response into buffer/quickfix",
+      "done": false
+    },
+    {
+      "task": "Cortex-MK3 XML protocol helpers — treesitter queries + ftplugin for MK3 logs",
+      "done": false
+    },
+    {
+      "task": "Neo-tree git_status workflow — stage/unstage/commit from the git source",
+      "done": false
+    },
+    {
+      "task": "Terminal bar session-state dots (live/detached/resurrect via zellij list-sessions)",
+      "done": false
+    },
+    {
+      "task": "Terminal kill-current edge cases (last terminal, non-visible, while zellij attached)",
+      "done": false
+    },
+    {
+      "task": "Zellij session hygiene — reap dead, resurrect EXITED on demand",
+      "done": false
+    },
+    {
+      "task": "Neo-tree multi-select polish — make V + x/d/y discoverable (hint/select-all)",
+      "done": false
+    },
+    {
+      "task": "Neo-tree symlink round-trip — relative-target resolution + symlink_target column",
+      "done": false
+    },
+    {
+      "task": "vim.tbl_islist deprecation — pin/patch aerial/bufferline/dressing/lazy/mason",
+      "done": false
+    },
+    {
+      "task": "Lualine terminal widget — session-state colors matching the bar upgrade",
+      "done": false
+    },
+    {
+      "task": "Neo-tree float reveal edge cases — verify deep manifest files land correctly",
+      "done": false
+    },
+    {
+      "task": "Changelog artifact — bindings, oil removal, neo-tree upgrades, setup() fix — survives compaction",
+      "done": false
+    }
+  ]
+}

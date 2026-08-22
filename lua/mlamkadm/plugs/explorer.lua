@@ -103,6 +103,25 @@ return {
                 },
             },
             commands = {
+                -- Format-aware open: executable files open in a new terminal
+                -- (ctrl-t pane/session); everything else opens normally.
+                smart_open = function(state)
+                    local node = state.tree:get_node()
+                    if not node then return end
+                    local path = node:get_id()
+                    if node.type == "file" and vim.fn.executable(path) == 1 then
+                        local ok, term = pcall(require, "mlamkadm.core.terminal")
+                        if ok and term and term.new_term then
+                            term.new_term(path, { use_theme = false })
+                        else
+                            vim.cmd("split | terminal " .. vim.fn.fnameescape(path))
+                        end
+                        return
+                    end
+                    -- Fall back to the built-in filesystem open (handles
+                    -- directory toggling and normal file opens).
+                    pcall(require("neo-tree.sources.filesystem.commands").open, state)
+                end,
                 -- Create a symlink pointing to the node under the cursor.
                 symlink = function(state)
                     local node = state.tree:get_node()
@@ -146,7 +165,7 @@ return {
                         "toggle_node",
                         nowait = true,
                     },
-                    ["<cr>"] = "open",
+                    ["<cr>"] = "smart_open",
                     ["<esc>"] = "cancel",
                     ["P"] = { "toggle_preview", config = { use_float = true } },
                     ["l"] = "focus_preview",

@@ -1,3 +1,11 @@
+-- Compatibility shim: nvim 0.11+ deprecated vim.tbl_islist in favor of
+-- vim.islist. Upstream plugins (plenary, cmp, dap, mini, snacks, nui, ...)
+-- still call the old name, which emits a deprecation warning on every call.
+-- Point the old name at the new one once so we don't patch every plugin.
+if vim.islist then
+    vim.tbl_islist = vim.islist
+end
+
 -- Add Mason bin + ~/.cargo/bin to PATH (fixes linter/formatter issues and
 -- finds zellij/other cargo tools, e.g. for <C-t>)
 vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.HOME .. "/.cargo/bin:" .. vim.env.PATH
