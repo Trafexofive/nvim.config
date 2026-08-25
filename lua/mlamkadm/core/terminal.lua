@@ -803,10 +803,14 @@ function M.save_session()
         end
     end
     
+    -- Stable order + remember which terminal was active so restore can re-show
+    -- it (instead of only the last `is_open` one).
+    table.sort(session_data, function(a, b) return a.cmd < b.cmd end)
+    
     local path = get_session_path()
     local file = io.open(path, "w")
     if file then
-        file:write(vim.json.encode(session_data))
+        file:write(vim.json.encode({ terminals = session_data, last_active_cmd = last_active_id and terminals[last_active_id] and terminals[last_active_id].cmd or nil }))
         file:close()
     end
 end
@@ -821,8 +825,13 @@ function M.restore_session()
     local content = file:read("*a")
     file:close()
     
-    local ok, session_data = pcall(vim.json.decode, content)
-    if not ok or type(session_data) ~= "table" then return end
+    local ok, decoded = pcall(vim.json.decode, content)
+    if not ok or type(decoded) ~= "table" then return end
+
+    -- Backward-compat: old format was a bare array of terminal records;
+    -- new format is { terminals = {...}, last_active_cmd = "..." }.
+    local session_data = decoded.terminals or decoded
+    local last_active_cmd = decoded.last_active_cmd
 
     -- Rebuild the registry from the saved snapshot WITHOUT clobbering any
     -- terminals already tracked (guards against double-restore from both
@@ -832,7 +841,6 @@ function M.restore_session()
         if t.cmd then seen[t.cmd] = true end
     end
 
-    local restored = 0
     local first_id = nil
     for _, data in ipairs(session_data) do
         if not data.cmd or data.cmd == "" then
@@ -844,34 +852,38 @@ function M.restore_session()
         end
         local term = M.create_term(data.cmd, data.opts)
         seen[data.cmd] = true
-        restored = restored + 1
         if not first_id then first_id = term.id end
         ::continue::
     end
 
-    -- Re-open every terminal that was open at save time. This is the fix for
-    -- "only the first/last session comes back" — previously only the last
-    -- `is_open` entry was being scheduled to an already-reused id.
-    for _, data in ipairs(session_data) do
-        if data.is_open and data.cmd and data.cmd ~= "" then
-            local term = nil
-            for id, t in pairs(terminals) do
-                if t.cmd == data.cmd and not t.win then term = t; break end
-            end
-            if term then
-                vim.schedule(function()
-                    if terminals[term.id] and not terminals[term.id].win then
-                        M.toggle(term.id, nil, true) -- stay in normal mode
-                    end
-                end)
+    -- Re-open ONE terminal: the last-active one (or the first restored, or the
+    -- single `is_open` entry as a fallback). The rest stay in the registry so
+    -- <C-j>/<C-k> cycles to them. This is the real fix for "only the first/
+    -- last session comes back".
+    local open_cmd = last_active_cmd
+    if not open_cmd then
+        for _, data in ipairs(session_data) do
+            if data.is_open and data.cmd and data.cmd ~= "" then
+                open_cmd = data.cmd
+                break
             end
         end
     end
 
-    -- If nothing was flagged open but we restored terminals, set last-active
-    -- to the first one so <C-t> brings up the right terminal.
-    if first_id then
-        last_active_id = first_id
+    local open_id = nil
+    for id, t in pairs(terminals) do
+        if t.cmd == open_cmd then open_id = id; break end
+    end
+    if not open_id and first_id then open_id = first_id end
+
+    if open_id then
+        local tid = open_id
+        vim.schedule(function()
+            if terminals[tid] then
+                M.toggle(tid, nil, true) -- stay in normal mode
+            end
+        end)
+        last_active_id = open_id
     end
 
     -- Silent restore, no notification to avoid clutter
