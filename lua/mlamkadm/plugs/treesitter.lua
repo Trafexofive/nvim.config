@@ -1,15 +1,21 @@
 return {
     "nvim-treesitter/nvim-treesitter",
+    branch = "main", -- nvim 0.12 requires the rewritten main branch (master is frozen/broken)
     build = ":TSUpdate",
     lazy = false,
     dependencies = {
         "nvim-lua/plenary.nvim",
-        "nvim-treesitter/nvim-treesitter-textobjects",
-        "nvim-treesitter/nvim-treesitter-context",
-        "windwp/nvim-ts-autotag",
-        "JoosepAlviste/nvim-ts-context-commentstring",
+        { "nvim-treesitter/nvim-treesitter-textobjects", branch = "main" },
+        { "nvim-treesitter/nvim-treesitter-context", branch = "master" },
+        { "windwp/nvim-ts-autotag", branch = "main" },
+        { "JoosepAlviste/nvim-ts-context-commentstring", branch = "main" },
     },
     config = function()
+        -- nvim 0.12 + nvim-treesitter `main` branch migration.
+        -- `main` only manages parser install: require("nvim-treesitter").setup().
+        -- Highlight + indent are nvim 0.12 BUILT-INS (vim.treesitter.start/indent).
+        -- Text objects / autotag live in their own satellites with their own modules.
+
         vim.filetype.add({
             extension = {
                 smt = "smelt",
@@ -23,73 +29,52 @@ return {
 
         -- Skip backwards compatibility routines and speed up loading
         vim.g.skip_ts_context_commentstring_module = true
-        
+
         -- Setup context_commentstring directly
         require('ts_context_commentstring').setup {
             enable_autocmd = false,
         }
 
-        -- nvim-treesitter ships highlights queries newer than the parser
-        -- revisions it pins, so opening certain files crashes at query parse
-        -- (e.g. lua's `operator:` field, vim's `tab` token — "Invalid node
-        -- type/field"). nvim MERGES runtime query files, so a bare after/
-        -- queries override is not enough; we must replace the whole query via
-        -- query.set(). Compatible versions live in after/queries/{lang}/.
-        local function override_query(lang, query_name)
-            local p = vim.fn.findfile(
-                "queries/" .. lang .. "/" .. query_name .. ".scm",
-                "/home/mlamkadm/.config/nvim/after"
-            )
-            if p == "" then return end
-            local qf = io.open(p, "r")
-            if not qf then return end
-            local qtext = qf:read("*a")
-            qf:close()
-            if qtext and #qtext > 0 then
-                vim.treesitter.query.set(lang, query_name, qtext)
+        -- New nvim-treesitter setup (parsers only).
+        require("nvim-treesitter").setup()
+
+        -- Ensure parsers are installed (replaces old `ensure_installed`).
+        -- Diff against installed so we don't reinstall on every startup.
+        local ensure = {
+            "c", "cpp", "lua", "vim", "vimdoc", "query",
+            "javascript", "html", "css", "python", "go", "rust", "bash", "yaml", "json",
+            "toml", "tsx", "typescript", "regex", "sql", "http", "dockerfile", "make", "java",
+        }
+        local installed = vim.treesitter.language.get_languages and vim.treesitter.language.get_languages() or {}
+        local to_install = {}
+        for _, lang in ipairs(ensure) do
+            if not vim.tbl_contains(installed, lang) then
+                to_install[#to_install + 1] = lang
             end
         end
-        override_query("lua", "highlights")
-        override_query("vim", "highlights")
+        if #to_install > 0 then
+            require("nvim-treesitter").install(to_install)
+        end
 
-        local configs = require("nvim-treesitter.config")
+        -- Enable highlighting + indentation via nvim 0.12 built-ins.
+        vim.api.nvim_create_autocmd("FileType", {
+            callback = function(args)
+                local ft = vim.bo[args.buf].filetype
+                if ft == "smelt" then return end -- no grammar yet
+                pcall(vim.treesitter.start, args.buf)
+                -- Indentation is provided by nvim-treesitter main via indentexpr().
+                vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+            end,
+        })
 
-        configs.setup({
-            ensure_installed = {
-                "c", "cpp", "lua", "vim", "vimdoc", "query",
-                "javascript", "html", "css", "python", "go", "rust", "bash", "yaml", "json",
-                "toml", "tsx", "typescript", "regex", "sql", "http", "dockerfile", "make", "java"
-            },
-            sync_install = false,
-            highlight = {
-                enable = true,
-                -- `smelt` has no native grammar yet (queries would need full
-                -- injection/indent/fold coverage).
-                disable = { "smelt" },
-            },
-            indent = {
-                enable = true,
-                disable = { "smelt" },
-            },
-            
-            -- Incremental selection for better editing
-            incremental_selection = {
-                enable = true,
-                keymaps = {
-                    init_selection = "<CR>",  -- Start selection
-                    node_incremental = "<CR>",  -- Expand to node
-                    scope_incremental = "<S-CR>", -- Expand to scope
-                    node_decremental = "<Tab>",  -- Shrink selection
-                },
-            },
-            
-            -- Autotag (HTML/JSX)
-            autotag = {
-                enable = true,
-            },
-            
-            -- Text Objects (select, move, swap)
-            textobjects = {
+        -- Autotag (HTML/JSX) — separate plugin.
+        pcall(function()
+            require("nvim-ts-autotag").setup()
+        end)
+
+        -- Text Objects (select + move) — satellite, module name unchanged.
+        pcall(function()
+            require("nvim-treesitter-textobjects").setup {
                 select = {
                     enable = true,
                     lookahead = true,
@@ -122,9 +107,9 @@ return {
                         ["[]"] = "@class.outer",
                     },
                 },
-            },
-        })
-        
+            }
+        end)
+
         -- Sticky Context Header
         require("treesitter-context").setup({
             enable = true,

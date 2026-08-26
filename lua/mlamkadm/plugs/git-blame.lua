@@ -1,21 +1,19 @@
--- git-blame.nvim — dedicated blame viewer + inline blame
--- Complements gitsigns (which gives inline signs + current_line_blame).
--- This adds a full per-file blame WINDOW toggle (commit / author / date / msg).
--- return {
---   "FabijanZulficar/git-blame.nvim",
---   dependencies = { "nvim-lua/plenary.nvim" },
---   keys = {
---     { "<leader>gB", "<cmd>GitBlameToggle<CR>", desc = "Toggle blame window" },
---     { "<leader>gbl", "<cmd>GitBlameOpenCommitURL<CR>", desc = "Open commit URL" },
---     { "<leader>gL", "<cmd>GitBlameOpenFileURL<CR>", desc = "Open file URL" },
---   },
---   config = function()
---     require("gitblame").setup({
---       enabled = true,
---       message_template = "  <summary> • <author> • <date>",
---       date_format = "%Y-%m-%d %H:%M",
---       virtual_text_column = 1,
---       display_virtual_text = false, -- only show the window, not per-line noise
---     })
---   end,
--- }
+-- blame.nvim — fugitive-style git blame visualizer (window + virtual views)
+-- Complements gitsigns (inline signs + current_line_blame).
+-- This adds a full per-file blame WINDOW toggle + commit navigation.
+return {
+  "FabijanZulj/blame.nvim",
+  dependencies = { "nvim-lua/plenary.nvim" },
+  keys = {
+    { "<leader>gB", "<cmd>BlameToggle<CR>", desc = "Toggle blame window" },
+    { "<leader>gbl", "<cmd>BlameToggle virtual<CR>", desc = "Toggle blame (virtual)" },
+  },
+  config = function()
+    require("blame").setup({
+      date_format = "%Y-%m-%d %H:%M",
+      focus_blame = true,
+      merge_consecutive = false,
+      max_summary_width = 30,
+    })
+  end,
+}
