@@ -1,2 +1,12 @@
+# Runtime / agent state - NOT config sources, never commit
+.artifacts/
 .cortex/
 .pi/
+
+# nvim scratch / state
+*.swp
+*.swo
+*~
+spell/
+
+# oh-my-zsh / editor junk
