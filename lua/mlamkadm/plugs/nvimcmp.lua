@@ -6,20 +6,20 @@ return {
         event = { "InsertEnter", "CmdlineEnter" },
         dependencies = {
             -- Sources
-            "hrsh7th/cmp-nvim-lsp",      -- LSP Source
-            "hrsh7th/cmp-buffer",        -- Buffer Source
-            "hrsh7th/cmp-path",          -- Path Source
-            "hrsh7th/cmp-cmdline",       -- Cmdline Source
-            "saadparwaiz1/cmp_luasnip",  -- Snippet Source
-            "hrsh7th/cmp-nvim-lua",      -- Lua Source
-            "tamago324/cmp-zsh",         -- Zsh Source
-            "hrsh7th/cmp-emoji",         -- Emoji Source
-            "lukas-reineke/cmp-rg",      -- Ripgrep Source
-            "petertriho/cmp-git",        -- Git Source
-            "david-kunz/cmp-npm",        -- NPM Source
-            "hrsh7th/cmp-calc",          -- Inline math (2+2 → 4)
-            "rcarriga/cmp-dap",          -- DAP variable completion
-            "uga-rosa/cmp-dictionary",   -- English word completion (prose)
+            "hrsh7th/cmp-nvim-lsp", -- LSP Source
+            "hrsh7th/cmp-buffer", -- Buffer Source
+            "hrsh7th/cmp-path", -- Path Source
+            "hrsh7th/cmp-cmdline", -- Cmdline Source
+            "saadparwaiz1/cmp_luasnip", -- Snippet Source
+            "hrsh7th/cmp-nvim-lua", -- Lua Source
+            "tamago324/cmp-zsh", -- Zsh Source
+            "hrsh7th/cmp-emoji", -- Emoji Source
+            "lukas-reineke/cmp-rg", -- Ripgrep Source
+            "petertriho/cmp-git", -- Git Source
+            "david-kunz/cmp-npm", -- NPM Source
+            "hrsh7th/cmp-calc", -- Inline math (2+2 → 4)
+            "rcarriga/cmp-dap", -- DAP variable completion
+            "uga-rosa/cmp-dictionary", -- English word completion (prose)
 
             -- Snippet Engine
             "L3MON4D3/LuaSnip",
@@ -44,7 +44,8 @@ return {
             local has_words_before = function()
                 unpack = unpack or table.unpack
                 local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-                return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+                return col ~= 0
+                    and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
             end
 
             -- Dictionary source: only available where a real wordlist exists.
@@ -62,33 +63,33 @@ return {
                 -- Sources Configuration
                 sources = cmp.config.sources({
                     { name = "nvim_lsp", priority = 90 },
-                    { name = "luasnip",  priority = 80 },
-                    { name = "path",     priority = 70 },
+                    { name = "luasnip", priority = 80 },
+                    { name = "path", priority = 70 },
                 }, {
-                    { name = "nvim_lua",    keyword_length = 2 },
-                    { name = "buffer",      keyword_length = 3 },
+                    { name = "nvim_lua", keyword_length = 2 },
+                    { name = "buffer", keyword_length = 3 },
                     { name = "calc" },
                     { name = "emoji" },
                     { name = "npm" },
                     { name = "zsh" },
-                    { name = "rg",          keyword_length = 3 },
+                    { name = "rg", keyword_length = 3 },
                 }),
 
                 -- Key Mappings
                 mapping = cmp.mapping.preset.insert({
-                    ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-                    ['<C-f>'] = cmp.mapping.scroll_docs(4),
-                    ['<C-Space>'] = cmp.mapping.complete(),
-                    ['<C-e>'] = cmp.mapping.abort(),
+                    ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+                    ["<C-f>"] = cmp.mapping.scroll_docs(4),
+                    ["<C-Space>"] = cmp.mapping.complete(),
+                    ["<C-e>"] = cmp.mapping.abort(),
                     -- j/k-style navigation via C-n/C-p (preset.insert already
                     -- has these; explicit here so it's visible).
-                    ['<C-n>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
-                    ['<C-p>'] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
-                    ['<Down>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
-                    ['<Up>'] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Select }),
+                    ["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+                    ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+                    ["<Down>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
+                    ["<Up>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Select }),
                     -- IDE-like: Tab accepts the highlighted item (or first).
-                    ['<CR>'] = cmp.mapping.confirm({ select = true }),
-                    ['<Tab>'] = cmp.mapping(function(fallback)
+                    ["<CR>"] = cmp.mapping.confirm({ select = true }),
+                    ["<Tab>"] = cmp.mapping(function(fallback)
                         if cmp.visible() then
                             cmp.confirm({ select = true })
                         elseif luasnip.expand_or_locally_jumpable() then
@@ -99,7 +100,7 @@ return {
                             fallback()
                         end
                     end, { "i", "s" }),
-                    ['<S-Tab>'] = cmp.mapping(function(fallback)
+                    ["<S-Tab>"] = cmp.mapping(function(fallback)
                         if cmp.visible() then
                             cmp.select_prev_item()
                         elseif luasnip.jumpable(-1) then
@@ -155,7 +156,7 @@ return {
                         -- Custom format function
                         before = function(entry, vim_item)
                             return vim_item
-                        end
+                        end,
                     }),
                 },
 
@@ -170,10 +171,10 @@ return {
                         winhighlight = "Normal:Normal,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None",
                     }),
                 },
-                
+
                 -- Experimental
                 experimental = {
-                    ghost_text = true, 
+                    ghost_text = true,
                 },
             })
 
@@ -184,7 +185,7 @@ return {
                 }, {
                     { name = "dictionary", keyword_length = 3 },
                     { name = "buffer" },
-                })
+                }),
             })
 
             -- Prose filetypes: English dictionary + inline math word completion
@@ -202,7 +203,7 @@ return {
                 sources = cmp.config.sources(prose_sources, {
                     { name = "buffer" },
                     { name = "emoji" },
-                })
+                }),
             })
 
             cmp.setup.filetype("smelt", {
@@ -216,20 +217,20 @@ return {
             })
 
             -- Command Line Config
-            cmp.setup.cmdline({ '/', '?' }, {
+            cmp.setup.cmdline({ "/", "?" }, {
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = {
-                    { name = 'buffer' }
-                }
+                    { name = "buffer" },
+                },
             })
 
-            cmp.setup.cmdline(':', {
+            cmp.setup.cmdline(":", {
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = cmp.config.sources({
-                    { name = 'path' }
+                    { name = "path" },
                 }, {
-                    { name = 'cmdline' }
-                })
+                    { name = "cmdline" },
+                }),
             })
         end,
     },
@@ -243,7 +244,7 @@ return {
         config = function()
             local ls = require("luasnip")
             local types = require("luasnip.util.types")
-            
+
             ls.setup({
                 history = true,
                 update_events = "TextChanged,TextChangedI",
@@ -270,14 +271,14 @@ return {
 
     -- Zsh Completion Source Config
     {
-        'tamago324/cmp-zsh',
-        dependencies = { 'nvim-lua/plenary.nvim' },
+        "tamago324/cmp-zsh",
+        dependencies = { "nvim-lua/plenary.nvim" },
         config = function()
-            require 'cmp_zsh'.setup {
+            require("cmp_zsh").setup({
                 zshrc = true,
                 filetypes = { "deoledit", "zsh" },
-            }
-        end
+            })
+        end,
     },
 
     -- Dictionary Completion Source

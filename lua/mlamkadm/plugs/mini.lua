@@ -9,7 +9,7 @@ return {
             -- 1. Indentscope: Subtle scope indicators
             require("mini.indentscope").setup({
                 symbol = "│",
-                options = { try_as_border = true }
+                options = { try_as_border = true },
             })
 
             -- 2. Cursorword: Subtle highlight of word under cursor
@@ -27,7 +27,7 @@ return {
                     preview = true, -- Enable preview
                     width_focus = 30,
                     width_nofocus = 15,
-                }
+                },
             })
 
             -- 6. Jump2d: Fast 2-char navigation
@@ -45,14 +45,20 @@ return {
             -- Mappings for Mini Modules
             -- ════════════════════════════════════════════
             local map = vim.keymap.set
-            
+
             -- mini.bufremove
-            map("n", "<leader>bd", function() require("mini.bufremove").delete(0, false) end, { desc = "Delete Buffer" })
-            map("n", "<leader>bD", function() require("mini.bufremove").delete(0, true) end, { desc = "Force Delete Buffer" })
-            
+            map("n", "<leader>bd", function()
+                require("mini.bufremove").delete(0, false)
+            end, { desc = "Delete Buffer" })
+            map("n", "<leader>bD", function()
+                require("mini.bufremove").delete(0, true)
+            end, { desc = "Force Delete Buffer" })
+
             -- mini.files
-            map("n", "<leader>fe", function() require("mini.files").open() end, { desc = "Open File Explorer (Mini)" })
-            
+            map("n", "<leader>fe", function()
+                require("mini.files").open()
+            end, { desc = "Open File Explorer (Mini)" })
+
             -- ════════════════════════════════════════════
             -- Highlights (Subtle Gruvbox integration)
             -- ════════════════════════════════════════════

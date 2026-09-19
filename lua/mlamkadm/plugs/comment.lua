@@ -45,8 +45,8 @@ return {
         -- when the buffer has no commentstring, so native ones win.
         local commentstring_fallback = {
             graphql = "# %s",
-            prisma  = "// %s",
-            hcl     = "# %s",
+            prisma = "// %s",
+            hcl = "# %s",
             -- extend here as needed
         }
 
@@ -61,7 +61,7 @@ return {
             end,
             desc = "Set commentstring for filetypes nvim leaves empty",
         })
-        
+
         -- ════════════════════════════════
         -- Gruvbox-themed highlights (subtle, zenful)
         -- ════════════════════════════════
@@ -71,11 +71,11 @@ return {
                 vim.api.nvim_set_hl(0, "Comment", {
                     fg = "#928374",
                     italic = true,
-                    nocombine = true
+                    nocombine = true,
                 })
             end,
         })
-        
+
         vim.cmd("doautocmd ColorScheme")
     end,
 }

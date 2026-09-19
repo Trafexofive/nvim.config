@@ -23,42 +23,73 @@ return {
             -- Enable folding capabilities for nvim-ufo if used later
             capabilities.textDocument.foldingRange = {
                 dynamicRegistration = false,
-                lineFoldingOnly = true
+                lineFoldingOnly = true,
             }
 
             -- GLOBAL LSP KEYMAPS (LspAttach)
             -- This ensures keymaps work for ANY active LSP, regardless of how it was setup
-            vim.api.nvim_create_autocmd('LspAttach', {
-                group = vim.api.nvim_create_augroup('UserLspConfig', { clear = true }),
+            vim.api.nvim_create_autocmd("LspAttach", {
+                group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
                 callback = function(ev)
                     -- Enable completion triggered by <c-x><c-o>
-                    vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
+                    vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
 
                     -- Navigation
                     vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition", buffer = ev.buf })
                     vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to Declaration", buffer = ev.buf })
                     vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "Go to References", buffer = ev.buf })
-                    vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to Implementation", buffer = ev.buf })
+                    vim.keymap.set(
+                        "n",
+                        "gi",
+                        vim.lsp.buf.implementation,
+                        { desc = "Go to Implementation", buffer = ev.buf }
+                    )
 
                     -- Information
                     vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Hover Documentation", buffer = ev.buf })
-                    vim.keymap.set("i", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature Help (insert)", buffer = ev.buf })
+                    vim.keymap.set(
+                        "i",
+                        "<C-k>",
+                        vim.lsp.buf.signature_help,
+                        { desc = "Signature Help (insert)", buffer = ev.buf }
+                    )
 
                     -- Actions
                     vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename Symbol", buffer = ev.buf })
-                    vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action", buffer = ev.buf })
+                    vim.keymap.set(
+                        { "n", "v" },
+                        "<leader>ca",
+                        vim.lsp.buf.code_action,
+                        { desc = "Code Action", buffer = ev.buf }
+                    )
 
                     -- Diagnostics
-                    vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show Diagnostics", buffer = ev.buf })
-                    vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic", buffer = ev.buf })
+                    vim.keymap.set(
+                        "n",
+                        "<leader>e",
+                        vim.diagnostic.open_float,
+                        { desc = "Show Diagnostics", buffer = ev.buf }
+                    )
+                    vim.keymap.set(
+                        "n",
+                        "[d",
+                        vim.diagnostic.goto_prev,
+                        { desc = "Previous Diagnostic", buffer = ev.buf }
+                    )
                     vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next Diagnostic", buffer = ev.buf })
 
                     -- Error-only navigation
-                    vim.keymap.set("n", "[e", function() vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR }) end, { desc = "Prev Error", buffer = ev.buf })
-                    vim.keymap.set("n", "]e", function() vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR }) end, { desc = "Next Error", buffer = ev.buf })
+                    vim.keymap.set("n", "[e", function()
+                        vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+                    end, { desc = "Prev Error", buffer = ev.buf })
+                    vim.keymap.set("n", "]e", function()
+                        vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+                    end, { desc = "Next Error", buffer = ev.buf })
 
                     -- Trouble diagnostic list
-                    vim.keymap.set("n", "<leader>dd", function() require("trouble").toggle("diagnostics") end, { desc = "Trouble: Diagnostics", buffer = ev.buf })
+                    vim.keymap.set("n", "<leader>dd", function()
+                        require("trouble").toggle("diagnostics")
+                    end, { desc = "Trouble: Diagnostics", buffer = ev.buf })
 
                     -- Inlay hints toggle
                     vim.keymap.set("n", "<leader>lh", function()
@@ -122,7 +153,7 @@ return {
                             capabilities = capabilities,
                             settings = {
                                 json = {
-                                    schemas = require('schemastore').json.schemas(),
+                                    schemas = require("schemastore").json.schemas(),
                                     validate = { enable = true },
                                 },
                             },
@@ -138,7 +169,7 @@ return {
                                         enable = false,
                                         url = "",
                                     },
-                                    schemas = require('schemastore').yaml.schemas(),
+                                    schemas = require("schemastore").yaml.schemas(),
                                 },
                             },
                         })
@@ -202,7 +233,8 @@ return {
                             single_file_support = true,
                             on_new_config = function(new_config, new_root_dir)
                                 local has_db = util.path.exists(util.path.join(new_root_dir, "compile_commands.json"))
-                                local build_db = util.path.exists(util.path.join(new_root_dir, "build", "compile_commands.json"))
+                                local build_db =
+                                    util.path.exists(util.path.join(new_root_dir, "build", "compile_commands.json"))
                                 local cmd = vim.deepcopy(new_config.cmd or { "clangd" })
 
                                 cmd = vim.tbl_filter(function(arg)
@@ -292,7 +324,7 @@ return {
                             settings = {
                                 java = {
                                     signatureHelp = { enabled = true },
-                                    contentProvider = { preferred = 'fernflower' },
+                                    contentProvider = { preferred = "fernflower" },
                                     configuration = {
                                         runtimes = {
                                             {
@@ -304,7 +336,7 @@ return {
                                                 name = "JavaSE-21",
                                                 path = "/usr/lib/jvm/java-21-openjdk",
                                             },
-                                        }
+                                        },
                                     },
                                     sources = {
                                         organizeImports = {
@@ -316,7 +348,7 @@ return {
                             },
                         })
                     end,
-                }
+                },
             })
 
             -- Smelt LSP (optional): activates when `smelt-lsp` is available.
@@ -344,7 +376,7 @@ return {
             -- Diagnostic configuration
             vim.diagnostic.config({
                 virtual_text = {
-                    prefix = '●', -- Could be '■', '▎', 'x'
+                    prefix = "●", -- Could be '■', '▎', 'x'
                 },
                 signs = {
                     text = {
@@ -358,8 +390,8 @@ return {
                 update_in_insert = false,
                 severity_sort = true,
                 float = {
-                    border = 'rounded',
-                    source = 'always',
+                    border = "rounded",
+                    source = "always",
                 },
             })
         end,

@@ -12,14 +12,10 @@ return {
     },
     config = function()
         -- If you want icons for diagnostic errors, you'll need to define them somewhere:
-        vim.fn.sign_define("DiagnosticSignError",
-            { text = " ", texthl = "DiagnosticSignError" })
-        vim.fn.sign_define("DiagnosticSignWarn",
-            { text = " ", texthl = "DiagnosticSignWarn" })
-        vim.fn.sign_define("DiagnosticSignInfo",
-            { text = " ", texthl = "DiagnosticSignInfo" })
-        vim.fn.sign_define("DiagnosticSignHint",
-            { text = "󰌵", texthl = "DiagnosticSignHint" })
+        vim.fn.sign_define("DiagnosticSignError", { text = " ", texthl = "DiagnosticSignError" })
+        vim.fn.sign_define("DiagnosticSignWarn", { text = " ", texthl = "DiagnosticSignWarn" })
+        vim.fn.sign_define("DiagnosticSignInfo", { text = " ", texthl = "DiagnosticSignInfo" })
+        vim.fn.sign_define("DiagnosticSignHint", { text = "󰌵", texthl = "DiagnosticSignHint" })
 
         require("neo-tree").setup({
             close_if_last_window = true, -- Close Neo-tree if it is the last window left in the tab
@@ -38,7 +34,7 @@ return {
             sort_function = nil,
             default_component_configs = {
                 container = {
-                    enable_character_fade = true
+                    enable_character_fade = true,
                 },
                 indent = {
                     indent_size = 4,
@@ -56,7 +52,7 @@ return {
                     folder_open = "",
                     folder_empty = "󰜌",
                     default = "󰈚",
-                    highlight = "NeoTreeFileIcon"
+                    highlight = "NeoTreeFileIcon",
                 },
                 modified = {
                     symbol = "[+]",
@@ -70,17 +66,17 @@ return {
                 git_status = {
                     symbols = {
                         -- Change type
-                        added     = "✚",
-                        modified  = "",
-                        deleted   = "✖",
-                        renamed   = "󰁕",
+                        added = "✚",
+                        modified = "",
+                        deleted = "✖",
+                        renamed = "󰁕",
                         -- Status type
                         untracked = "",
-                        ignored   = "",
-                        unstaged  = "󰄱",
-                        staged    = "",
-                        conflict  = "",
-                    }
+                        ignored = "",
+                        unstaged = "󰄱",
+                        staged = "",
+                        conflict = "",
+                    },
                 },
                 file_size = {
                     enabled = true,
@@ -107,7 +103,9 @@ return {
                 -- (ctrl-t pane/session); everything else opens normally.
                 smart_open = function(state)
                     local node = state.tree:get_node()
-                    if not node then return end
+                    if not node then
+                        return
+                    end
                     local path = node:get_id()
                     if node.type == "file" and vim.fn.executable(path) == 1 then
                         local ok, term = pcall(require, "mlamkadm.core.terminal")
@@ -125,13 +123,17 @@ return {
                 -- Create a symlink pointing to the node under the cursor.
                 symlink = function(state)
                     local node = state.tree:get_node()
-                    if not node then return end
+                    if not node then
+                        return
+                    end
                     local target = node:get_id()
                     local base = vim.fn.fnamemodify(target, ":t")
                     local parent = vim.fn.fnamemodify(target, ":h")
                     local inputs = require("neo-tree.ui.inputs")
                     inputs.input("Symlink name (points to " .. base .. "):", parent .. "/", function(link_path)
-                        if not link_path or link_path == "" then return end
+                        if not link_path or link_path == "" then
+                            return
+                        end
                         link_path = vim.fn.fnamemodify(link_path, ":p")
                         local out = vim.fn.system({ "ln", "-s", target, link_path })
                         if vim.v.shell_error ~= 0 then
@@ -178,8 +180,8 @@ return {
                     ["a"] = {
                         "add",
                         config = {
-                            show_path = "none"
-                        }
+                            show_path = "none",
+                        },
                     },
                     ["A"] = "add_directory",
                     -- Multi-file ops: V (visual line) to select many nodes, then
@@ -202,7 +204,7 @@ return {
                     ["<C-k>"] = "next_source",
                     ["i"] = "show_file_details",
                     ["L"] = "symlink",
-                }
+                },
             },
             nesting_rules = {},
             filesystem = {
@@ -224,7 +226,7 @@ return {
                     always_show = {},
                     never_show = {
                         ".DS_Store",
-                        "thumbs.db"
+                        "thumbs.db",
                     },
                     never_show_by_pattern = {
                         ".null-ls_*",
@@ -265,7 +267,7 @@ return {
                         ["<C-p>"] = "move_cursor_up",
                     },
                 },
-                commands = {}
+                commands = {},
             },
             buffers = {
                 follow_current_file = {
@@ -286,33 +288,38 @@ return {
                         ["on"] = { "order_by_name", nowait = false },
                         ["os"] = { "order_by_size", nowait = false },
                         ["ot"] = { "order_by_type", nowait = false },
-                    }
+                    },
                 },
             },
             git_status = {
                 window = {
                     position = "float",
                     mappings = {
-                        ["A"]  = "git_add_all",
+                        ["A"] = "git_add_all",
                         ["gu"] = "git_unstage_file",
                         ["ga"] = "git_add_file",
                         ["gr"] = "git_revert_file",
                         ["gc"] = "git_commit",
                         ["gp"] = "git_push",
                         ["gg"] = "git_commit_and_push",
-                        ["o"]  = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
+                        ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
                         ["oc"] = { "order_by_created", nowait = false },
                         ["od"] = { "order_by_diagnostics", nowait = false },
                         ["om"] = { "order_by_modified", nowait = false },
                         ["on"] = { "order_by_name", nowait = false },
                         ["os"] = { "order_by_size", nowait = false },
                         ["ot"] = { "order_by_type", nowait = false },
-                    }
-                }
-            }
+                    },
+                },
+            },
         })
 
         -- Sidebar (persistent, non-float) reveal of the current file.
-        vim.keymap.set("n", "<leader>n", "<cmd>Neotree reveal<cr>", { desc = "Reveal current file in NeoTree (sidebar)" })
+        vim.keymap.set(
+            "n",
+            "<leader>n",
+            "<cmd>Neotree reveal<cr>",
+            { desc = "Reveal current file in NeoTree (sidebar)" }
+        )
     end,
 }

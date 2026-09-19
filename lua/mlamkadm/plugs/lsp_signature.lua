@@ -10,11 +10,11 @@ return {
         max_height = 15,
         max_width = 80,
         handler_opts = {
-            border = "rounded"
+            border = "rounded",
         },
         hi_parameter = "LspSignatureActiveParameter",
     },
     config = function(_, opts)
-        require('lsp_signature').setup(opts)
+        require("lsp_signature").setup(opts)
     end,
 }

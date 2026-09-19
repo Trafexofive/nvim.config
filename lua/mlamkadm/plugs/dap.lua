@@ -10,13 +10,55 @@ return {
             "mfussenegger/nvim-dap-python",
         },
         keys = {
-            { "<F5>", function() require("dap").continue() end, desc = "Debug: Continue" },
-            { "<F10>", function() require("dap").step_over() end, desc = "Debug: Step Over" },
-            { "<F11>", function() require("dap").step_into() end, desc = "Debug: Step Into" },
-            { "<F12>", function() require("dap").step_out() end, desc = "Debug: Step Out" },
-            { "<leader>b", function() require("dap").toggle_breakpoint() end, desc = "Debug: Toggle Breakpoint" },
-            { "<leader>B", function() require("dap").set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "Debug: Conditional Breakpoint" },
-            { "<leader>du", function() require("dapui").toggle() end, desc = "Debug: Toggle UI" },
+            {
+                "<F5>",
+                function()
+                    require("dap").continue()
+                end,
+                desc = "Debug: Continue",
+            },
+            {
+                "<F10>",
+                function()
+                    require("dap").step_over()
+                end,
+                desc = "Debug: Step Over",
+            },
+            {
+                "<F11>",
+                function()
+                    require("dap").step_into()
+                end,
+                desc = "Debug: Step Into",
+            },
+            {
+                "<F12>",
+                function()
+                    require("dap").step_out()
+                end,
+                desc = "Debug: Step Out",
+            },
+            {
+                "<leader>b",
+                function()
+                    require("dap").toggle_breakpoint()
+                end,
+                desc = "Debug: Toggle Breakpoint",
+            },
+            {
+                "<leader>B",
+                function()
+                    require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
+                end,
+                desc = "Debug: Conditional Breakpoint",
+            },
+            {
+                "<leader>du",
+                function()
+                    require("dapui").toggle()
+                end,
+                desc = "Debug: Toggle UI",
+            },
         },
         config = function()
             local dap = require("dap")
@@ -26,19 +68,19 @@ return {
                 -- Makes a best effort to setup the various debuggers with
                 -- reasonable debug configurations
                 automatic_setup = true,
-                
+
                 -- You can provide additional configuration to the handlers,
                 -- see mason-nvim-dap README for more information
                 handlers = {},
-                
+
                 -- You'll need to check that you have the required things installed
                 -- online, please don't ask me how to install them :)
                 ensure_installed = {
                     -- Update this to ensure that you have the debuggers for the languages you want
                     "delve",
-                    "codelldb", 
+                    "codelldb",
                     "debugpy",
-                    "javadbg", 
+                    "javadbg",
                     "javatest",
                 },
             })
@@ -73,12 +115,12 @@ return {
 
             -- Install golang specific config
             require("dap-go").setup()
-            
+
             -- Install python specific config
             -- Uses the debugpy installed by mason
             local debugpy_path = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python"
             require("dap-python").setup(debugpy_path)
-            
+
             -- C/C++/Rust via codelldb
             -- mason-nvim-dap handles the setup usually, but custom configs can be added here
         end,

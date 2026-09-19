@@ -1,15 +1,15 @@
 return {
-    'nvim-tree/nvim-web-devicons',
-    event = 'VeryLazy', -- Only load when needed
+    "nvim-tree/nvim-web-devicons",
+    event = "VeryLazy", -- Only load when needed
     config = function()
-        require 'nvim-web-devicons'.setup {
+        require("nvim-web-devicons").setup({
             override = {
                 zsh = {
                     icon = "",
                     color = "#428850",
                     cterm_color = "65",
-                    name = "Zsh"
-                }
+                    name = "Zsh",
+                },
             },
             color_icons = true,
             default = true,
@@ -18,15 +18,15 @@ return {
                 [".gitignore"] = {
                     icon = "",
                     color = "#f1502f",
-                    name = "Gitignore"
-                }
+                    name = "Gitignore",
+                },
             },
             override_by_extension = {
                 ["log"] = {
                     icon = "",
                     color = "#81e043",
-                    name = "Log"
-                }
+                    name = "Log",
+                },
             },
             override_by_operating_system = {
                 ["apple"] = {
@@ -36,6 +36,6 @@ return {
                     name = "Apple",
                 },
             },
-        }
-    end
+        })
+    end,
 }

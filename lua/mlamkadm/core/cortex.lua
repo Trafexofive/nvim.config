@@ -85,21 +85,23 @@ local function run_oneshot(prompt)
         return
     end
     prompt = prompt or ""
-    local cmd = string.format(
-        "%s --raw --prompt %s --no-session --ephemeral --no-ansi",
-        bin, vim.fn.shellescape(prompt)
-    )
+    local cmd =
+        string.format("%s --raw --prompt %s --no-session --ephemeral --no-ansi", bin, vim.fn.shellescape(prompt))
     vim.notify("Running cortex-mk3 one-shot…", vim.log.levels.INFO)
     vim.fn.jobstart(cmd, {
         stdout_buffered = true,
         on_stdout = function(_, data)
-            if not data then return end
+            if not data then
+                return
+            end
             vim.schedule(function()
                 local buf = vim.api.nvim_get_current_buf()
                 local lines = vim.api.nvim_buf_get_lines(buf, -1, -1, true)
                 local append = {}
                 for _, l in ipairs(data) do
-                    if l ~= "" then append[#append + 1] = l end
+                    if l ~= "" then
+                        append[#append + 1] = l
+                    end
                 end
                 vim.api.nvim_buf_set_lines(buf, -1, -1, true, append)
             end)
@@ -166,8 +168,12 @@ function M.setup()
     vim.api.nvim_create_user_command("CortexPrompt", M.quick_prompt, { desc = "Cortex-MK3: quick prompt" })
 
     vim.keymap.set("n", "<leader>cx", M.open, { desc = "Cortex: Open harness" })
-    vim.keymap.set("n", "<leader>ca", function() M.open_agent() end, { desc = "Cortex: Open agent browser" })
-    vim.keymap.set("n", "<leader>cr", function() M.run() end, { desc = "Cortex: One-shot run" })
+    vim.keymap.set("n", "<leader>ca", function()
+        M.open_agent()
+    end, { desc = "Cortex: Open agent browser" })
+    vim.keymap.set("n", "<leader>cr", function()
+        M.run()
+    end, { desc = "Cortex: One-shot run" })
     vim.keymap.set("n", "<leader>cs", M.resume, { desc = "Cortex: Resume session" })
 end
 

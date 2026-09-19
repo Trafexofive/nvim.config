@@ -38,7 +38,9 @@ return {
                 prepend_args = { "-i", "4", "-ci" },
             },
             clang_format = {
-                prepend_args = { "-style={IndentWidth: 4, TabWidth: 4, UseTab: Never, AccessModifierOffset: -4, AllowShortIfStatementsOnASingleLine: false, AllowShortFunctionsOnASingleLine: false}" },
+                prepend_args = {
+                    "-style={IndentWidth: 4, TabWidth: 4, UseTab: Never, AccessModifierOffset: -4, AllowShortIfStatementsOnASingleLine: false, AllowShortFunctionsOnASingleLine: false}",
+                },
             },
             prettierd = {
                 prepend_args = { "--tab-width", "4", "--no-use-tabs" },

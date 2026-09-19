@@ -4,10 +4,10 @@ return {
         event = { "BufWritePost", "BufReadPost", "InsertLeave" },
         config = function()
             local lint = require("lint")
-            
+
             -- Set linters by filetype
             lint.linters_by_ft = {
-                lua = { "selene" }, 
+                lua = { "selene" },
                 python = { "pylint" },
                 javascript = { "eslint_d" },
                 typescript = { "eslint_d" },
@@ -26,7 +26,7 @@ return {
                 callback = function()
                     local ft = vim.bo.filetype
                     local linters = lint.linters_by_ft[ft]
-                    
+
                     if linters then
                         -- Check executable existence to avoid errors
                         local available = {}
@@ -35,7 +35,7 @@ return {
                                 table.insert(available, name)
                             end
                         end
-                        
+
                         if #available > 0 then
                             lint.try_lint(available)
                         end

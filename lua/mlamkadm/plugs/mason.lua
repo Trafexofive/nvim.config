@@ -12,14 +12,14 @@ return {
                     icons = {
                         package_installed = "✓",
                         package_pending = "➜",
-                        package_uninstalled = "✗"
-                    }
+                        package_uninstalled = "✗",
+                    },
                 },
                 -- Automatically install these tools
                 ensure_installed = {
                     -- LSPs are handled by mason-lspconfig in lsp.lua
                     -- This list is for formatters, linters, debuggers
-                    
+
                     -- Formatters
                     "prettierd",
                     "stylua",
@@ -30,7 +30,7 @@ return {
                     "gofumpt",
                     "goimports",
                     "yamlfmt",
-                    
+
                     -- Linters
                     "eslint_d",
                     "shellcheck",
@@ -40,7 +40,7 @@ return {
                     "hadolint",
                     "pylint",
                     "selene",
-                    
+
                     -- Debuggers (DAP)
                     "delve", -- Go
                     "codelldb", -- C/C++/Rust
@@ -62,7 +62,7 @@ return {
                     "goimports",
                     "yamlfmt",
                     "google-java-format",
-                    
+
                     -- Linters
                     "eslint_d",
                     "shellcheck",
@@ -73,16 +73,16 @@ return {
                     "pylint",
                     "selene",
                     "checkmake",
-                    
+
                     -- Debuggers
                     "delve",
                     "codelldb",
                     "debugpy",
                 },
                 auto_update = true,
-                run_on_start = false,  -- Defer installs, manual trigger only
+                run_on_start = false, -- Defer installs, manual trigger only
             })
-            
+
             -- Add Mason bin to PATH
             vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
         end,

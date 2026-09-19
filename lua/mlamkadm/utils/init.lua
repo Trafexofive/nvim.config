@@ -5,7 +5,7 @@ local M = {}
 -- Use nvim-notify directly (SmpNotify wrapper deprecated in favor of nvim-notify)
 local ok, SmpNotify = pcall(require, "notify")
 M.SmpNotify = ok and SmpNotify or nil
-M.lsp = require("mlamkadm.utils.lsp")  -- LSP utilities
+M.lsp = require("mlamkadm.utils.lsp") -- LSP utilities
 
 --- Safely require a module.
 -- @param mod (string) The module name to require.

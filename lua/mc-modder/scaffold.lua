@@ -2,59 +2,59 @@ local M = {}
 
 -- Function to create a directory if it doesn't exist
 local function create_dir(path)
-  if vim.fn.isdirectory(path) == 0 then
-    vim.fn.mkdir(path, "p")
-  end
+    if vim.fn.isdirectory(path) == 0 then
+        vim.fn.mkdir(path, "p")
+    end
 end
 
 -- Function to write content to a file
 local function write_file(path, content)
-  local file = io.open(path, "w")
-  if file then
-    file:write(content)
-    file:close()
-  else
-    vim.notify("Failed to create file: " .. path, vim.log.levels.ERROR)
-  end
+    local file = io.open(path, "w")
+    if file then
+        file:write(content)
+        file:close()
+    else
+        vim.notify("Failed to create file: " .. path, vim.log.levels.ERROR)
+    end
 end
 
 -- Function to create a basic Minecraft mod project structure
 function M.create_mod_project(project_name, mod_type, version)
-  local project_path = vim.fn.getcwd() .. "/" .. project_name
-  local mod_type = mod_type or "fabric"
-  local version = version or "1.20.1"
-  
-  -- Create project directory
-  create_dir(project_path)
-  
-  -- Create standard Minecraft mod directories
-  create_dir(project_path .. "/src/main/java")
-  create_dir(project_path .. "/src/main/resources")
-  create_dir(project_path .. "/gradle/wrapper")
-  
-  -- Create the mod metadata file based on mod type
-  if mod_type == "fabric" then
-    M.create_fabric_mod(project_path, project_name, version)
-  elseif mod_type == "forge" then
-    M.create_forge_mod(project_path, project_name, version)
-  elseif mod_type == "quilt" then
-    M.create_quilt_mod(project_path, project_name, version)
-  else
-    vim.notify("Unsupported mod type: " .. mod_type, vim.log.levels.ERROR)
-    return
-  end
-  
-  -- Create common files
-  M.create_gitignore(project_path)
-  M.create_readme(project_path, project_name, mod_type, version)
-  
-  vim.notify("Minecraft mod project '" .. project_name .. "' created successfully!", vim.log.levels.INFO)
+    local project_path = vim.fn.getcwd() .. "/" .. project_name
+    local mod_type = mod_type or "fabric"
+    local version = version or "1.20.1"
+
+    -- Create project directory
+    create_dir(project_path)
+
+    -- Create standard Minecraft mod directories
+    create_dir(project_path .. "/src/main/java")
+    create_dir(project_path .. "/src/main/resources")
+    create_dir(project_path .. "/gradle/wrapper")
+
+    -- Create the mod metadata file based on mod type
+    if mod_type == "fabric" then
+        M.create_fabric_mod(project_path, project_name, version)
+    elseif mod_type == "forge" then
+        M.create_forge_mod(project_path, project_name, version)
+    elseif mod_type == "quilt" then
+        M.create_quilt_mod(project_path, project_name, version)
+    else
+        vim.notify("Unsupported mod type: " .. mod_type, vim.log.levels.ERROR)
+        return
+    end
+
+    -- Create common files
+    M.create_gitignore(project_path)
+    M.create_readme(project_path, project_name, mod_type, version)
+
+    vim.notify("Minecraft mod project '" .. project_name .. "' created successfully!", vim.log.levels.INFO)
 end
 
 -- Function to create Fabric mod structure
 function M.create_fabric_mod(project_path, project_name, version)
-  -- Create fabric.mod.json
-  local fabric_json = [[{
+    -- Create fabric.mod.json
+    local fabric_json = [[{
   "schemaVersion": 1,
   "id": "]] .. string.lower(project_name):gsub(" ", "_") .. [[",
   "version": "${version}",
@@ -86,10 +86,10 @@ function M.create_fabric_mod(project_path, project_name, version)
   }
 }]]
 
-  write_file(project_path .. "/src/main/resources/fabric.mod.json", fabric_json)
-  
-  -- Create build.gradle
-  local build_gradle = [[plugins {
+    write_file(project_path .. "/src/main/resources/fabric.mod.json", fabric_json)
+
+    -- Create build.gradle
+    local build_gradle = [[plugins {
 	id 'fabric-loom' version '1.2-SNAPSHOT'
 	id 'java'
 }
@@ -149,10 +149,10 @@ jar {
 	}
 }
 ]]
-  write_file(project_path .. "/build.gradle", build_gradle)
-  
-  -- Create gradle.properties
-  local gradle_properties = [[# Done to increase the memory available to gradle.
+    write_file(project_path .. "/build.gradle", build_gradle)
+
+    -- Create gradle.properties
+    local gradle_properties = [[# Done to increase the memory available to gradle.
 org.gradle.jvmargs=-Xmx1G
 org.gradle.parallel=true
 
@@ -170,10 +170,10 @@ archives_base_name = ]] .. project_name:gsub(" ", "_"):lower() .. [[
 # Dependencies
 fabric_version=0.83.0+1.20.1
 ]]
-  write_file(project_path .. "/gradle.properties", gradle_properties)
-  
-  -- Create settings.gradle
-  local settings_gradle = [[pluginManagement {
+    write_file(project_path .. "/gradle.properties", gradle_properties)
+
+    -- Create settings.gradle
+    local settings_gradle = [[pluginManagement {
 	repositories {
 		maven {
 			name = 'Fabric'
@@ -184,11 +184,13 @@ fabric_version=0.83.0+1.20.1
 	}
 }
 ]]
-  write_file(project_path .. "/settings.gradle", settings_gradle)
-  
-  -- Create main Java class
-  local main_class_name = string.gsub(project_name, "%s+", ""):lower()
-  local main_java = [[package ]] .. main_class_name .. [[;
+    write_file(project_path .. "/settings.gradle", settings_gradle)
+
+    -- Create main Java class
+    local main_class_name = string.gsub(project_name, "%s+", ""):lower()
+    local main_java = [[package ]]
+        .. main_class_name
+        .. [[;
 
 import net.fabricmc.api.ModInitializer;
 
@@ -196,7 +198,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Main implements ModInitializer {
-	public static final String MOD_ID = "]] .. string.lower(project_name):gsub(" ", "_") .. [[";
+	public static final String MOD_ID = "]]
+        .. string.lower(project_name):gsub(" ", "_")
+        .. [[";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	@Override
@@ -205,14 +209,14 @@ public class Main implements ModInitializer {
 	}
 }
 ]]
-  create_dir(project_path .. "/src/main/java/" .. main_class_name:gsub("%.", "/"))
-  write_file(project_path .. "/src/main/java/" .. main_class_name .. "/Main.java", main_java)
+    create_dir(project_path .. "/src/main/java/" .. main_class_name:gsub("%.", "/"))
+    write_file(project_path .. "/src/main/java/" .. main_class_name .. "/Main.java", main_java)
 end
 
 -- Function to create Forge mod structure
 function M.create_forge_mod(project_path, project_name, version)
-  -- Create mods.toml
-  local mods_toml = [==[# This is an example mods.toml file. It contains the data relating to the loading mods.
+    -- Create mods.toml
+    local mods_toml = [==[# This is an example mods.toml file. It contains the data relating to the loading mods.
 # There are several mandatory fields (#mandatory), and many more optional fields (#optional).
 # The overall format is standard TOML format.
 # Note that there are a couple of special values that will be replaced by the build script:
@@ -262,10 +266,10 @@ versionRange="[1.20.1,1.21)"
 ordering="NONE"
 side="BOTH"
 ]==]
-  write_file(project_path .. "/src/main/resources/META-INF/mods.toml", mods_toml)
-  
-  -- Create build.gradle for Forge
-  local forge_build_gradle = [[plugins {
+    write_file(project_path .. "/src/main/resources/META-INF/mods.toml", mods_toml)
+
+    -- Create build.gradle for Forge
+    local forge_build_gradle = [[plugins {
 	id 'eclipse'
 	id 'idea'
 	id 'maven-publish'
@@ -366,29 +370,33 @@ publishing {
 	tasks.publish.dependsOn 'build'
 }
 ]]
-  write_file(project_path .. "/build.gradle", forge_build_gradle)
-  
-  -- Create main Java class for Forge
-  local main_class_name = string.gsub(project_name, "%s+", ""):lower()
-  local forge_main_java = [[package ]] .. main_class_name .. [[;
+    write_file(project_path .. "/build.gradle", forge_build_gradle)
+
+    -- Create main Java class for Forge
+    local main_class_name = string.gsub(project_name, "%s+", ""):lower()
+    local forge_main_java = [[package ]]
+        .. main_class_name
+        .. [[;
 
 import net.minecraftforge.fml.common.Mod;
 
-@Mod("]] .. string.lower(project_name):gsub(" ", "_") .. [[")
+@Mod("]]
+        .. string.lower(project_name):gsub(" ", "_")
+        .. [[")
 public class Main {
 
     public Main() {
     }
 }
 ]]
-  create_dir(project_path .. "/src/main/java/" .. main_class_name:gsub("%.", "/"))
-  write_file(project_path .. "/src/main/java/" .. main_class_name .. "/Main.java", forge_main_java)
+    create_dir(project_path .. "/src/main/java/" .. main_class_name:gsub("%.", "/"))
+    write_file(project_path .. "/src/main/java/" .. main_class_name .. "/Main.java", forge_main_java)
 end
 
 -- Function to create Quilt mod structure
 function M.create_quilt_mod(project_path, project_name, version)
-  -- Create quilt.mod.json
-  local quilt_json = [[{
+    -- Create quilt.mod.json
+    local quilt_json = [[{
   "schema_version": 1,
   "quilt_loader": {
     "group": "com.yourname",
@@ -424,10 +432,10 @@ function M.create_quilt_mod(project_path, project_name, version)
   }
 }]]
 
-  write_file(project_path .. "/src/main/resources/quilt.mod.json", quilt_json)
-  
-  -- Create build.gradle for Quilt
-  local quilt_build_gradle = [[plugins {
+    write_file(project_path .. "/src/main/resources/quilt.mod.json", quilt_json)
+
+    -- Create build.gradle for Quilt
+    local quilt_build_gradle = [[plugins {
 	id 'org.quiltmc.loom' version '1.3.5'
 	id 'java'
 }
@@ -480,10 +488,10 @@ jar {
 	}
 }
 ]]
-  write_file(project_path .. "/build.gradle", quilt_build_gradle)
-  
-  -- Create gradle.properties for Quilt
-  local quilt_gradle_properties = [[# Done to increase the memory available to gradle.
+    write_file(project_path .. "/build.gradle", quilt_build_gradle)
+
+    -- Create gradle.properties for Quilt
+    local quilt_gradle_properties = [[# Done to increase the memory available to gradle.
 org.gradle.jvmargs=-Xmx1G
 org.gradle.parallel=true
 
@@ -498,10 +506,10 @@ mod_version = 1.0.0
 maven_group = com.yourname
 archives_base_name = ]] .. project_name:gsub(" ", "_"):lower() .. [[
 ]]
-  write_file(project_path .. "/gradle.properties", quilt_gradle_properties)
-  
-  -- Create settings.gradle for Quilt
-  local quilt_settings_gradle = [[pluginManagement {
+    write_file(project_path .. "/gradle.properties", quilt_gradle_properties)
+
+    -- Create settings.gradle for Quilt
+    local quilt_settings_gradle = [[pluginManagement {
 	repositories {
 		maven {
 			name = 'Quilt'
@@ -512,11 +520,13 @@ archives_base_name = ]] .. project_name:gsub(" ", "_"):lower() .. [[
 	}
 }
 ]]
-  write_file(project_path .. "/settings.gradle", quilt_settings_gradle)
-  
-  -- Create main Java class for Quilt
-  local main_class_name = string.gsub(project_name, "%s+", ""):lower()
-  local quilt_main_java = [[package ]] .. main_class_name .. [[;
+    write_file(project_path .. "/settings.gradle", quilt_settings_gradle)
+
+    -- Create main Java class for Quilt
+    local main_class_name = string.gsub(project_name, "%s+", ""):lower()
+    local quilt_main_java = [[package ]]
+        .. main_class_name
+        .. [[;
 
 import org.quiltmc.loader.api.ModContainer;
 import org.quiltmc.qsl.base.api.entrypoint.ModInitializer;
@@ -528,13 +538,13 @@ public class Main implements ModInitializer {
 	}
 }
 ]]
-  create_dir(project_path .. "/src/main/java/" .. main_class_name:gsub("%.", "/"))
-  write_file(project_path .. "/src/main/java/" .. main_class_name .. "/Main.java", quilt_main_java)
+    create_dir(project_path .. "/src/main/java/" .. main_class_name:gsub("%.", "/"))
+    write_file(project_path .. "/src/main/java/" .. main_class_name .. "/Main.java", quilt_main_java)
 end
 
 -- Function to create .gitignore
 function M.create_gitignore(project_path)
-  local gitignore_content = [[# Compiled class file
+    local gitignore_content = [[# Compiled class file
 *.class
 
 # Log file
@@ -605,21 +615,29 @@ libraries/
 out/
 ]]
 
-  write_file(project_path .. "/.gitignore", gitignore_content)
+    write_file(project_path .. "/.gitignore", gitignore_content)
 end
 
 -- Function to create README.md
 function M.create_readme(project_path, project_name, mod_type, version)
-  local readme_content = "# " .. project_name .. "\n\n" ..
-    "A Minecraft " .. mod_type .. " mod for version " .. version .. ".\n\n" ..
-    "## Development\n\n" ..
-    "To set up the development environment:\n\n" ..
-    "1. Install JDK 17 or higher\n" ..
-    "2. Run `./gradlew genSources` to generate sources\n" ..
-    "3. Import the project into your IDE\n\n" ..
-    "For more information about " .. mod_type .. " modding, visit the official documentation."
+    local readme_content = "# "
+        .. project_name
+        .. "\n\n"
+        .. "A Minecraft "
+        .. mod_type
+        .. " mod for version "
+        .. version
+        .. ".\n\n"
+        .. "## Development\n\n"
+        .. "To set up the development environment:\n\n"
+        .. "1. Install JDK 17 or higher\n"
+        .. "2. Run `./gradlew genSources` to generate sources\n"
+        .. "3. Import the project into your IDE\n\n"
+        .. "For more information about "
+        .. mod_type
+        .. " modding, visit the official documentation."
 
-  write_file(project_path .. "/README.md", readme_content)
+    write_file(project_path .. "/README.md", readme_content)
 end
 
 return M

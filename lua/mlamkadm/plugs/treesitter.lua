@@ -31,9 +31,9 @@ return {
         vim.g.skip_ts_context_commentstring_module = true
 
         -- Setup context_commentstring directly
-        require('ts_context_commentstring').setup {
+        require("ts_context_commentstring").setup({
             enable_autocmd = false,
-        }
+        })
 
         -- New nvim-treesitter setup (parsers only).
         require("nvim-treesitter").setup()
@@ -41,9 +41,30 @@ return {
         -- Ensure parsers are installed (replaces old `ensure_installed`).
         -- Diff against installed so we don't reinstall on every startup.
         local ensure = {
-            "c", "cpp", "lua", "vim", "vimdoc", "query",
-            "javascript", "html", "css", "python", "go", "rust", "bash", "yaml", "json",
-            "toml", "tsx", "typescript", "regex", "sql", "http", "dockerfile", "make", "java",
+            "c",
+            "cpp",
+            "lua",
+            "vim",
+            "vimdoc",
+            "query",
+            "javascript",
+            "html",
+            "css",
+            "python",
+            "go",
+            "rust",
+            "bash",
+            "yaml",
+            "json",
+            "toml",
+            "tsx",
+            "typescript",
+            "regex",
+            "sql",
+            "http",
+            "dockerfile",
+            "make",
+            "java",
         }
         local installed = vim.treesitter.language.get_languages and vim.treesitter.language.get_languages() or {}
         local to_install = {}
@@ -60,7 +81,9 @@ return {
         vim.api.nvim_create_autocmd("FileType", {
             callback = function(args)
                 local ft = vim.bo[args.buf].filetype
-                if ft == "smelt" then return end -- no grammar yet
+                if ft == "smelt" then
+                    return
+                end -- no grammar yet
                 pcall(vim.treesitter.start, args.buf)
                 -- Indentation is provided by nvim-treesitter main via indentexpr().
                 vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
@@ -74,7 +97,7 @@ return {
 
         -- Text Objects (select + move) — satellite, module name unchanged.
         pcall(function()
-            require("nvim-treesitter-textobjects").setup {
+            require("nvim-treesitter-textobjects").setup({
                 select = {
                     enable = true,
                     lookahead = true,
@@ -107,7 +130,7 @@ return {
                         ["[]"] = "@class.outer",
                     },
                 },
-            }
+            })
         end)
 
         -- Sticky Context Header
@@ -117,8 +140,8 @@ return {
             min_window_height = 0,
             line_numbers = true,
             multiline_threshold = 20,
-            trim_scope = 'outer',
-            mode = 'cursor',
+            trim_scope = "outer",
+            mode = "cursor",
             separator = nil,
             zindex = 20,
             on_attach = function(bufnr)

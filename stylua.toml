@@ -1,0 +1,10 @@
+# stylua config — matches this repo's established style
+# (4-space indent, ~120 col). Lua52 grammar so goto/label (::x::) parses.
+column_width = 120
+line_endings = "Unix"
+indent_type = "Spaces"
+indent_width = 4
+quote_style = "AutoPreferDouble"
+call_parentheses = "Always"
+collapse_simple_statement = "Never"
+syntax = "Lua52"

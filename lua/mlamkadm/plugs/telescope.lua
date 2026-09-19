@@ -1,62 +1,67 @@
-
 return {
     "nvim-telescope/telescope.nvim",
     tag = "0.1.5",
     event = "VeryLazy", -- Lazy load for better startup time
     dependencies = {
-        'nvim-lua/plenary.nvim',
-        'jonarrien/telescope-cmdline.nvim',
-        'gbrlsnchs/telescope-lsp-handlers.nvim',
+        "nvim-lua/plenary.nvim",
+        "jonarrien/telescope-cmdline.nvim",
+        "gbrlsnchs/telescope-lsp-handlers.nvim",
         -- Highly recommended performance extension
         {
-            'nvim-telescope/telescope-fzf-native.nvim',
-            build =
-            'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 && cmake --build build --config Release && cmake --install build --prefix build',
+            "nvim-telescope/telescope-fzf-native.nvim",
+            build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 && cmake --build build --config Release && cmake --install build --prefix build",
         },
         -- Additional powerful extensions
-        'nvim-telescope/telescope-frecency.nvim',       -- Frecent file sorting
-        'nvim-telescope/telescope-live-grep-args.nvim', -- Better grep with args
-        { 'nvim-telescope/telescope-ui-select.nvim', version = '^1.0.0' },
-        'debugloop/telescope-undo.nvim',                -- Visual undo tree
+        "nvim-telescope/telescope-frecency.nvim", -- Frecent file sorting
+        "nvim-telescope/telescope-live-grep-args.nvim", -- Better grep with args
+        { "nvim-telescope/telescope-ui-select.nvim", version = "^1.0.0" },
+        "debugloop/telescope-undo.nvim", -- Visual undo tree
     },
     keys = {
         -- Essential operations
-        { '<leader>b',        '<cmd>Telescope buffers sort_mru=true<cr>',  desc = 'Buffers' },
-        { '<leader>ff',       '<cmd>Telescope find_files<cr>',             desc = 'Find Files (all)' },
-        { '<leader>i',        '<cmd>Telescope git_files<cr>',              desc = 'Git Files' },
-        { '<leader>r',        '<cmd>Telescope resume<cr>',                 desc = 'Resume Last Picker' },
+        { "<leader>b", "<cmd>Telescope buffers sort_mru=true<cr>", desc = "Buffers" },
+        { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find Files (all)" },
+        { "<leader>i", "<cmd>Telescope git_files<cr>", desc = "Git Files" },
+        { "<leader>r", "<cmd>Telescope resume<cr>", desc = "Resume Last Picker" },
 
         -- Advanced search
-        { '<leader>/',        '<cmd>Telescope live_grep_args<cr>',         desc = 'Live Grep with Args' },
-        { '<leader>fw',       '<cmd>Telescope grep_string<cr>',            desc = 'Find Word Under Cursor' },
-        { '<leader>fr',       '<cmd>Telescope frecency<cr>',               desc = 'Recent Files' },
-        { '<leader>fu',       '<cmd>Telescope undo<cr>',                   desc = 'Undo Tree' },
-        { '<leader>fh',       '<cmd>Telescope help_tags<cr>',              desc = 'Help Tags' },
-        { '<leader>fk',       '<cmd>Telescope keymaps<cr>',                desc = 'Key Maps' },
-        { '<leader>fc',       '<cmd>Telescope commands<cr>',               desc = 'Commands' },
-        { '<leader>fm',       '<cmd>Telescope marks<cr>',                  desc = 'Marks' },
-        { '<leader>fo',       '<cmd>Telescope oldfiles<cr>',               desc = 'Recent Files (Old)' },
+        { "<leader>/", "<cmd>Telescope live_grep_args<cr>", desc = "Live Grep with Args" },
+        { "<leader>fw", "<cmd>Telescope grep_string<cr>", desc = "Find Word Under Cursor" },
+        { "<leader>fr", "<cmd>Telescope frecency<cr>", desc = "Recent Files" },
+        { "<leader>fu", "<cmd>Telescope undo<cr>", desc = "Undo Tree" },
+        { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help Tags" },
+        { "<leader>fk", "<cmd>Telescope keymaps<cr>", desc = "Key Maps" },
+        { "<leader>fc", "<cmd>Telescope commands<cr>", desc = "Commands" },
+        { "<leader>fm", "<cmd>Telescope marks<cr>", desc = "Marks" },
+        { "<leader>fo", "<cmd>Telescope oldfiles<cr>", desc = "Recent Files (Old)" },
 
         -- LSP operations (using different keys to avoid conflicts)
-        { '<leader>ld',       '<cmd>Telescope lsp_definitions<cr>',        desc = 'LSP Definitions' },
-        { '<leader>lr',       '<cmd>Telescope lsp_references<cr>',         desc = 'LSP References' },
-        { '<leader>li',       '<cmd>Telescope lsp_implementations<cr>',    desc = 'LSP Implementations' },
-        { '<leader>ls',       '<cmd>Telescope lsp_document_symbols<cr>',   desc = 'LSP Document Symbols' },
-        { '<leader>lw',       '<cmd>Telescope lsp_workspace_symbols<cr>',  desc = 'LSP Workspace Symbols' },
-        { '<leader>lt',       '<cmd>Telescope lsp_type_definitions<cr>',   desc = 'LSP Type Definitions' },
+        { "<leader>ld", "<cmd>Telescope lsp_definitions<cr>", desc = "LSP Definitions" },
+        { "<leader>lr", "<cmd>Telescope lsp_references<cr>", desc = "LSP References" },
+        { "<leader>li", "<cmd>Telescope lsp_implementations<cr>", desc = "LSP Implementations" },
+        { "<leader>ls", "<cmd>Telescope lsp_document_symbols<cr>", desc = "LSP Document Symbols" },
+        { "<leader>lw", "<cmd>Telescope lsp_workspace_symbols<cr>", desc = "LSP Workspace Symbols" },
+        { "<leader>lt", "<cmd>Telescope lsp_type_definitions<cr>", desc = "LSP Type Definitions" },
 
         -- Git operations
-        { '<leader>gc',       '<cmd>Telescope git_commits<cr>',            desc = 'Git Commits' },
-        { '<leader>gb',       '<cmd>Telescope git_branches<cr>',           desc = 'Git Branches' },
-        { '<leader>gs',       '<cmd>Telescope git_status<cr>',             desc = 'Git Status' },
-        { '<leader>gf',       '<cmd>Telescope git_files<cr>',              desc = 'Git Files' },
+        { "<leader>gc", "<cmd>Telescope git_commits<cr>", desc = "Git Commits" },
+        { "<leader>gb", "<cmd>Telescope git_branches<cr>", desc = "Git Branches" },
+        { "<leader>gs", "<cmd>Telescope git_status<cr>", desc = "Git Status" },
+        { "<leader>gf", "<cmd>Telescope git_files<cr>", desc = "Git Files" },
     },
     opts = {
         defaults = {
             -- Performance optimizations
             file_ignore_patterns = {
-                "%.git/", "node_modules/", "%.cache/", "%.DS_Store",
-                "%.class", "%.pdf", "%.mkv", "%.mp4", "%.zip"
+                "%.git/",
+                "node_modules/",
+                "%.cache/",
+                "%.DS_Store",
+                "%.class",
+                "%.pdf",
+                "%.mkv",
+                "%.mp4",
+                "%.zip",
             },
             vimgrep_arguments = {
                 "rg",
@@ -70,7 +75,7 @@ return {
             },
 
             -- Better UI
-            layout_strategy = 'flex',
+            layout_strategy = "flex",
             layout_config = {
                 horizontal = {
                     preview_width = 0.6,
@@ -151,7 +156,7 @@ return {
             cmdline = {
                 history = true,
                 previewer = true,
-                history_style = 'dropdown',
+                history_style = "dropdown",
             },
             ["ui-select"] = {
                 require("telescope.themes").get_dropdown(),
@@ -174,7 +179,7 @@ return {
                     ["services"] = "/home/mlamkadm/services",
                 },
             },
-        }
+        },
     },
     config = function(_, opts)
         -- Telescope 0.1.5 previewers still call `nvim-treesitter.parsers.ft_to_lang`,
@@ -225,13 +230,13 @@ return {
 
         -- Load extensions
         local extensions = {
-            'cmdline',
-            'lsp_handlers',
-            'fzf',
-            'ui-select',
-            'frecency',
-            'undo',
-            'live_grep_args',
+            "cmdline",
+            "lsp_handlers",
+            "fzf",
+            "ui-select",
+            "frecency",
+            "undo",
+            "live_grep_args",
         }
 
         -- Safely load extensions

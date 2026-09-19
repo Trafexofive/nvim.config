@@ -2,7 +2,7 @@ local M = {}
 
 -- Template for a basic block mod
 M.block_template = {
-  java = [[package {{PACKAGE_NAME}};
+    java = [[package {{PACKAGE_NAME}};
 
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
@@ -23,27 +23,27 @@ public class {{CLASS_NAME}} {
 	}
 }
 ]],
-  resources = {
-    ["blockstates/{{BLOCK_ID}}.json"] = [[{
+    resources = {
+        ["blockstates/{{BLOCK_ID}}.json"] = [[{
   "variants": {
     "": { "model": "{{MOD_ID}}:block/{{BLOCK_ID}}" }
   }
 }]],
-    ["models/block/{{BLOCK_ID}}.json"] = [[{
+        ["models/block/{{BLOCK_ID}}.json"] = [[{
   "parent": "block/cube_all",
   "textures": {
     "all": "{{MOD_ID}}:blocks/{{BLOCK_ID}}"
   }
 }]],
-    ["models/item/{{BLOCK_ID}}.json"] = [[{
+        ["models/item/{{BLOCK_ID}}.json"] = [[{
   "parent": "{{MOD_ID}}:block/{{BLOCK_ID}}"
-}]]
-  }
+}]],
+    },
 }
 
 -- Template for a basic item mod
 M.item_template = {
-  java = [[package {{PACKAGE_NAME}};
+    java = [[package {{PACKAGE_NAME}};
 
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.item.Item;
@@ -59,19 +59,19 @@ public class {{CLASS_NAME}} {
 	}
 }
 ]],
-  resources = {
-    ["models/item/{{ITEM_ID}}.json"] = [[{
+    resources = {
+        ["models/item/{{ITEM_ID}}.json"] = [[{
   "parent": "item/generated",
   "textures": {
     "layer0": "{{MOD_ID}}:items/{{ITEM_ID}}"
   }
-}]]
-  }
+}]],
+    },
 }
 
 -- Template for a basic entity mod
 M.entity_template = {
-  java = [[package {{PACKAGE_NAME}};
+    java = [[package {{PACKAGE_NAME}};
 
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
@@ -91,16 +91,16 @@ public class {{CLASS_NAME}} {
 	}
 }
 ]],
-  resources = {
-    ["lang/en_us.json"] = [[{
+    resources = {
+        ["lang/en_us.json"] = [[{
   "entity.{{MOD_ID}}.{{ENTITY_ID}}": "{{ENTITY_NAME}}"
-}]]
-  }
+}]],
+    },
 }
 
 -- Template for a basic screen/GUI mod
 M.screen_template = {
-  java = [[package {{PACKAGE_NAME}};
+    java = [[package {{PACKAGE_NAME}};
 
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -118,7 +118,7 @@ public class {{CLASS_NAME}} extends Screen {
 		super.render(matrices, mouseX, mouseY, delta);
 	}
 }
-]]
+]],
 }
 
 return M

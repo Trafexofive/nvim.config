@@ -2,113 +2,118 @@
 local M = {}
 
 function M.setup()
-  -- Set global border style
-  vim.o.pumblend = 10
-  vim.o.winblend = 10
-  vim.o.wildoptions = 'pum'
-  vim.o.pumheight = 10
+    -- Set global border style
+    vim.o.pumblend = 10
+    vim.o.winblend = 10
+    vim.o.wildoptions = "pum"
+    vim.o.pumheight = 10
 
-  -- Set up consistent border style for floating windows
-  -- Consistent rounded border for LSP floats (non-deprecated handler override)
-  vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
-    return vim.lsp.handlers.hover(err, result, ctx, vim.tbl_extend("force", config or {}, { border = "rounded" }))
-  end
-  vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
-    return vim.lsp.handlers.signature_help(err, result, ctx, vim.tbl_extend("force", config or {}, { border = "rounded" }))
-  end
+    -- Set up consistent border style for floating windows
+    -- Consistent rounded border for LSP floats (non-deprecated handler override)
+    vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
+        return vim.lsp.handlers.hover(err, result, ctx, vim.tbl_extend("force", config or {}, { border = "rounded" }))
+    end
+    vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
+        return vim.lsp.handlers.signature_help(
+            err,
+            result,
+            ctx,
+            vim.tbl_extend("force", config or {}, { border = "rounded" })
+        )
+    end
 
-  -- Set up default border for all floating windows
-  local set_floating_window_border = function()
-    vim.api.nvim_command("highlight! FloatBorder guifg=#928374 guibg=NONE")
-  end
+    -- Set up default border for all floating windows
+    local set_floating_window_border = function()
+        vim.api.nvim_command("highlight! FloatBorder guifg=#928374 guibg=NONE")
+    end
 
-  set_floating_window_border()
+    set_floating_window_border()
 
-  -- Add autocommand to ensure borders are applied consistently
-  vim.api.nvim_create_autocmd("VimEnter", {
-    callback = set_floating_window_border,
-    desc = "Set consistent floating window borders"
-  })
+    -- Add autocommand to ensure borders are applied consistently
+    vim.api.nvim_create_autocmd("VimEnter", {
+        callback = set_floating_window_border,
+        desc = "Set consistent floating window borders",
+    })
 
-  -- Enhance colors and highlights
-  vim.api.nvim_create_autocmd("ColorScheme", {
-    callback = function()
-      -- Enhance visual elements for better contrast
-      vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#fabd2f", bg = "NONE", bold = true })
-      vim.api.nvim_set_hl(0, "Visual", { bg = "#3c3d5a" })
-      vim.api.nvim_set_hl(0, "Search", { bg = "#458588", fg = "#ebdbb2" })
-      vim.api.nvim_set_hl(0, "IncSearch", { bg = "#d79921", fg = "#282828" })
-      vim.api.nvim_set_hl(0, "LineNr", { fg = "#7c8f8f" })
-      vim.api.nvim_set_hl(0, "CursorLine", { bg = "#3c3836" })
+    -- Enhance colors and highlights
+    vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+            -- Enhance visual elements for better contrast
+            vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#fabd2f", bg = "NONE", bold = true })
+            vim.api.nvim_set_hl(0, "Visual", { bg = "#3c3d5a" })
+            vim.api.nvim_set_hl(0, "Search", { bg = "#458588", fg = "#ebdbb2" })
+            vim.api.nvim_set_hl(0, "IncSearch", { bg = "#d79921", fg = "#282828" })
+            vim.api.nvim_set_hl(0, "LineNr", { fg = "#7c8f8f" })
+            vim.api.nvim_set_hl(0, "CursorLine", { bg = "#3c3836" })
 
-      -- Enhance git signs
-      vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#a6da95" })
-      vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#7aa2f7" })
-      vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f7768e" })
+            -- Enhance git signs
+            vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#a6da95" })
+            vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#7aa2f7" })
+            vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f7768e" })
 
-      -- Enhance dashboard elements if in dashboard
-      vim.api.nvim_set_hl(0, "SnacksDashboardHeader", { fg = "#89b4fa", bold = true })
-      vim.api.nvim_set_hl(0, "SnacksDashboardKey", { fg = "#cba6f7", bold = true })
-      vim.api.nvim_set_hl(0, "SnacksDashboardDesc", { fg = "#a6adc8" })
-    end,
-    desc = "Enhance highlights after colorscheme change"
-  })
+            -- Enhance dashboard elements if in dashboard
+            vim.api.nvim_set_hl(0, "SnacksDashboardHeader", { fg = "#89b4fa", bold = true })
+            vim.api.nvim_set_hl(0, "SnacksDashboardKey", { fg = "#cba6f7", bold = true })
+            vim.api.nvim_set_hl(0, "SnacksDashboardDesc", { fg = "#a6adc8" })
+        end,
+        desc = "Enhance highlights after colorscheme change",
+    })
 
-  -- Set better fold colors
-  vim.o.fillchars = [[eob: ,fold:.,foldopen:,foldclose:,foldsep: ]]
+    -- Set better fold colors
+    vim.o.fillchars = [[eob: ,fold:.,foldopen:,foldclose:,foldsep: ]]
 
-  -- Improve cursor appearance
-  vim.o.cursorline = true
-  vim.o.termguicolors = true
+    -- Improve cursor appearance
+    vim.o.cursorline = true
+    vim.o.termguicolors = true
 
-  -- Better popup menu appearance
-  vim.o.pumblend = 10
-  vim.o.winblend = 10
+    -- Better popup menu appearance
+    vim.o.pumblend = 10
+    vim.o.winblend = 10
 
-  -- Winbar has been removed, its content moved to the statusline
+    -- Winbar has been removed, its content moved to the statusline
 end
 
 -- Function to generate winbar content - kept for potential statusline use
 function M.get_winbar()
-  local filename = vim.fn.expand("%:t")
-  local modified = vim.bo.modified and " ●" or ""
+    local filename = vim.fn.expand("%:t")
+    local modified = vim.bo.modified and " ●" or ""
 
-  if filename == "" then
-    filename = "[No Name]"
-  end
-
-  local winbar_str = ""
-
-  -- Add file type icon if devicons is available
-  local devicons_available, devicons = pcall(require, "nvim-web-devicons")
-  if devicons_available then
-    local ft = vim.bo.filetype
-    local icon, hl_color = devicons.get_icon(filename, ft, { default = true })
-    if icon then
-      winbar_str = winbar_str .. "%#WinBarIcon#" .. icon .. "%* "
+    if filename == "" then
+        filename = "[No Name]"
     end
-  end
 
-  -- Add the filename with modified indicator
-  winbar_str = winbar_str .. "%#WinBar#" .. filename .. modified .. "%*"
+    local winbar_str = ""
 
-  -- Center: Current time and date
-  local current_time = os.date("%H:%M:%S")
-  local current_date = os.date("%m/%d")
-  winbar_str = winbar_str .. "%=" -- Push everything to center
-  winbar_str = winbar_str .. "%#WinBar#" .. current_date .. " " .. current_time .. "%*"
-  winbar_str = winbar_str .. "%=" -- Balance the centering
-
-  -- Add git branch info to the far right
-  local gitsigns_available, gitsigns = pcall(require, "gitsigns")
-  if gitsigns_available then
-    local gs = vim.b.gitsigns_status_dict
-    if gs and gs.head and gs.head ~= "" then
-      winbar_str = winbar_str .. "%#WinBar#" .. " 󰊢 " .. gs.head .. "%*"
+    -- Add file type icon if devicons is available
+    local devicons_available, devicons = pcall(require, "nvim-web-devicons")
+    if devicons_available then
+        local ft = vim.bo.filetype
+        local icon, hl_color = devicons.get_icon(filename, ft, { default = true })
+        if icon then
+            winbar_str = winbar_str .. "%#WinBarIcon#" .. icon .. "%* "
+        end
     end
-  end
 
-  return winbar_str
+    -- Add the filename with modified indicator
+    winbar_str = winbar_str .. "%#WinBar#" .. filename .. modified .. "%*"
+
+    -- Center: Current time and date
+    local current_time = os.date("%H:%M:%S")
+    local current_date = os.date("%m/%d")
+    winbar_str = winbar_str .. "%=" -- Push everything to center
+    winbar_str = winbar_str .. "%#WinBar#" .. current_date .. " " .. current_time .. "%*"
+    winbar_str = winbar_str .. "%=" -- Balance the centering
+
+    -- Add git branch info to the far right
+    local gitsigns_available, gitsigns = pcall(require, "gitsigns")
+    if gitsigns_available then
+        local gs = vim.b.gitsigns_status_dict
+        if gs and gs.head and gs.head ~= "" then
+            winbar_str = winbar_str .. "%#WinBar#" .. " 󰊢 " .. gs.head .. "%*"
+        end
+    end
+
+    return winbar_str
 end
 
 return M

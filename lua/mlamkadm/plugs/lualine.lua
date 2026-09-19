@@ -36,7 +36,9 @@ return {
                     return string.char(tonumber(h, 16))
                 end)
                 name = vim.fn.fnamemodify(name, ":t")
-                if name ~= "" then return name end
+                if name ~= "" then
+                    return name
+                end
             end
             local name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
             return name ~= "" and name or "~"
@@ -46,14 +48,18 @@ return {
         -- Click opens the session picker (README preview).
         local function session_widget()
             local ok, sm = pcall(require, "mlamkadm.core.session_manager")
-            if not ok then return session_name() end
+            if not ok then
+                return session_name()
+            end
 
             -- Any modified buffer => session is dirty (unsaved work)
             local dirty = false
             for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-                if vim.api.nvim_buf_is_valid(buf)
+                if
+                    vim.api.nvim_buf_is_valid(buf)
                     and vim.api.nvim_buf_is_loaded(buf)
-                    and vim.api.nvim_buf_get_option(buf, "modified") then
+                    and vim.api.nvim_buf_get_option(buf, "modified")
+                then
                     dirty = true
                     break
                 end
@@ -86,13 +92,17 @@ return {
         local zellij_busy = false
 
         local function refresh_zellij()
-            if zellij_busy or vim.fn.executable("zellij") ~= 1 then return end
+            if zellij_busy or vim.fn.executable("zellij") ~= 1 then
+                return
+            end
             zellij_busy = true
             vim.system({ "zellij", "list-sessions" }, { text = true }, function(out)
                 zellij_busy = false
                 local live, any = 0, false
                 for line in (out.stdout or ""):gmatch("[^\n]+") do
-                    if not line:find("EXITED", 1, true) then live = live + 1 end
+                    if not line:find("EXITED", 1, true) then
+                        live = live + 1
+                    end
                     any = true
                 end
                 if live ~= zellij_live or any ~= zellij_any then
@@ -110,8 +120,12 @@ return {
             -- fallback: nvim-tracked float terminals
             local ok, term = pcall(require, "mlamkadm.core.terminal")
             local n = ok and #term.list_terminals() or 0
-            if n > 0 then return u(0x25cb) .. " " .. n end
-            if zellij_any then return u(0x25cb) .. " 0" end -- sessions, all EXITED
+            if n > 0 then
+                return u(0x25cb) .. " " .. n
+            end
+            if zellij_any then
+                return u(0x25cb) .. " 0"
+            end -- sessions, all EXITED
             return ""
         end
 
@@ -129,7 +143,9 @@ return {
         -- While inside a Luasnip snippet: show the jump position.
         local function insert_context()
             local m = vim.fn.mode()
-            if m ~= "i" and m ~= "ic" then return "" end
+            if m ~= "i" and m ~= "ic" then
+                return ""
+            end
 
             local ok_cmp, cmp = pcall(require, "cmp")
             if ok_cmp and cmp.visible and pcall(cmp.visible) and cmp.visible() then
@@ -139,7 +155,9 @@ return {
                     name = entry.source.name
                 end
                 local n = 0
-                if cmp.get_entries then n = #(cmp.get_entries() or {}) end
+                if cmp.get_entries then
+                    n = #(cmp.get_entries() or {})
+                end
                 return (name ~= "" and name or "cmp") .. " " .. n
             end
 
@@ -158,7 +176,9 @@ return {
         -- ── Active LSP clients for the current buffer ─────────────────────
         local function lsp_clients()
             local clients = vim.lsp.get_clients({ bufnr = 0 })
-            if #clients == 0 then return "" end
+            if #clients == 0 then
+                return ""
+            end
             local names = {}
             for _, c in ipairs(clients) do
                 table.insert(names, c.name)
@@ -169,11 +189,17 @@ return {
         -- ── Colored per-filetype icon via devicons ────────────────────────
         local function file_icon()
             local ok, devicons = pcall(require, "nvim-web-devicons")
-            if not ok then return "" end
+            if not ok then
+                return ""
+            end
             local fname = vim.fn.expand("%:t")
-            if fname == "" then return "" end
+            if fname == "" then
+                return ""
+            end
             local icon, hl = devicons.get_icon(fname, vim.bo.filetype, { default = true })
-            if not icon then return "" end
+            if not icon then
+                return ""
+            end
             return "%#" .. (hl or "DevIconDefault") .. "#" .. icon .. "%*"
         end
 
@@ -214,7 +240,12 @@ return {
             },
             sections = {
                 lualine_a = {
-                    { "mode", fmt = function(m) return " " .. m:upper() .. " " end },
+                    {
+                        "mode",
+                        fmt = function(m)
+                            return " " .. m:upper() .. " "
+                        end,
+                    },
                 },
                 lualine_b = {
                     { session_widget, color = { fg = aqua }, on_click = session_picker },

@@ -8,11 +8,11 @@ return {
     config = function()
         require("cheatsheet").setup({
             bundled_cheatsheets = {
-                enabled = { 'default', 'lua', 'git' },
+                enabled = { "default", "lua", "git" },
                 disabled = {},
             },
             bundled_plugin_cheatsheets = {
-                enabled = { 'telescope', 'nvim-tree', 'dap' },
+                enabled = { "telescope", "nvim-tree", "dap" },
                 disabled = {},
             },
             -- Custom cheatsheet files
@@ -23,5 +23,5 @@ return {
     keys = {
         { "<leader>?", "<cmd>Cheatsheet<cr>", desc = "Open cheatsheet" },
         { "<leader>cs", "<cmd>Cheatsheet<cr>", desc = "Open cheatsheet" },
-    }
+    },
 }

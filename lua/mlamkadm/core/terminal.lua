@@ -11,7 +11,7 @@ local config = {
     -- No border: the popup is a clean rectangle with a winbar (top status bar)
     -- instead of a titled outline. This removes all "|" / "-" border glyphs.
     border = "none",
-    width = 0.9,   -- unified terminal float width (regular + zellij)
+    width = 0.9, -- unified terminal float width (regular + zellij)
     height = 0.85, -- unified terminal float height (regular + zellij)
     title = "Terminal",
     title_pos = "center", -- center | left | right
@@ -28,7 +28,7 @@ local config = {
     persistence = {
         enabled = true,
         save_file = vim.fn.stdpath("data") .. "/terminal_session.json",
-    }
+    },
 }
 
 -- ----------------------------------------------------------------------------
@@ -44,7 +44,9 @@ local last_active_id = nil
 -- no buffer AND no window (killed/detached but never removed from the
 -- registry). Such entries must not render a bar dot.
 local function is_live(term)
-    if not term then return false end
+    if not term then
+        return false
+    end
     if term.buf and vim.api.nvim_buf_is_valid(term.buf) then
         return true
     end
@@ -62,7 +64,9 @@ local new_zellij_counter = 0
 local function project_session_name()
     local cwd = vim.fn.getcwd()
     local name = vim.fn.fnamemodify(cwd, ":t")
-    if name == "" then name = "home" end
+    if name == "" then
+        name = "home"
+    end
     name = name:gsub("[^%w_.-]", "-")
     return "nvim-" .. name .. "-" .. vim.fn.sha256(cwd):sub(1, 8)
 end
@@ -78,14 +82,18 @@ end
 
 local function get_term_by_buf(buf)
     for _, term in pairs(terminals) do
-        if term.buf == buf then return term end
+        if term.buf == buf then
+            return term
+        end
     end
     return nil
 end
 
 local function get_term_by_cmd(cmd)
     for _, term in pairs(terminals) do
-        if term.cmd == cmd then return term end
+        if term.cmd == cmd then
+            return term
+        end
     end
     return nil
 end
@@ -93,43 +101,43 @@ end
 local function create_float(term)
     local screen_width = vim.o.columns
     local screen_height = vim.o.lines
-    
+
     local width_ratio = term.opts.width or config.width
     local height_ratio = term.opts.height or config.height
-    
+
     local width = math.floor(screen_width * width_ratio)
     local height = math.floor(screen_height * height_ratio)
-    
+
     local row = math.floor((screen_height - height) / 2)
     local col = math.floor((screen_width - width) / 2)
-    
-    local position = term.opts.position or 'center'
-    if position == 'right' then
+
+    local position = term.opts.position or "center"
+    if position == "right" then
         col = screen_width - width - 2
-    elseif position == 'left' then
+    elseif position == "left" then
         col = 2
     end
-    
+
     local title = term.opts.title or config.title
     -- If title is default, try to derive from command
     if title == config.title and term.cmd then
-         local cmd_name = term.cmd:match("^(%S+)") or term.cmd
-         title = cmd_name:gsub("^%l", string.upper) .. " (" .. term.id .. ")"
+        local cmd_name = term.cmd:match("^(%S+)") or term.cmd
+        title = cmd_name:gsub("^%l", string.upper) .. " (" .. term.id .. ")"
     end
     -- Store the bar title on the term so M.toggle can render the winbar.
     term._bar_title = title
 
     local win_opts = {
-        relative = 'editor',
+        relative = "editor",
         width = width,
         height = height,
         row = row,
         col = col,
         border = config.border, -- "none": no outline, no "|" / "-"
-        style = 'minimal',
+        style = "minimal",
         zindex = config.zindex,
     }
-    
+
     return win_opts
 end
 
@@ -151,7 +159,9 @@ local function render_bar(term)
         local hl = active and "TerminalBarActive" or "TerminalBarInactive"
         local dot = active and "●" or "○"
         bar = bar .. string.format("%%#%s#%s", hl, dot)
-        if i < #ids then bar = bar .. " " end
+        if i < #ids then
+            bar = bar .. " "
+        end
     end
     if bar == "" then
         bar = term._bar_title or config.title -- fallback (no tracked terminals)
@@ -185,16 +195,16 @@ function M.create_term(cmd, opts)
     opts = opts or {}
     local id = next_id
     next_id = next_id + 1
-    
+
     local term = {
         id = id,
         cmd = cmd or vim.o.shell,
         opts = opts,
         buf = nil,
         win = nil,
-        open = false
+        open = false,
     }
-    
+
     terminals[id] = term
     return term
 end
@@ -217,10 +227,14 @@ function M.toggle(id_or_cmd, opts, stay_normal)
         end
     end
 
-    if not term then return end
+    if not term then
+        return
+    end
 
     -- Determine position from args or stored opts
-    if opts.position then term.opts.position = opts.position end
+    if opts.position then
+        term.opts.position = opts.position
+    end
 
     -- If open, hide it
     if term.win and vim.api.nvim_win_is_valid(term.win) then
@@ -235,21 +249,27 @@ function M.toggle(id_or_cmd, opts, stay_normal)
     -- Create buffer if needed
     if not term.buf or not vim.api.nvim_buf_is_valid(term.buf) then
         term.buf = vim.api.nvim_create_buf(false, true)
-        vim.api.nvim_buf_set_option(term.buf, 'bufhidden', 'hide')
-        
+        vim.api.nvim_buf_set_option(term.buf, "bufhidden", "hide")
+
         -- Setup keymaps for this buffer
         local close_key = term.opts.close_key or config.close_key
         local opts_map = { noremap = true, silent = true }
-        
-        vim.api.nvim_buf_set_keymap(term.buf, 't', close_key, [[<C-\><C-n><cmd>lua require("mlamkadm.core.terminal").toggle(]] .. term.id .. [[)<CR>]], opts_map)
-        vim.api.nvim_buf_set_keymap(term.buf, 't', '<C-Esc>', [[<C-\><C-n>]], opts_map)
+
+        vim.api.nvim_buf_set_keymap(
+            term.buf,
+            "t",
+            close_key,
+            [[<C-\><C-n><cmd>lua require("mlamkadm.core.terminal").toggle(]] .. term.id .. [[)<CR>]],
+            opts_map
+        )
+        vim.api.nvim_buf_set_keymap(term.buf, "t", "<C-Esc>", [[<C-\><C-n>]], opts_map)
         -- We don't map <C-d> to close automatically, let the shell handle it, or exit
     end
 
     -- Create window
     local win_opts = create_float(term)
     term.win = vim.api.nvim_open_win(term.buf, true, win_opts)
-    vim.api.nvim_win_set_option(term.win, 'winblend', config.winblend)
+    vim.api.nvim_win_set_option(term.win, "winblend", config.winblend)
     set_terminal_bar(term) -- top dynamic status bar (no outline)
     term.open = true
     last_active_id = term.id
@@ -258,7 +278,7 @@ function M.toggle(id_or_cmd, opts, stay_normal)
     if vim.bo[term.buf].buftype ~= "terminal" then
         local cmd = term.cmd
         local use_theme = term.opts.use_theme ~= false
-        
+
         local term_opts = {
             on_exit = function(job_id, code, event)
                 -- Always clear the registry entry on exit (clean or not), so
@@ -279,16 +299,16 @@ function M.toggle(id_or_cmd, opts, stay_normal)
                     last_active_id = nil
                 end
                 refresh_bars()
-            end
+            end,
         }
-        
+
         if not use_theme then
             term_opts.env = { TERM = "xterm-256color" }
         end
-        
+
         vim.fn.termopen(cmd, term_opts)
     end
-    
+
     if not stay_normal then
         vim.cmd("startinsert")
     end
@@ -297,7 +317,9 @@ end
 -- Wrapper for _G.Poptui compatibility
 function M.toggle_popup(cmd, position, opts)
     opts = opts or {}
-    if position then opts.position = position end
+    if position then
+        opts.position = position
+    end
     M.toggle(cmd, opts)
 end
 
@@ -331,10 +353,13 @@ function M.open_zellij(opts)
         end
     end
 
-    M.toggle(cmd, vim.tbl_deep_extend("force", {
-        title = "Zellij: " .. session,
-        use_theme = false,
-    }, opts))
+    M.toggle(
+        cmd,
+        vim.tbl_deep_extend("force", {
+            title = "Zellij: " .. session,
+            use_theme = false,
+        }, opts)
+    )
 end
 
 -- Open a NEW zellij session (a fresh zellij terminal), unlike Ctrl+T which
@@ -359,10 +384,13 @@ function M.open_new_zellij(opts)
     end
     new_zellij_counter = new_zellij_counter + 1
     local session = project_session_name() .. "-" .. new_zellij_counter
-    M.toggle(M.zellij_cmd(session), vim.tbl_deep_extend("force", {
-        title = "Zellij: " .. session,
-        use_theme = false,
-    }, opts))
+    M.toggle(
+        M.zellij_cmd(session),
+        vim.tbl_deep_extend("force", {
+            title = "Zellij: " .. session,
+            use_theme = false,
+        }, opts)
+    )
 end
 
 -- Kill all running (headless/detached) zellij sessions.
@@ -388,7 +416,10 @@ function M.kill_all_zellij_sessions()
             end
         end
     end
-    vim.notify((killed == 0 and "No headless zellij sessions to kill" or (killed .. " headless zellij session(s) killed")), vim.log.levels.INFO)
+    vim.notify(
+        (killed == 0 and "No headless zellij sessions to kill" or (killed .. " headless zellij session(s) killed")),
+        vim.log.levels.INFO
+    )
 end
 
 function M.cleanup(opts)
@@ -429,7 +460,7 @@ function M.list_terminals()
             cmd = term.cmd,
             buf = term.buf,
             open = term.open,
-            name = "Term " .. id .. ": " .. term.cmd
+            name = "Term " .. id .. ": " .. term.cmd,
         })
     end
     return list
@@ -479,7 +510,9 @@ end
 --- Find the index of `id` in the sorted ids list, or nil.
 local function index_of(ids, id)
     for i, v in ipairs(ids) do
-        if v == id then return i end
+        if v == id then
+            return i
+        end
     end
     return nil
 end
@@ -488,7 +521,9 @@ end
 -- Returns false if the buf was never a terminal, was deleted, or the job died
 -- (channel closed). Used to filter dead entries out of the cycle.
 local function is_alive(term)
-    if not term then return false end
+    if not term then
+        return false
+    end
     if not term.buf or not vim.api.nvim_buf_is_valid(term.buf) then
         return false
     end
@@ -536,7 +571,9 @@ end
 local function alive_ids()
     local ids = {}
     for id, term in pairs(terminals) do
-        if is_alive(term) then table.insert(ids, id) end
+        if is_alive(term) then
+            table.insert(ids, id)
+        end
     end
     table.sort(ids)
     return ids
@@ -581,17 +618,25 @@ end
 -- target, and only if that target is valid to open. No-op otherwise.
 function M.cycle_next()
     local cur = visible_id()
-    if not cur then return end -- don't intrude when no terminal is showing
+    if not cur then
+        return
+    end -- don't intrude when no terminal is showing
 
     local ids = alive_ids()
     local n = #ids
-    if n < 2 then return end
+    if n < 2 then
+        return
+    end
 
     local cur_idx = index_of(ids, cur)
-    if not cur_idx then return end -- visible one isn't in the live set
+    if not cur_idx then
+        return
+    end -- visible one isn't in the live set
 
     local target = ids[(cur_idx % n) + 1]
-    if not terminals[target] then return end
+    if not terminals[target] then
+        return
+    end
 
     local cur_term = terminals[cur]
     if cur_term.win and vim.api.nvim_win_is_valid(cur_term.win) then
@@ -607,17 +652,25 @@ end
 -- drops the popup.
 function M.cycle_prev()
     local cur = visible_id()
-    if not cur then return end
+    if not cur then
+        return
+    end
 
     local ids = alive_ids()
     local n = #ids
-    if n < 2 then return end
+    if n < 2 then
+        return
+    end
 
     local cur_idx = index_of(ids, cur)
-    if not cur_idx then return end
+    if not cur_idx then
+        return
+    end
 
     local target = ids[((cur_idx - 2) % n) + 1]
-    if not terminals[target] then return end
+    if not terminals[target] then
+        return
+    end
 
     local cur_term = terminals[cur]
     if cur_term.win and vim.api.nvim_win_is_valid(cur_term.win) then
@@ -632,7 +685,9 @@ end
 -- and remove it from the registry.
 function M.kill_term(id)
     local term = terminals[id]
-    if not term then return end
+    if not term then
+        return
+    end
 
     if term.win and vim.api.nvim_win_is_valid(term.win) then
         pcall(vim.api.nvim_win_close, term.win, true)
@@ -690,30 +745,32 @@ end
 -- pickers/finders/sorter/attach boilerplate; callers supply the results,
 -- an entry_maker, and the on-select callback.
 local function portrait_picker(title, results, entry_maker, on_select)
-    local pickers = require('telescope.pickers')
-    local finders = require('telescope.finders')
-    local conf = require('telescope.config').values
-    local actions = require('telescope.actions')
-    local action_state = require('telescope.actions.state')
+    local pickers = require("telescope.pickers")
+    local finders = require("telescope.finders")
+    local conf = require("telescope.config").values
+    local actions = require("telescope.actions")
+    local action_state = require("telescope.actions.state")
 
-    pickers.new({}, {
-        prompt_title = title,
-        finder = finders.new_table {
-            results = results,
-            entry_maker = entry_maker,
-        },
-        sorter = conf.generic_sorter({}),
-        attach_mappings = function(prompt_bufnr, map)
-            actions.select_default:replace(function()
-                actions.close(prompt_bufnr)
-                local selection = action_state.get_selected_entry()
-                if selection then
-                    on_select(selection.value)
-                end
-            end)
-            return true
-        end,
-    }):find()
+    pickers
+        .new({}, {
+            prompt_title = title,
+            finder = finders.new_table({
+                results = results,
+                entry_maker = entry_maker,
+            }),
+            sorter = conf.generic_sorter({}),
+            attach_mappings = function(prompt_bufnr, map)
+                actions.select_default:replace(function()
+                    actions.close(prompt_bufnr)
+                    local selection = action_state.get_selected_entry()
+                    if selection then
+                        on_select(selection.value)
+                    end
+                end)
+                return true
+            end,
+        })
+        :find()
 end
 
 function M.switch_terminal()
@@ -723,9 +780,11 @@ function M.switch_terminal()
         return
     end
 
-    portrait_picker('Switch Terminal', terms,
-        function(entry) return { value = entry, display = (entry.open and "[*] " or "[ ] ") .. entry.name, ordinal = entry.name } end,
-        function(term) M.toggle(term.id) end)
+    portrait_picker("Switch Terminal", terms, function(entry)
+        return { value = entry, display = (entry.open and "[*] " or "[ ] ") .. entry.name, ordinal = entry.name }
+    end, function(term)
+        M.toggle(term.id)
+    end)
 end
 
 -- ----------------------------------------------------------------------------
@@ -737,18 +796,22 @@ function M.register_tui(name, cmd, position, opts)
         name = name,
         cmd = cmd,
         position = position,
-        opts = opts or {}
+        opts = opts or {},
     })
 end
 
 function M.show_tui_registry()
-    portrait_picker('TUI Commands', tui_registry,
-        function(entry) return { value = entry, display = string.format("%-20s → %s", entry.name, entry.cmd), ordinal = entry.name .. " " .. entry.cmd } end,
-        function(sel)
-            -- Create a new instance for this TUI, or toggle if it's a singleton (based on cmd)
-            -- For TUIs, we generally want singletons per command
-            M.toggle(sel.cmd, { position = sel.position, title = sel.name, use_theme = sel.opts.use_theme })
-        end)
+    portrait_picker("TUI Commands", tui_registry, function(entry)
+        return {
+            value = entry,
+            display = string.format("%-20s → %s", entry.name, entry.cmd),
+            ordinal = entry.name .. " " .. entry.cmd,
+        }
+    end, function(sel)
+        -- Create a new instance for this TUI, or toggle if it's a singleton (based on cmd)
+        -- For TUIs, we generally want singletons per command
+        M.toggle(sel.cmd, { position = sel.position, title = sel.name, use_theme = sel.opts.use_theme })
+    end)
 end
 
 -- Persistence
@@ -764,43 +827,56 @@ local function get_session_path()
 end
 
 function M.save_session()
-    if not config.persistence.enabled then return end
-    
+    if not config.persistence.enabled then
+        return
+    end
+
     local session_data = {}
     for id, term in pairs(terminals) do
         if term.cmd then
             table.insert(session_data, {
                 cmd = term.cmd,
                 opts = term.opts,
-                is_open = term.open
+                is_open = term.open,
             })
         end
     end
-    
+
     -- Stable order + remember which terminal was active so restore can re-show
     -- it (instead of only the last `is_open` one).
-    table.sort(session_data, function(a, b) return a.cmd < b.cmd end)
-    
+    table.sort(session_data, function(a, b)
+        return a.cmd < b.cmd
+    end)
+
     local path = get_session_path()
     local file = io.open(path, "w")
     if file then
-        file:write(vim.json.encode({ terminals = session_data, last_active_cmd = last_active_id and terminals[last_active_id] and terminals[last_active_id].cmd or nil }))
+        file:write(vim.json.encode({
+            terminals = session_data,
+            last_active_cmd = last_active_id and terminals[last_active_id] and terminals[last_active_id].cmd or nil,
+        }))
         file:close()
     end
 end
 
 function M.restore_session()
-    if not config.persistence.enabled then return end
-    
+    if not config.persistence.enabled then
+        return
+    end
+
     local path = get_session_path()
     local file = io.open(path, "r")
-    if not file then return end
-    
+    if not file then
+        return
+    end
+
     local content = file:read("*a")
     file:close()
-    
+
     local ok, decoded = pcall(vim.json.decode, content)
-    if not ok or type(decoded) ~= "table" then return end
+    if not ok or type(decoded) ~= "table" then
+        return
+    end
 
     -- Backward-compat: old format was a bare array of terminal records;
     -- new format is { terminals = {...}, last_active_cmd = "..." }.
@@ -812,7 +888,9 @@ function M.restore_session()
     -- auto-session hooks firing).
     local seen = {}
     for _, t in pairs(terminals) do
-        if t.cmd then seen[t.cmd] = true end
+        if t.cmd then
+            seen[t.cmd] = true
+        end
     end
 
     local first_id = nil
@@ -826,7 +904,9 @@ function M.restore_session()
         end
         local term = M.create_term(data.cmd, data.opts)
         seen[data.cmd] = true
-        if not first_id then first_id = term.id end
+        if not first_id then
+            first_id = term.id
+        end
         ::continue::
     end
 
@@ -846,9 +926,14 @@ function M.restore_session()
 
     local open_id = nil
     for id, t in pairs(terminals) do
-        if t.cmd == open_cmd then open_id = id; break end
+        if t.cmd == open_cmd then
+            open_id = id
+            break
+        end
     end
-    if not open_id and first_id then open_id = first_id end
+    if not open_id and first_id then
+        open_id = first_id
+    end
 
     if open_id then
         local tid = open_id
@@ -875,8 +960,8 @@ function M.setup(opts)
     -- continuous bar; only the dot glyph/foreground differ (active=bright,
     -- inactive=dim). Re-applied on ColorScheme so it stays themed.
     local function setup_bar_hl()
-        vim.api.nvim_set_hl(0, config.bar_hl,          { fg = "#282828", bg = "#83a598", bold = true })
-        vim.api.nvim_set_hl(0, "TerminalBarActive",   { fg = "#fbf1c7", bg = "#83a598", bold = true })
+        vim.api.nvim_set_hl(0, config.bar_hl, { fg = "#282828", bg = "#83a598", bold = true })
+        vim.api.nvim_set_hl(0, "TerminalBarActive", { fg = "#fbf1c7", bg = "#83a598", bold = true })
         vim.api.nvim_set_hl(0, "TerminalBarInactive", { fg = "#3c3836", bg = "#83a598" })
     end
     setup_bar_hl()
@@ -905,7 +990,7 @@ function M.setup(opts)
 
     -- Autocmds
     local group = vim.api.nvim_create_augroup("TerminalManager", { clear = true })
-    
+
     vim.api.nvim_create_autocmd("VimLeavePre", {
         group = group,
         callback = function()
@@ -916,9 +1001,9 @@ function M.setup(opts)
                 end
             end
         end,
-        desc = "Close terminal windows and save session on exit"
+        desc = "Close terminal windows and save session on exit",
     })
-    
+
     -- Restore on startup?
     -- Maybe explicitly call it or hook into session load.
 end
@@ -937,24 +1022,40 @@ end
 --          NOTE: `<C-d>` is also mapped by smooth-scroll (neoscroll); terminal
 --          owns it here, so smooth-scroll's <C-d> is intentionally disabled.
 -- <leader>tz : open the project's primary Zellij session (explicit, non-toggle).
-vim.keymap.set('n', '<c-t>', M.toggle_last_active, { desc = 'Terminal: Toggle last-active' })
-vim.keymap.set('n', '<C-j>', M.cycle_next, { desc = 'Terminal: Next' })
-vim.keymap.set('n', '<C-k>', M.cycle_prev, { desc = 'Terminal: Prev' })
-vim.keymap.set('n', '<C-n>', M.open_new_zellij, { desc = 'Terminal: New Zellij session' })
-vim.keymap.set('n', '<C-d>', M.kill_current, { desc = 'Terminal: Kill current' })
-vim.keymap.set('n', '<leader>tz', M.open_zellij, { desc = 'Open Zellij terminal' })
-vim.keymap.set('n', '<leader>ts', M.switch_terminal, { desc = 'Switch Terminal' })
-vim.keymap.set('n', '<leader>tt', M.show_tui_registry, { desc = 'TUI Registry' })
-vim.keymap.set('n', '<leader>tn', M.open_new_zellij, { desc = 'New Zellij session' })
+vim.keymap.set("n", "<c-t>", M.toggle_last_active, { desc = "Terminal: Toggle last-active" })
+vim.keymap.set("n", "<C-j>", M.cycle_next, { desc = "Terminal: Next" })
+vim.keymap.set("n", "<C-k>", M.cycle_prev, { desc = "Terminal: Prev" })
+vim.keymap.set("n", "<C-n>", M.open_new_zellij, { desc = "Terminal: New Zellij session" })
+vim.keymap.set("n", "<C-d>", M.kill_current, { desc = "Terminal: Kill current" })
+vim.keymap.set("n", "<leader>tz", M.open_zellij, { desc = "Open Zellij terminal" })
+vim.keymap.set("n", "<leader>ts", M.switch_terminal, { desc = "Switch Terminal" })
+vim.keymap.set("n", "<leader>tt", M.show_tui_registry, { desc = "TUI Registry" })
+vim.keymap.set("n", "<leader>tn", M.open_new_zellij, { desc = "New Zellij session" })
 
 -- Re-bind the specific TUI keys
-vim.keymap.set('n', '<leader>jj', function() M.toggle('lazygit') end, { desc = 'Toggle Lazygit' })
-vim.keymap.set('n', '<leader>jd', function() M.toggle('lazydocker') end, { desc = 'Toggle Lazydocker' })
-vim.keymap.set('n', '<leader>dl', function() M.toggle('docker-compose logs -f') end, { desc = 'Docker Compose Logs' })
-vim.keymap.set('n', '<leader>jt', function() M.toggle('btop', { use_theme = false }) end, { desc = 'Toggle Btop' })
-vim.keymap.set('n', '<leader>jf', function() M.toggle('yazi') end, { desc = 'Toggle File Manager (Yazi)' })
-vim.keymap.set('n', '<leader>mg', function() M.toggle('glow') end, { desc = 'Make: Glow' })
-vim.keymap.set('n', '<leader>mr', function() M.toggle('make run') end, { desc = 'Make: Run' })
-vim.keymap.set('n', '<leader>mc', function() M.toggle('make clean') end, { desc = 'Make: Clean' })
+vim.keymap.set("n", "<leader>jj", function()
+    M.toggle("lazygit")
+end, { desc = "Toggle Lazygit" })
+vim.keymap.set("n", "<leader>jd", function()
+    M.toggle("lazydocker")
+end, { desc = "Toggle Lazydocker" })
+vim.keymap.set("n", "<leader>dl", function()
+    M.toggle("docker-compose logs -f")
+end, { desc = "Docker Compose Logs" })
+vim.keymap.set("n", "<leader>jt", function()
+    M.toggle("btop", { use_theme = false })
+end, { desc = "Toggle Btop" })
+vim.keymap.set("n", "<leader>jf", function()
+    M.toggle("yazi")
+end, { desc = "Toggle File Manager (Yazi)" })
+vim.keymap.set("n", "<leader>mg", function()
+    M.toggle("glow")
+end, { desc = "Make: Glow" })
+vim.keymap.set("n", "<leader>mr", function()
+    M.toggle("make run")
+end, { desc = "Make: Run" })
+vim.keymap.set("n", "<leader>mc", function()
+    M.toggle("make clean")
+end, { desc = "Make: Clean" })
 
 return M
