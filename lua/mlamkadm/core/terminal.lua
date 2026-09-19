@@ -685,14 +685,11 @@ function M.kill_current()
     end
 end
 
-function M.switch_terminal()
-    local terms = M.list_terminals()
-    if #terms == 0 then
-        vim.notify("No active terminals", vim.log.levels.INFO)
-        return
-    end
-
-    -- Use Telescope
+-- Build a telescope table picker with the standard portrait layout used by
+-- the terminal manager (switch + TUI registry). Encapsulates the
+-- pickers/finders/sorter/attach boilerplate; callers supply the results,
+-- an entry_maker, and the on-select callback.
+local function portrait_picker(title, results, entry_maker, on_select)
     local pickers = require('telescope.pickers')
     local finders = require('telescope.finders')
     local conf = require('telescope.config').values
@@ -700,16 +697,10 @@ function M.switch_terminal()
     local action_state = require('telescope.actions.state')
 
     pickers.new({}, {
-        prompt_title = 'Switch Terminal',
+        prompt_title = title,
         finder = finders.new_table {
-            results = terms,
-            entry_maker = function(entry)
-                return {
-                    value = entry,
-                    display = (entry.open and "[*] " or "[ ] ") .. entry.name,
-                    ordinal = entry.name,
-                }
-            end,
+            results = results,
+            entry_maker = entry_maker,
         },
         sorter = conf.generic_sorter({}),
         attach_mappings = function(prompt_bufnr, map)
@@ -717,12 +708,24 @@ function M.switch_terminal()
                 actions.close(prompt_bufnr)
                 local selection = action_state.get_selected_entry()
                 if selection then
-                    M.toggle(selection.value.id)
+                    on_select(selection.value)
                 end
             end)
             return true
         end,
     }):find()
+end
+
+function M.switch_terminal()
+    local terms = M.list_terminals()
+    if #terms == 0 then
+        vim.notify("No active terminals", vim.log.levels.INFO)
+        return
+    end
+
+    portrait_picker('Switch Terminal', terms,
+        function(entry) return { value = entry, display = (entry.open and "[*] " or "[ ] ") .. entry.name, ordinal = entry.name } end,
+        function(term) M.toggle(term.id) end)
 end
 
 -- ----------------------------------------------------------------------------
@@ -739,42 +742,13 @@ function M.register_tui(name, cmd, position, opts)
 end
 
 function M.show_tui_registry()
-    local pickers = require('telescope.pickers')
-    local finders = require('telescope.finders')
-    local conf = require('telescope.config').values
-    local actions = require('telescope.actions')
-    local action_state = require('telescope.actions.state')
-
-    pickers.new({}, {
-        prompt_title = 'TUI Commands',
-        finder = finders.new_table {
-            results = tui_registry,
-            entry_maker = function(entry)
-                return {
-                    value = entry,
-                    display = string.format("%-20s → %s", entry.name, entry.cmd),
-                    ordinal = entry.name .. " " .. entry.cmd,
-                }
-            end,
-        },
-        sorter = conf.generic_sorter({}),
-        attach_mappings = function(prompt_bufnr, map)
-            actions.select_default:replace(function()
-                actions.close(prompt_bufnr)
-                local selection = action_state.get_selected_entry()
-                if selection then
-                    -- Create a new instance for this TUI, or toggle if it's a singleton (based on cmd)
-                    -- For TUIs, we generally want singletons per command
-                    M.toggle(selection.value.cmd, { 
-                        position = selection.value.position,
-                        title = selection.value.name,
-                        use_theme = selection.value.opts.use_theme
-                    })
-                end
-            end)
-            return true
-        end,
-    }):find()
+    portrait_picker('TUI Commands', tui_registry,
+        function(entry) return { value = entry, display = string.format("%-20s → %s", entry.name, entry.cmd), ordinal = entry.name .. " " .. entry.cmd } end,
+        function(sel)
+            -- Create a new instance for this TUI, or toggle if it's a singleton (based on cmd)
+            -- For TUIs, we generally want singletons per command
+            M.toggle(sel.cmd, { position = sel.position, title = sel.name, use_theme = sel.opts.use_theme })
+        end)
 end
 
 -- Persistence
