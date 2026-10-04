@@ -569,10 +569,11 @@ end
 
 --- Open (or focus) a terminal window in a workspace. With opts.key this is
 --- the singleton contract: an existing window with that key is selected
---- instead of spawning a duplicate.
+--- instead of spawning a duplicate. With opts.once, always create a fresh
+--- window (no singleton lookup) — e.g. the <C-n> "new terminal" action.
 -- @param ws_name string workspace display name
 -- @param cmd string command to run ("" = shell)
--- @param opts { key = singleton window key, cwd = working dir }
+-- @param opts { key = singleton window key, cwd = working dir, once = bool }
 -- @return { name = window name, created = bool } or nil on failure
 function M.open_window(ws_name, cmd, opts)
     opts = opts or {}
@@ -581,10 +582,12 @@ function M.open_window(ws_name, cmd, opts)
     local key = safe_window_name(opts.key or cmd)
     local cwd = opts.cwd or vim.fn.getcwd()
 
-    for _, w in ipairs(tmux.windows(ws.session)) do
-        if w.name == key then
-            tmux.select_window(ws.session, key)
-            return { name = key, created = false }
+    if not opts.once then
+        for _, w in ipairs(tmux.windows(ws.session)) do
+            if w.name == key then
+                tmux.select_window(ws.session, key)
+                return { name = key, created = false }
+            end
         end
     end
 
@@ -657,7 +660,11 @@ function M.remove(ws_name)
     if active_ws_name == ws_name then
         active_ws_name = #kept > 0 and kept[1].name or nil
     end
-    j.last_active = active_ws_name or j.last_active
+    if j.last_active == ws_name then
+        -- Never leave last_active pointing at the corpse — active_name()
+        -- would otherwise resurrect it via ensure().
+        j.last_active = #kept > 0 and kept[1].name or nil
+    end
     J.save(j)
     return swept
 end
@@ -729,6 +736,18 @@ end
 --- Session name for a workspace display name (creating the journal record).
 function M.session_of(ws_name)
     return (M.ensure(ws_name)).session
+end
+
+--- Peek at a workspace record WITHOUT creating anything.
+-- @return { name, session, live } or nil if unknown to the journal.
+function M.lookup(ws_name)
+    local j = J.load()
+    for _, ws in ipairs(j.workspaces) do
+        if ws.name == ws_name then
+            return { name = ws.name, session = ws.session, live = tmux.session_exists(ws.session) }
+        end
+    end
+    return nil
 end
 
 --- Count of live workspace sessions in the namespace (statusline widget).

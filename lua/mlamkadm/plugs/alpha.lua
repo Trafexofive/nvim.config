@@ -45,9 +45,9 @@ return {
             { type = "padding", val = 1 },
             {
                 type = "button",
-                val = "  > Kill Zellij Sessions  ",
+                val = "  > Kill All Workspaces  ",
                 on_press = function()
-                    require("mlamkadm.core.terminal").kill_all_zellij_sessions()
+                    require("mlamkadm.core.terminal").kill_all_workspaces()
                 end,
                 opts = { hl = "AlphaButton", hl_shortcut = "AlphaShortcut" },
             },

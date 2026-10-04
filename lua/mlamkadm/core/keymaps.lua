@@ -80,7 +80,8 @@ map("n", "<leader>Q", function()
     vim.fn.chdir(current_dir)
 
     -- Clean up managed terminal windows/buffers before returning to the dashboard.
-    -- Terminal state was already saved by SessionSave; zellij sessions remain attachable.
+    -- Terminal state was already saved by SessionSave; tmux workspace sessions
+    -- keep running headless in the daemon and re-attach on restore.
     pcall(function()
         require("mlamkadm.core.terminal").cleanup()
     end)

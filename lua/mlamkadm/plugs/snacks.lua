@@ -186,9 +186,9 @@ return {
                     {
                         icon = "",
                         key = "T",
-                        desc = "Open persistent Zellij",
+                        desc = "Open Workspace",
                         action = function()
-                            require("mlamkadm.core.terminal").open_zellij()
+                            require("mlamkadm.core.terminal").switch_workspace()
                         end,
                     },
                 },

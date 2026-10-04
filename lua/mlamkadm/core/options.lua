@@ -7,7 +7,7 @@ if vim.islist then
 end
 
 -- Add Mason bin + ~/.cargo/bin to PATH (fixes linter/formatter issues and
--- finds zellij/other cargo tools, e.g. for <C-t>)
+-- finds cargo tools, e.g. for <C-t>)
 vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.HOME .. "/.cargo/bin:" .. vim.env.PATH
 
 vim.opt.tabstop = 4
@@ -41,7 +41,8 @@ vim.opt.incsearch = true
 
 vim.opt.backspace = "indent,eol,start"
 
--- Session options (terminal omitted: zellij owns CLI persistence now)
+-- Session options (terminal omitted: the tmux workspace daemon owns
+-- CLI persistence now)
 vim.opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,localoptions"
 
 -- Example using a list of specs with the default options
