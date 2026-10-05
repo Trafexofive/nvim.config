@@ -83,49 +83,45 @@ return {
             end
         end
 
-        -- ── Terminal widget: live Zellij session count (async) ────────────
-        -- The user's real terminals live as Zellij CLI sessions (persist across
-        -- nvim), so the widget reflects those, not just nvim's in-memory floats.
-        -- `zellij list-sessions` runs async to avoid blocking statusline render.
-        local zellij_live = 0
-        local zellij_any = false
-        local zellij_busy = false
+        -- ── Terminal widget: live workspace session count (async) ────────────
+        -- Terminals live as tmux workspace sessions in the daemon (they
+        -- persist across nvim), so the widget counts live namespace sessions,
+        -- not just nvim's in-memory floats. `tmux list-sessions` runs async
+        -- to avoid blocking statusline render.
+        local ws_live = 0
+        local ws_busy = false
 
-        local function refresh_zellij()
-            if zellij_busy or vim.fn.executable("zellij") ~= 1 then
+        local function refresh_workspaces()
+            if ws_busy or vim.fn.executable("tmux") ~= 1 then
                 return
             end
-            zellij_busy = true
-            vim.system({ "zellij", "list-sessions" }, { text = true }, function(out)
-                zellij_busy = false
-                local live, any = 0, false
-                for line in (out.stdout or ""):gmatch("[^\n]+") do
-                    if not line:find("EXITED", 1, true) then
+            ws_busy = true
+            vim.system({ "tmux", "list-sessions", "-F", "#{session_name}" }, { text = true }, function(out)
+                ws_busy = false
+                local live = 0
+                for line in (out.stdout or ""):gmatch("[^\r\n]+") do
+                    if vim.startswith(line, "nvim-") then
                         live = live + 1
                     end
-                    any = true
                 end
-                if live ~= zellij_live or any ~= zellij_any then
-                    zellij_live, zellij_any = live, any
+                if live ~= ws_live then
+                    ws_live = live
                     pcall(vim.cmd, "redrawstatus")
                 end
             end)
         end
 
         local function terminal_status()
-            refresh_zellij()
-            if zellij_live > 0 then
-                return u(0x25cf) .. " " .. zellij_live -- ● n live sessions
+            refresh_workspaces()
+            if ws_live > 0 then
+                return u(0x25cf) .. " " .. ws_live -- ● n live workspace sessions
             end
-            -- fallback: nvim-tracked float terminals
+            -- fallback: windows of the active workspace
             local ok, term = pcall(require, "mlamkadm.core.terminal")
             local n = ok and #term.list_terminals() or 0
             if n > 0 then
                 return u(0x25cb) .. " " .. n
             end
-            if zellij_any then
-                return u(0x25cb) .. " 0"
-            end -- sessions, all EXITED
             return ""
         end
 
@@ -302,7 +298,7 @@ return {
             {
                 group = group,
                 callback = function()
-                    refresh_zellij()
+                    refresh_workspaces()
                     vim.cmd("redrawstatus")
                 end,
                 desc = "Refresh statusline on session/terminal/window changes",
