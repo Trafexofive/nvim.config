@@ -16,20 +16,27 @@ Leader key: `Space`. `Mod` below = Super (niri). Terminal cycling uses `<C-j>/<C
 | `n` / `N` | Next/Prev search match (centered) |
 | `<C-Tab>` | Switch to last buffer |
 
-## 🖥️ Terminal / Zellij
+## 🖥️ Terminal / Workspaces (tmux daemon)
 | Key | Action |
 |-----|--------|
-| `<C-t>` | Pull up / pull down the terminal popup (strict toggle — restores last-active) |
-| `<C-n>` | New zellij session (hides the current one first) |
-| `<C-j>` / `<C-k>` | Cycle terminals (only when visible; never drops the popup) |
-| `<C-d>` | Kill current terminal + pull up the next one (popup stays focused) |
+| `<C-t>` | Pull up / pull down the workspace float (detach on hide — processes keep running in the daemon) |
+| `<C-n>` | New terminal window in the active workspace (fresh shell every time) |
+| `<C-j>` / `<C-k>` | Cycle workspace terminal windows (only while a float is visible) |
+| `<C-d>` | Kill the active window (SIGTERM→SIGKILL group teardown; last window takes the workspace with it) |
 | `<C-Esc>` (term mode) | Exit terminal mode |
-| `<leader>tz` | Open the project's primary zellij session (explicit, non-toggle) |
-| `<leader>ts` | Switch terminal (telescope) |
-| `<leader>tt` | TUI registry |
-| `<leader>tn` | New zellij session |
-| `<leader>nt` | New buffer with plain terminal |
-| `<leader>jX` | lazygit / lazydocker / btop / yazi / glow etc. |
+| `<leader>tw` | **Workspace switcher** (telescope) |
+| `<leader>tN` | **New workspace** (named) |
+| `<leader>tK` | **Kill workspace** (picker → confirm → rigid kill, nothing resurrects) |
+| `<leader>ts` | Switch terminal window (telescope, within workspace) |
+| `<leader>tt` | TUI registry (each entry = singleton daemon window, survives restarts) |
+| `<leader>nt` | New buffer with plain terminal (raw nvim terminal, no daemon) |
+| `<leader>jX` | lazygit / lazydocker / btop / yazi / glow etc. — singleton windows |
+
+**Workspaces** are named groups of terminal instances, each mapped to a
+headless tmux session (namespace `nvim-*`). nvim floats only attach — closing
+nvim or a float never kills anything; next open re-attaches to the live
+session (smart resurrect respawns dead ones from the journal). Kill is the
+only permanent op.
 
 ## 🧠 LSP
 | Key | Action |
