@@ -111,6 +111,20 @@ function M.project_session_name(ws_name)
     return base .. "-" .. ws_name
 end
 
+--- Session name for a terminal instance (flat registry — the OLD terminal
+--- model: one session per terminal). The "-term-" marker keeps them out of
+--- the workspace feature's pickers and kills.
+function M.terminal_session_name(key)
+    local cwd = vim.fn.getcwd()
+    local proj = vim.fn.fnamemodify(cwd, ":t")
+    if proj == "" then
+        proj = "home"
+    end
+    proj = safe_session_name(proj)
+    local hash = vim.fn.sha256(cwd):sub(1, 8)
+    return config.namespace .. proj .. "-" .. hash .. "-term-" .. safe_session_name(key)
+end
+
 -- ----------------------------------------------------------------------------
 -- tmux adapter
 -- ----------------------------------------------------------------------------
@@ -150,6 +164,9 @@ local function session_opts(sess)
     -- Sensible server-wide defaults (idempotent; only our daemon anyway).
     run({ "tmux", "set-option", "-q", "-g", "default-terminal", "tmux-256color" })
     run({ "tmux", "set-option", "-q", "-g", "history-limit", tostring(config.history_limit) })
+    -- The operator's shell expects this (see its own "extended-keys is off"
+    -- warning); keeps Enter/modified keys working inside our panes.
+    run({ "tmux", "set-option", "-q", "-g", "extended-keys", "on" })
 end
 
 --- Create a session headless. `first` = optional first window:
@@ -360,8 +377,13 @@ end
 
 local function default_journal()
     return {
-        version = 2,
+        version = 3,
         cwd = vim.fn.getcwd(),
+        -- Flat terminal registry (the old terminal.lua model): each terminal
+        -- instance is its own daemon session.
+        terminals = {},
+        last_active_terminal = nil,
+        -- Workspace ("synced terminals") feature.
         last_active = "primary",
         workspaces = {
             { name = "primary", session = M.project_session_name("primary"), terms = {} },
@@ -377,8 +399,8 @@ local function ensure_journal_dir()
 end
 
 --- One-shot migration from the zellij-era journal: zellij attach commands
---- are dropped (the old sessions are not coming back), everything else
---- becomes a window of the primary workspace. Old files are kept as .bak.
+--- are dropped (the old sessions are not coming back); everything else was a
+--- registry terminal instance, so it becomes one. Old files kept as .bak.
 local function migrate_legacy()
     local j = default_journal()
     for _, path in ipairs(legacy_paths()) do
@@ -393,10 +415,15 @@ local function migrate_legacy()
                     for _, e in ipairs(entries) do
                         if type(e) == "table" and e.cmd and e.cmd ~= "" then
                             if not vim.startswith(e.cmd, "zellij") then
-                                table.insert(j.workspaces[1].terms, {
-                                    name = safe_window_name(e.cmd),
+                                local key = safe_window_name(e.cmd)
+                                table.insert(j.terminals, {
+                                    key = key,
                                     cmd = e.cmd,
+                                    session = M.terminal_session_name(key),
                                     cwd = vim.fn.getcwd(),
+                                    position = (type(e.opts) == "table" and e.opts.position) or nil,
+                                    title = nil,
+                                    is_open = e.is_open == true,
                                 })
                             end
                         end
@@ -431,6 +458,11 @@ function J.load()
         J.save(journal_cache)
         return journal_cache
     end
+    -- v2 (workspace-only) journals gain the v3 terminal fields in place.
+    decoded.terminals = decoded.terminals or {}
+    decoded.last_active_terminal = decoded.last_active_terminal or nil
+    decoded.last_active = decoded.last_active or "primary"
+    decoded.cwd = decoded.cwd or vim.fn.getcwd()
     journal_cache = decoded
     if not journal_cache.workspaces or #journal_cache.workspaces == 0 then
         journal_cache = default_journal()
@@ -541,6 +573,8 @@ function M.ensure(name)
 end
 
 --- All workspaces for this project (journal ∪ live namespace sessions).
+--- Terminal-instance sessions ("-term-" marker) are excluded — they are
+--- managed by the flat terminal registry, not the workspace feature.
 --- Each entry: { name, session, live = bool, n_windows = int }
 function M.list()
     local j = J.load()
@@ -553,9 +587,10 @@ function M.list()
         seen[ws.session] = true
     end
     -- Live namespace sessions not known to the journal (e.g. created from
-    -- another machine path or an old journal wiped) — surface them too.
+    -- another machine path or an old journal wiped) — surface them too,
+    -- except flat terminal instances.
     for _, sess in ipairs(tmux.list_sessions()) do
-        if not seen[sess] then
+        if not seen[sess] and not sess:find("-term-", 1, true) then
             table.insert(out, {
                 name = sess,
                 session = sess,
@@ -672,19 +707,52 @@ end
 --- Kill ALL workspaces: every namespace session torn down (rigid) and every
 --- project journal purged. Global clean slate — same contract the old alpha
 --- dashboard button had with zellij, but it actually kills the processes.
-function M.kill_all()
-    local n = 0
+--- Every namespace session belonging to THIS project (its base prefix:
+--- the primary workspace session name, under which workspaces and terminal
+--- instances live). Machine-global by default is a live grenade when any
+--- other nvim / pi instance owns sessions in the namespace.
+function M.project_sessions()
+    local base = M.project_session_name("primary") -- exactly the base name
+    local out = {}
     for _, sess in ipairs(tmux.list_sessions()) do
+        if vim.startswith(sess, base) then
+            table.insert(out, sess)
+        end
+    end
+    return out
+end
+
+--- Kill workspaces + terminal instances. PROJECT-SCOPED by default: only
+--- this project's sessions and journal die — other projects' terminals
+--- (including any live pi/agent sessions) survive. opts.all = true gives
+--- the old machine-wide clean slate (every namespace session + journal).
+function M.kill_all(opts)
+    opts = opts or {}
+    local targets
+    if opts.all then
+        targets = tmux.list_sessions()
+    else
+        targets = M.project_sessions()
+    end
+
+    local n = 0
+    for _, sess in ipairs(targets) do
         tmux.kill_session(sess)
         n = n + 1
     end
-    -- Purge journals so nothing resurrects.
-    local dir = journal_dir()
-    for _, f in ipairs(vim.fn.readdir(dir) or {}) do
-        if vim.endswith(f, ".json") then
-            pcall(os.remove, dir .. "/" .. f)
+
+    -- Purge journals so nothing resurrects — scoped like the kills.
+    if opts.all then
+        local dir = journal_dir()
+        for _, f in ipairs(vim.fn.readdir(dir) or {}) do
+            if vim.endswith(f, ".json") then
+                pcall(os.remove, dir .. "/" .. f)
+            end
         end
+    else
+        pcall(os.remove, journal_path())
     end
+
     journal_cache = nil
     journal_loaded = false
     active_ws_name = nil
@@ -753,6 +821,96 @@ end
 --- Count of live workspace sessions in the namespace (statusline widget).
 function M.live_session_count()
     return #tmux.list_sessions()
+end
+
+-- ----------------------------------------------------------------------------
+-- Flat terminal registry (OLD terminal.lua model: one session per terminal)
+-- ----------------------------------------------------------------------------
+
+--- Ensure a terminal instance session exists (respawning a dead one from
+--- its recipe — that IS smart resurrect for a singleton terminal). Returns
+--- the session name, or nil if the session can't be created.
+function M.ensure_terminal(key, cmd, cwd)
+    local sess = M.terminal_session_name(key)
+    if not tmux.session_exists(sess) then
+        if not create_session(sess, { name = "main", cwd = cwd or vim.fn.getcwd(), cmd = cmd }) then
+            return nil
+        end
+    end
+    return sess
+end
+
+--- Rigid-kill a raw session name (pgid collection → kill-session → SIGKILL
+--- sweep). Returns number of surviving groups that had to be SIGKILL'd.
+function M.rigid_kill_session(sess)
+    return tmux.kill_session(sess)
+end
+
+--- Get a journal terminal record by key (nil if unknown).
+function M.get_terminal(key)
+    local j = J.load()
+    for _, t in ipairs(j.terminals) do
+        if t.key == key then
+            return t
+        end
+    end
+    return nil
+end
+
+--- Upsert a terminal record into the journal.
+function M.upsert_terminal(rec)
+    local j = J.load()
+    local found = false
+    for i, t in ipairs(j.terminals) do
+        if t.key == rec.key then
+            j.terminals[i] = rec
+            found = true
+            break
+        end
+    end
+    if not found then
+        table.insert(j.terminals, rec)
+    end
+    J.save(j)
+end
+
+--- Remove a terminal record from the journal (kill is permanent).
+function M.remove_terminal(key)
+    local j = J.load()
+    local kept = {}
+    for _, t in ipairs(j.terminals) do
+        if t.key ~= key then
+            table.insert(kept, t)
+        end
+    end
+    j.terminals = kept
+    if j.last_active_terminal == key then
+        j.last_active_terminal = #kept > 0 and kept[1].key or nil
+    end
+    J.save(j)
+end
+
+--- Persist the last-active terminal key.
+function M.set_last_active_terminal(key)
+    local j = J.load()
+    j.last_active_terminal = key
+    J.save(j)
+end
+
+--- Terminal records from the journal (sorted by key for stable dots).
+function M.journal_terminals()
+    local j = J.load()
+    local out = vim.list_extend({}, j.terminals)
+    table.sort(out, function(a, b)
+        return a.key < b.key
+    end)
+    return out
+end
+
+--- Last-active terminal key persisted in the journal (nil if none).
+function M.last_active_terminal()
+    local j = J.load()
+    return j.last_active_terminal
 end
 
 -- ----------------------------------------------------------------------------

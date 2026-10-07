@@ -16,27 +16,35 @@ Leader key: `Space`. `Mod` below = Super (niri). Terminal cycling uses `<C-j>/<C
 | `n` / `N` | Next/Prev search match (centered) |
 | `<C-Tab>` | Switch to last buffer |
 
-## 🖥️ Terminal / Workspaces (tmux daemon)
+## 🖥️ Terminal (tmux daemon — old UX, restored)
 | Key | Action |
 |-----|--------|
-| `<C-t>` | Pull up / pull down the workspace float (detach on hide — processes keep running in the daemon) |
-| `<C-n>` | New terminal window in the active workspace (fresh shell every time) |
-| `<C-j>` / `<C-k>` | Cycle workspace terminal windows (only while a float is visible) |
-| `<C-d>` | Kill the active window (SIGTERM→SIGKILL group teardown; last window takes the workspace with it) |
+| `<C-t>` | Strict toggle of the LAST-ACTIVE terminal — hides the window only; buffer, client and process keep running |
+| `<C-j>` / `<C-k>` | Cycle live terminals (wraps; never drops the popup) |
+| `<C-n>` | New terminal instance (own daemon session; hides current first) |
+| `<C-d>` | Kill current terminal → pull up the next live one (SIGTERM→SIGKILL group teardown; nothing resurrects) |
 | `<C-Esc>` (term mode) | Exit terminal mode |
-| `<leader>tw` | **Workspace switcher** (telescope) |
-| `<leader>tN` | **New workspace** (named) |
-| `<leader>tK` | **Kill workspace** (picker → confirm → rigid kill, nothing resurrects) |
-| `<leader>ts` | Switch terminal window (telescope, within workspace) |
-| `<leader>tt` | TUI registry (each entry = singleton daemon window, survives restarts) |
+| `<leader>tz` | Open the project's PRIMARY terminal (strict toggle, never cycles) |
+| `<leader>tn` | New terminal instance |
+| `<leader>ts` | Switch terminal (telescope) |
+| `<leader>tt` | TUI registry (singleton per command — one lazygit per project, forever) |
 | `<leader>nt` | New buffer with plain terminal (raw nvim terminal, no daemon) |
-| `<leader>jX` | lazygit / lazydocker / btop / yazi / glow etc. — singleton windows |
+| `<leader>jX` | lazygit / lazydocker / btop / yazi / glow etc. — daemon-backed singletons, survive restarts |
 
-**Workspaces** are named groups of terminal instances, each mapped to a
-headless tmux session (namespace `nvim-*`). nvim floats only attach — closing
-nvim or a float never kills anything; next open re-attaches to the live
-session (smart resurrect respawns dead ones from the journal). Kill is the
-only permanent op.
+Each terminal instance = its own headless tmux session (`nvim-<proj>-<hash>-term-<key>`).
+Hide ≠ kill: the process keeps running; re-open reattaches the same buffer/instance.
+Dead instances respawn from the journal recipe (smart resurrect); `kill` is the only permanent op.
+
+## 🧲 Synced Terminals (workspaces)
+| Key | Action |
+|-----|--------|
+| `<leader>tw` | Workspace switcher (one float attaches to a multi-window session) |
+| `<leader>tN` | New named workspace |
+| `<leader>tK` | Kill workspace (rigid — all member processes + journal entry) |
+
+Terminal groups for long-running sets (make watch / agents / logs). Terminal-instance
+sessions never appear in workspace pickers; `kill_all` (alpha dashboard) is
+**project-scoped** — other projects' terminals and agent sessions are never touched.
 
 ## 🧠 LSP
 | Key | Action |
