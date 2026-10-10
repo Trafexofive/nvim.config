@@ -33,7 +33,9 @@ Leader key: `Space`. `Mod` below = Super (niri). Terminal cycling uses `<C-j>/<C
 
 Each terminal instance = its own headless tmux session (`nvim-<proj>-<hash>-term-<key>`).
 Hide ≠ kill: the process keeps running; re-open reattaches the same buffer/instance.
-Dead instances respawn from the journal recipe (smart resurrect); `kill` is the only permanent op.
+Scrollback is replayed into a fresh attach buffer, so **history survives detach and
+nvim restarts** (scroll up and it's there). Dead instances respawn from the journal
+recipe (smart resurrect); `kill` is the only permanent op.
 
 ## 🧲 Synced Terminals (workspaces)
 | Key | Action |

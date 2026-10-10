@@ -1096,9 +1096,10 @@ function M.setup(opts)
 
     _G.Poptui = M.toggle_popup
 
-    -- Register Default TUIs (old list, Zellij entry kept as manual escape
-    -- hatch — it is a plain singleton cmd now, nothing special).
+    -- Register Default TUIs (old list verbatim — the Zellij entry stays as
+    -- the manual escape hatch it always was: a singleton cmd like any TUI).
     M.register_tui("Terminal", vim.o.shell)
+    M.register_tui("Zellij", "zellij attach --create " .. W.project_session_name("primary"))
     M.register_tui("Lazygit", "lazygit")
     M.register_tui("Glow", "glow")
     M.register_tui("Noter", "noter")

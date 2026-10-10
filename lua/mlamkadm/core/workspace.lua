@@ -32,6 +32,9 @@ local config = {
     journal_dir = nil, -- defaults to stdpath("data") .. "/term_workspaces"
     -- tmux copy-mode scrollback per pane (nvim buffer scrollback is separate).
     history_limit = 50000,
+    -- Lines of session history replayed into a fresh attach client's buffer
+    -- (nvim scrollback survives detach / nvim restart this way).
+    attach_history = 5000,
     -- Rigid kill: grace (seconds) between tmux teardown and the SIGKILL sweep.
     kill_grace = 0,
 }
@@ -344,8 +347,20 @@ end
 
 -- Attach command for a termopen job. Runs via sh so we can unset TMUX
 -- (nvim may itself be running inside tmux; nesting protection would refuse).
+--
+-- History preserve: a fresh attach client only ever receives the live screen,
+-- so the nvim buffer would have NO scrollback after a detach/restart. We
+-- therefore replay the session's scrollback (capture-pane, ending just above
+-- the visible pane) into the buffer FIRST, then exec the attach — the seeded
+-- lines land as nvim scrollback and stay readable with normal scrolling.
 function M.attach_cmd(sess)
-    return { "sh", "-c", "exec env -u TMUX tmux attach-session -t =" .. sess }
+    local script = string.format(
+        "tmux capture-pane -p -S -%d -E -1 -t =%s: 2>/dev/null; exec env -u TMUX tmux attach-session -t =%s",
+        config.attach_history,
+        sess,
+        sess
+    )
+    return { "sh", "-c", script }
 end
 
 -- ----------------------------------------------------------------------------
