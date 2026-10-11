@@ -164,6 +164,11 @@ local function session_opts(sess)
     run({ "tmux", "set-option", "-q", "-t", "=" .. sess, "mouse", "on" })
     run({ "tmux", "set-option", "-q", "-t", "=" .. sess, "remain-on-exit", "off" })
     run({ "tmux", "set-option", "-q", "-t", "=" .. sess, "detach-on-destroy", "on" })
+    -- No alternate screen: the nvim buffer stays the real screen, so terminal
+    -- history accumulates as genuine, scrollable buffer lines (and the seeded
+    -- pre-reboot snapshot above it is reachable). With the alt screen on,
+    -- everything the attached client draws is invisible to nvim's scrollback.
+    run({ "tmux", "set-option", "-q", "-t", "=" .. sess, "alternate-screen", "off" })
     -- Sensible server-wide defaults (idempotent; only our daemon anyway).
     run({ "tmux", "set-option", "-q", "-g", "default-terminal", "tmux-256color" })
     run({ "tmux", "set-option", "-q", "-g", "history-limit", tostring(config.history_limit) })
