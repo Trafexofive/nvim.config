@@ -242,6 +242,8 @@ local function sync_poll_start()
                 end
                 return
             end
+            -- Digest-gated: writes only when a session's scrollback changed.
+            W.save_history()
             refresh_bars()
         end)
     end)
@@ -314,12 +316,15 @@ local function prepare_term(term)
     )
     vim.api.nvim_buf_set_keymap(term.buf, "t", "<C-Esc>", [[<C-\><C-n>]], map_opts)
 
-    local sess = W.ensure_terminal(term.key, term.cmd, term.opts.cwd)
+    local sess, created = W.ensure_terminal(term.key, term.cmd, term.opts.cwd)
     if not sess then
         vim.notify("failed to start terminal '" .. term.key .. "'", vim.log.levels.ERROR)
         return false
     end
     term.session = sess
+    -- Respawned ⇒ the previous contents are gone from the daemon; the attach
+    -- will seed the on-disk scrollback snapshot (history across a reboot).
+    term._respawned = created
     return true
 end
 
@@ -328,7 +333,7 @@ end
 local function launch_attach(term)
     local id = term.id
     local key = term.key
-    return vim.fn.termopen(W.attach_cmd(term.session), {
+    return vim.fn.termopen(W.attach_cmd(term.session, { respawned = term._respawned }), {
         on_exit = function(_job_id, _code, _event)
             local t = terminals[id]
             if not t then
@@ -431,6 +436,7 @@ function M.toggle(id_or_cmd, opts, stay_normal)
         term.win = nil
         term.open = false
         last_active_id = term.id
+        W.save_history() -- snapshot before the user can reboot on us
         refresh_bars()
         return
     end
@@ -505,6 +511,7 @@ function M.toggle_last_active()
             term.open = false
         end
         last_active_id = visible
+        W.save_history()
         return
     end
 
@@ -767,7 +774,7 @@ end
 
 local function show_ws_float(name, opts)
     opts = opts or {}
-    local ws = W.ensure(name)
+    local ws, created = W.ensure(name)
     if not ws then
         return
     end
@@ -797,7 +804,7 @@ local function show_ws_float(name, opts)
     fl.win = win
     refresh_bars()
 
-    local job = vim.fn.termopen(W.attach_cmd(ws.session), {
+    local job = vim.fn.termopen(W.attach_cmd(ws.session, { respawned = created }), {
         on_exit = function()
             local cur = ws_floats[name]
             if not cur or cur.job ~= job then

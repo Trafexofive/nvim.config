@@ -348,18 +348,30 @@ end
 -- Attach command for a termopen job. Runs via sh so we can unset TMUX
 -- (nvim may itself be running inside tmux; nesting protection would refuse).
 --
--- History preserve: a fresh attach client only ever receives the live screen,
--- so the nvim buffer would have NO scrollback after a detach/restart. We
--- therefore replay the session's scrollback (capture-pane, ending just above
--- the visible pane) into the buffer FIRST, then exec the attach — the seeded
--- lines land as nvim scrollback and stay readable with normal scrolling.
-function M.attach_cmd(sess)
-    local script = string.format(
-        "tmux capture-pane -p -S -%d -E -1 -t =%s: 2>/dev/null; exec env -u TMUX tmux attach-session -t =%s",
-        config.attach_history,
-        sess,
-        sess
-    )
+-- History preserve:
+--   * Normal re-attach (session alive): replay the live tmux scrollback
+--     (capture-pane, ending just above the visible pane) into the buffer.
+--   * Respawned session (daemon died — machine reboot): the live scrollback
+--     is whatever the fresh process just printed, so instead replay the
+--     on-disk snapshot taken before the daemon died. The caller knows which
+--     case it is (ensure_terminal/ensure report creation), so there is no
+--     guessing and no duplication.
+function M.attach_cmd(sess, opts)
+    opts = opts or {}
+    local file = vim.fn.shellescape(M.history_path(sess))
+    local script
+    if opts.respawned then
+        script = string.format("[ -f %s ] && cat %s; exec env -u TMUX tmux attach-session -t =%s", file, file, sess)
+    else
+        script = string.format(
+            "h=$(tmux capture-pane -p -S -%d -E -1 -t =%s: 2>/dev/null); "
+                .. '[ -n "$h" ] && printf \'%%s\\n\' "$h"; '
+                .. "exec env -u TMUX tmux attach-session -t =%s",
+            config.attach_history,
+            sess,
+            sess
+        )
+    end
     return { "sh", "-c", script }
 end
 
@@ -549,6 +561,9 @@ function M.save()
     j.last_active = active_ws_name or j.last_active or "primary"
     j.cwd = vim.fn.getcwd()
     J.save(j)
+    -- Scrollback snapshots ride along with every journal save so terminal
+    -- history survives a daemon death (machine reboot).
+    M.save_history()
 end
 
 -- ----------------------------------------------------------------------------
@@ -565,6 +580,7 @@ function M.ensure(name)
     if not find_ws(j, name) then
         table.insert(j.workspaces, ws)
     end
+    local created = false
     if not tmux.session_exists(ws.session) then
         -- Dead: create the session and respawn every journal term.
         local first = ws.terms[1]
@@ -582,9 +598,10 @@ function M.ensure(name)
             create_session(ws.session) -- locked "main" shell window
         end
         session_opts(ws.session)
+        created = true
     end
     active_ws_name = ws.name
-    return ws
+    return ws, created
 end
 
 --- All workspaces for this project (journal ∪ live namespace sessions).
@@ -844,15 +861,18 @@ end
 
 --- Ensure a terminal instance session exists (respawning a dead one from
 --- its recipe — that IS smart resurrect for a singleton terminal). Returns
---- the session name, or nil if the session can't be created.
+--- the session name and whether it had to be (re)created — the caller uses
+--- that to seed the on-disk scrollback snapshot exactly when the previous
+--- contents are gone.
 function M.ensure_terminal(key, cmd, cwd)
     local sess = M.terminal_session_name(key)
     if not tmux.session_exists(sess) then
         if not create_session(sess, { name = "main", cwd = cwd or vim.fn.getcwd(), cmd = cmd }) then
-            return nil
+            return nil, false
         end
+        return sess, true
     end
-    return sess
+    return sess, false
 end
 
 --- Rigid-kill a raw session name (pgid collection → kill-session → SIGKILL
@@ -926,6 +946,63 @@ end
 function M.last_active_terminal()
     local j = J.load()
     return j.last_active_terminal
+end
+
+-- ----------------------------------------------------------------------------
+-- Scrollback persistence (history that survives the daemon / a reboot)
+-- ----------------------------------------------------------------------------
+local history_state = {} -- sess -> last snapshot digest (skip unchanged writes)
+
+local function history_dir()
+    local d = journal_dir() .. "/history"
+    if vim.fn.isdirectory(d) == 0 then
+        vim.fn.mkdir(d, "p")
+    end
+    return d
+end
+
+--- On-disk snapshot path for a session's scrollback.
+function M.history_path(sess)
+    return history_dir() .. "/" .. sess .. ".history"
+end
+
+--- Snapshot every live project session's scrollback to disk. Called on
+--- journal saves, on hiding a terminal, and periodically while a float is
+--- open — so a machine reboot loses at most the last few seconds. Skips
+--- writing when the capture is unchanged.
+function M.save_history()
+    if not tmux.available() then
+        return 0
+    end
+    local n = 0
+    for _, sess in ipairs(M.project_sessions()) do
+        local r = run({
+            "tmux",
+            "capture-pane",
+            "-p",
+            "-S",
+            "-" .. config.attach_history,
+            "-t",
+            "=" .. sess .. ":",
+        })
+        if r.ok and r.out ~= "" then
+            local digest = vim.fn.sha256(r.out)
+            if history_state[sess] ~= digest then
+                history_state[sess] = digest
+                local path = M.history_path(sess)
+                local tmp = path .. ".tmp"
+                local f = io.open(tmp, "w")
+                if f then
+                    f:write(r.out)
+                    f:close()
+                    if os.rename(tmp, path) then
+                        n = n + 1
+                    end
+                end
+            end
+        end
+    end
+    return n
 end
 
 -- ----------------------------------------------------------------------------
