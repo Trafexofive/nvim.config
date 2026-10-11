@@ -886,6 +886,42 @@ function M.cycle_ws_windows(dir)
     end
 end
 
+--- Add a terminal WINDOW to a workspace ("synced terminals"): this is how a
+--- workspace becomes a real group instead of a single shell. The window is a
+--- tmux window inside the workspace's session, so it is killed/resurrected
+--- with the group and shows in the workspace float's dots.
+-- @param ws_name string|nil  target workspace (default: visible/active)
+-- @param cmd string|nil      command (default: $SHELL)
+-- @return window name or nil
+function M.new_ws_window(ws_name, cmd)
+    if not ws_name or ws_name == "" then
+        ws_name = visible_ws() or active_ws_name()
+    end
+    local r = W.open_window(ws_name, cmd or vim.o.shell, { once = true })
+    if not r then
+        vim.notify("failed to add window to workspace '" .. tostring(ws_name) .. "'", vim.log.levels.ERROR)
+        return nil
+    end
+    -- If the workspace float is up, keep it focused on the new window.
+    if visible_ws() then
+        show_ws_float(ws_name, {})
+    end
+    refresh_bars()
+    return r.name
+end
+
+--- Prompt for a command, then add it as a window to the workspace.
+function M.new_ws_window_prompt()
+    local ws_name = visible_ws() or active_ws_name()
+    vim.ui.input({ prompt = "Command for new window in '" .. ws_name .. "' (empty = shell): " }, function(input)
+        input = vim.trim(input or "")
+        if input == "" then
+            return
+        end
+        M.new_ws_window(ws_name, input)
+    end)
+end
+
 --- Kill the active window of a visible workspace float.
 function M.kill_ws_window(name)
     local cur = ws_active_window(name)
@@ -1167,6 +1203,10 @@ vim.keymap.set("n", "<leader>tt", M.show_tui_registry, { desc = "TUI Registry" }
 vim.keymap.set("n", "<leader>tw", M.switch_workspace, { desc = "Workspaces: Switch (synced terminals)" })
 vim.keymap.set("n", "<leader>tN", M.new_workspace, { desc = "Workspaces: New" })
 vim.keymap.set("n", "<leader>tK", M.kill_workspace, { desc = "Workspaces: Kill (rigid)" })
+vim.keymap.set("n", "<leader>tW", function()
+    M.new_ws_window(nil, vim.o.shell)
+end, { desc = "Workspaces: New window (shell)" })
+vim.keymap.set("n", "<leader>tC", M.new_ws_window_prompt, { desc = "Workspaces: New window (command)" })
 
 -- Singleton TUI keys (old)
 vim.keymap.set("n", "<leader>jj", function()
