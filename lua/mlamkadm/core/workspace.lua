@@ -92,6 +92,12 @@ local function safe_window_name(s)
     if s == "" then
         s = "term"
     end
+    -- Truncation must not make different commands (different ARGS) collide into
+    -- one singleton key: when the name has to be cut, salt it with a digest of
+    -- the FULL command so the key still identifies the exact cmd + args.
+    if #s > 24 then
+        return s:sub(1, 24) .. "-" .. vim.fn.sha256(s):sub(1, 5)
+    end
     return s:sub(1, 24)
 end
 
@@ -415,6 +421,9 @@ local function default_journal()
         -- instance is its own daemon session.
         terminals = {},
         last_active_terminal = nil,
+        -- TUI registry memory: last command + args actually used per TUI name
+        -- (so a registry entry replays what you last ran, not a static default).
+        tui_cmds = {},
         -- Workspace ("synced terminals") feature.
         last_active = "primary",
         workspaces = {
@@ -492,6 +501,7 @@ function J.load()
     end
     -- v2 (workspace-only) journals gain the v3 terminal fields in place.
     decoded.terminals = decoded.terminals or {}
+    decoded.tui_cmds = decoded.tui_cmds or {}
     decoded.last_active_terminal = decoded.last_active_terminal or nil
     decoded.last_active = decoded.last_active or "primary"
     decoded.cwd = decoded.cwd or vim.fn.getcwd()
@@ -951,6 +961,21 @@ end
 function M.last_active_terminal()
     local j = J.load()
     return j.last_active_terminal
+end
+
+--- Last command + args recorded for a TUI registry entry (nil if never run).
+function M.get_tui_cmd(name)
+    local j = J.load()
+    return (j.tui_cmds or {})[name]
+end
+
+--- Remember the command + args used for a TUI registry entry so the entry
+--- replays the real command (with its arguments) next time it is picked.
+function M.set_tui_cmd(name, cmd)
+    local j = J.load()
+    j.tui_cmds = j.tui_cmds or {}
+    j.tui_cmds[name] = cmd
+    J.save(j)
 end
 
 -- ----------------------------------------------------------------------------

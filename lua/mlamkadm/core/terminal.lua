@@ -971,15 +971,31 @@ function M.register_tui(name, cmd, position, opts)
     })
 end
 
+--- TUI registry picker. Each entry replays the last command + args actually
+--- used for it (journal-persisted); the static default is the fallback until
+--- you have run it once. Selecting records the effective command, so running
+--- e.g. `docker-compose logs -f web` once makes that the replayed command.
 function M.show_tui_registry()
-    W.portrait_picker("TUI Commands", tui_registry, function(entry)
+    local entries = {}
+    for _, e in ipairs(tui_registry) do
+        local last = W.get_tui_cmd(e.name)
+        entries[#entries + 1] = {
+            name = e.name,
+            cmd = last or e.cmd,
+            is_last = last ~= nil,
+            position = e.position,
+            opts = e.opts,
+        }
+    end
+
+    W.portrait_picker("TUI Commands", entries, function(entry)
         return {
             value = entry,
-            display = string.format("%-20s → %s", entry.name, entry.cmd),
+            display = string.format("%-20s → %s%s", entry.name, entry.cmd, entry.is_last and "  (last)" or ""),
             ordinal = entry.name .. " " .. entry.cmd,
         }
     end, function(sel)
-        -- Singleton per command (registry behavior preserved).
+        W.set_tui_cmd(sel.name, sel.cmd)
         M.toggle(sel.cmd, { position = sel.position, title = sel.name })
     end)
 end
